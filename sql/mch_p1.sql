@@ -1,0 +1,79 @@
+USE eshop_db;
+
+-- ============================================================
+-- mch_p1.sql — 商户运营相关表（依赖 P0: merchants）
+-- ============================================================
+
+CREATE TABLE `mch_merchant_users` (
+    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
+    `merchant_id` BIGINT NOT NULL COMMENT '商家ID',
+    `user_id` BIGINT NOT NULL COMMENT '系统用户ID',
+    `role_id` BIGINT NOT NULL DEFAULT 0 COMMENT '店铺角色ID',
+    `status` TINYINT NOT NULL DEFAULT 1 COMMENT '1-正常 2-禁用',
+    `invited_at` DATETIME DEFAULT NULL COMMENT '邀请时间',
+    `last_login_at` DATETIME DEFAULT NULL COMMENT '最后登录时间',
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at` DATETIME DEFAULT NULL,
+    UNIQUE KEY `uk_merchant_user` (`merchant_id`, `user_id`),
+    KEY `idx_merchant_status` (`merchant_id`, `status`),
+    KEY `idx_user_id` (`user_id`),
+    KEY `idx_deleted_at` (`deleted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家员工/管理员关联表';
+
+
+CREATE TABLE `mch_merchant_balances` (
+    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
+    `merchant_id` BIGINT NOT NULL COMMENT '商家ID',
+    `available_balance` DECIMAL(12,2) NOT NULL DEFAULT 0.00 COMMENT '可提现余额',
+    `freeze_balance` DECIMAL(12,2) NOT NULL DEFAULT 0.00 COMMENT '冻结余额',
+    `currency` VARCHAR(10) NOT NULL DEFAULT 'CNY' COMMENT '币种',
+    `version` BIGINT NOT NULL DEFAULT 0 COMMENT '版本号（并发控制）',
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at` DATETIME DEFAULT NULL,
+    UNIQUE KEY `uk_merchant_currency` (`merchant_id`, `currency`),
+    KEY `idx_deleted_at` (`deleted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家资金余额表';
+
+
+CREATE TABLE `mch_merchant_withdrawals` (
+    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
+    `merchant_id` BIGINT NOT NULL COMMENT '商家ID',
+    `withdraw_no` VARCHAR(32) NOT NULL COMMENT '提现单号',
+    `amount` DECIMAL(12,2) NOT NULL COMMENT '提现金额',
+    `bank_account_id` BIGINT NOT NULL COMMENT '结算账户ID',
+    `status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-待审核 1-审核通过 2-已打款 3-拒绝',
+    `audit_remark` VARCHAR(200) DEFAULT '' COMMENT '审批备注',
+    `applied_at` DATETIME DEFAULT NULL COMMENT '申请时间',
+    `approved_at` DATETIME DEFAULT NULL COMMENT '审批时间',
+    `paid_at` DATETIME DEFAULT NULL COMMENT '打款时间',
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at` DATETIME DEFAULT NULL,
+    UNIQUE KEY `uk_withdraw_no` (`withdraw_no`),
+    KEY `idx_merchant_status` (`merchant_id`, `status`),
+    KEY `idx_deleted_at` (`deleted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家提现申请表';
+
+
+CREATE TABLE `mch_merchant_settlement_logs` (
+    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
+    `merchant_id` BIGINT NOT NULL COMMENT '商家ID',
+    `settlement_no` VARCHAR(32) NOT NULL COMMENT '结算单号',
+    `settlement_cycle` VARCHAR(20) COMMENT '结算周期（如 2026-07-01~2026-07-15）',
+    `total_amount` DECIMAL(12,2) DEFAULT 0.00 COMMENT '期内总金额',
+    `commission_amount` DECIMAL(12,2) DEFAULT 0.00 COMMENT '平台佣金',
+    `settlement_amount` DECIMAL(12,2) DEFAULT 0.00 COMMENT '应结算金额',
+    `status` TINYINT DEFAULT 0 COMMENT '0-待结算 1-已结算 2-已打款',
+    `settled_at` DATETIME COMMENT '结算时间',
+    `paid_at` DATETIME COMMENT '打款时间',
+    `remark` VARCHAR(500) COMMENT '备注',
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at` DATETIME DEFAULT NULL,
+    UNIQUE KEY `uk_settlement_no` (`settlement_no`),
+    INDEX `idx_merchant` (`merchant_id`),
+    INDEX `idx_status` (`status`),
+    INDEX `idx_deleted_at` (`deleted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家结算流水表';
