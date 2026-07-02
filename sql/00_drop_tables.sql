@@ -65,6 +65,7 @@ DROP TABLE IF EXISTS `mch_merchants`;
 -- ============================================================
 -- P0: 独立基础表
 -- ============================================================
+DROP TABLE IF EXISTS `base_notification_reads`;
 DROP TABLE IF EXISTS `base_notifications`;
 DROP TABLE IF EXISTS `base_notification_templates`;
 DROP TABLE IF EXISTS `sp_categories`;

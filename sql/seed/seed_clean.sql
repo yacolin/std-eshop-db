@@ -57,6 +57,7 @@ TRUNCATE TABLE usr_permissions;
 TRUNCATE TABLE usr_roles;
 
 -- 消息
+TRUNCATE TABLE base_notification_reads;
 TRUNCATE TABLE base_notifications;
 TRUNCATE TABLE base_notification_templates;
 

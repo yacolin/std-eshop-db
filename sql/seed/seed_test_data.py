@@ -331,6 +331,7 @@ def clean(conn):
         "sp_inventory_logs", "sp_inventories",
         "sp_product_attributes", "sp_product_descriptions", "sp_skus",
         "sp_products", "sp_attributes", "sp_category_brands", "sp_categories", "sp_brands",
+        "base_notification_reads", "base_notifications", "base_notification_templates",
     ]
     with conn.cursor() as cur:
         cur.execute("SET FOREIGN_KEY_CHECKS = 0")
@@ -593,6 +594,42 @@ def seed_marketing(conn):
 
     conn.commit()
     print("营销中心 ✅\n")
+
+
+NOTIFICATION_TEMPLATES = [
+    ("system_announcement", 1, "系统公告",
+     "【系统公告】{{message}}", 1, 1),
+    ("maintenance_notice", 1, "系统维护通知",
+     "系统将于 {{start_time}} 至 {{end_time}} 进行维护升级，期间部分功能可能暂时不可用，敬请谅解。", 1, 2),
+    ("order_shipped", 1, "订单已发货",
+     "您的订单 {{order_no}} 已由 {{courier_company}} 发出，运单号 {{tracking_no}}，请留意查收。", 2, 1),
+    ("order_delivered", 1, "订单已签收",
+     "您的订单 {{order_no}} 已签收，感谢您的购买。", 2, 1),
+    ("order_cancelled", 1, "订单已取消",
+     "您的订单 {{order_no}} 已被取消，{{reason}}", 2, 2),
+    ("security_login_alert", 1, "登录安全提醒",
+     "您的账户于 {{login_time}} 通过 {{device}} 登录。如非本人操作，请立即修改密码。", 5, 2),
+    ("password_changed", 1, "密码修改通知",
+     "您的账户密码已于 {{change_time}} 修改成功。如非本人操作，请立即联系客服。", 5, 1),
+    ("marketing_promotion", 1, "优惠活动",
+     "{{promotion_name}} 活动进行中，{{message}}", 3, 3),
+]
+
+
+# ── 通知模板 ───────────────────────────────────────
+
+def seed_notification(conn):
+    with conn.cursor() as cur:
+        for code, channel, title, content, category, priority in NOTIFICATION_TEMPLATES:
+            cur.execute(
+                "INSERT IGNORE INTO base_notification_templates "
+                "(template_code, channel, title_template, content_template, category, priority, status) "
+                "VALUES (%s, %s, %s, %s, %s, %s, 1)",
+                (code, channel, title, content, category, priority),
+            )
+    conn.commit()
+    print(f"  通知模板: {len(NOTIFICATION_TEMPLATES)} 条")
+    print("通知模板 ✅\n")
 
 
 MERCHANTS = [
@@ -860,7 +897,7 @@ def seed_order(conn):
 def main():
     parser = argparse.ArgumentParser(description="为新表生成测试数据")
     parser.add_argument("--clean", action="store_true", help="先清空再生成")
-    parser.add_argument("--module", choices=["product", "inventory", "marketing", "merchant", "order"],
+    parser.add_argument("--module", choices=["product", "inventory", "marketing", "merchant", "order", "notification"],
                         help="只生成指定模块")
     args = parser.parse_args()
 
@@ -874,6 +911,7 @@ def main():
         "marketing": seed_marketing,
         "merchant": seed_merchant,
         "order": seed_order,
+        "notification": seed_notification,
     }
 
     if args.module:
@@ -891,7 +929,8 @@ def main():
                       "sp_skus", "sp_product_descriptions", "sp_product_attributes",
                       "sp_inventories", "mkt_promotions", "mkt_user_promotions",
                       "tx_orders", "tx_order_items", "tx_payments",
-                      "mch_merchants", "mch_merchant_balances"]:
+                      "mch_merchants", "mch_merchant_balances",
+                      "base_notification_templates"]:
             cur.execute(f"SELECT COUNT(*) AS cnt FROM {table}")
             row = cur.fetchone()
             print(f"  {table}: {row[0]}")

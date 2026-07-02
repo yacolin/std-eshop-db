@@ -22,8 +22,14 @@ CREATE TABLE `base_notification_templates` (
 CREATE TABLE `base_notifications` (
     `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '通知ID',
 
-    -- 接收人
-    `user_id` BIGINT NOT NULL COMMENT '接收用户ID',
+    -- 接收范围（user_id=0 表示全体用户，>0 表示指定用户）
+    -- 未来可按角色/商户/标签等维度扩展，加 target_scope 字段即可：
+    --   'user'     = 指定用户（user_id）
+    --   'all'      = 全体用户
+    --   'role'     = 按角色（target_id=角色ID）
+    --   'merchant' = 按商户（target_id=商户ID）
+    --   'tag'      = 按用户标签（target_id=标签ID）
+    `user_id` BIGINT NOT NULL COMMENT '0-全体用户 >0-指定用户',
     `merchant_id` BIGINT NOT NULL DEFAULT 0 COMMENT '所属商家ID（0表示平台）',
 
     -- 通知基本信息
@@ -44,16 +50,6 @@ CREATE TABLE `base_notifications` (
     -- 扩展图片/图标
     `icon_url` VARCHAR(500) COMMENT '通知图标（如订单图标、优惠券图标）',
 
-    -- 状态管理
-    `is_read` TINYINT DEFAULT 0 COMMENT '0-未读 1-已读',
-    `read_at` DATETIME COMMENT '阅读时间',
-    `is_processed` TINYINT DEFAULT 0 COMMENT '0-待处理 1-已处理（如短信已发送、Push已推送）',
-    `processed_at` DATETIME COMMENT '处理时间',
-    `process_result` VARCHAR(200) COMMENT '处理结果（如短信发送回执ID）',
-
-    -- 用户操作（可选）
-    `is_deleted_by_user` TINYINT DEFAULT 0 COMMENT '用户是否删除（软删除，前端不展示）',
-
     -- 优先级
     `priority` TINYINT DEFAULT 1 COMMENT '优先级: 0-高 1-中 2-低（用于排序展示）',
 
@@ -64,11 +60,21 @@ CREATE TABLE `base_notifications` (
     `deleted_at` DATETIME DEFAULT NULL COMMENT '系统软删除（数据清理用）',
 
     -- 索引
-    INDEX `idx_user_read` (`user_id`, `is_read`, `created_at` DESC),
+    INDEX `idx_user_id` (`user_id`),
     INDEX `idx_merchant` (`merchant_id`),
     INDEX `idx_channel` (`channel`),
     INDEX `idx_category` (`category`),
     INDEX `idx_target` (`target_type`, `target_id`),
-    INDEX `idx_processed` (`is_processed`, `processed_at`),
     INDEX `idx_created` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='统一通知表';
+
+
+CREATE TABLE `base_notification_reads` (
+    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
+    `notification_id` BIGINT NOT NULL COMMENT '关联通知ID',
+    `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `read_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '阅读时间',
+
+    UNIQUE KEY `uk_notification_user` (`notification_id`, `user_id`),
+    INDEX `idx_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='通知已读记录表';
