@@ -24,8 +24,23 @@ mysql -u root -p < sql/00_drop_tables.sql
 mysql -u root -p < sql/run.sql
 ```
 
+## 种子数据
+
+```bash
+# 初始化 RBAC 数据（权限、角色、管理员/用户）
+mysql -u root -p eshop_db < sql/seed/run.sql
+
+# 批量生成测试数据（商品、库存、订单等）
+python sql/seed/seed_test_data.py
+```
+
 ## 说明
 
+- 表名统一加域前缀：`usr_users`、`usr_roles`、`usr_permissions`、`usr_role_permissions` 等
 - MCH 多商户扩展字段（merchant_id、scope_type/scope_id）已直接写入 CREATE TABLE，无需 ALTER
 - 不含 FOREIGN KEY 约束，关联由业务层保证
 - 所有时间字段统一使用 `timestamp` 或 `datetime(3)` 精度
+
+## 增量权限
+
+`add_permission_template.sql` 是新增权限的 SQL 模板，后续添加新权限时参考（注意表名使用 `usr_` 前缀）。
