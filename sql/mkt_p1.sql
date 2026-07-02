@@ -39,17 +39,16 @@ CREATE TABLE `mkt_promotion_products` (
     `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
     `promotion_id` BIGINT NOT NULL COMMENT '促销ID',
     `merchant_id` BIGINT NOT NULL DEFAULT 0 COMMENT '所属商家ID',
-    `product_id` BIGINT NOT NULL COMMENT '商品SPU ID',
-    `sku_id` BIGINT DEFAULT NULL COMMENT '限制到SKU维度则填写（NULL表示整个SPU）',
-    `status` TINYINT DEFAULT 1 COMMENT '1-参与活动 0-取消参与',
+    `product_type` TINYINT NOT NULL COMMENT '1-全站 2-指定分类 3-指定SPU 4-指定SKU',
+    `product_id` BIGINT COMMENT '产品ID（product_type=3/4时使用）',
+    `category_id` BIGINT COMMENT '分类ID（product_type=2时使用）',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `deleted_at` DATETIME DEFAULT NULL,
 
-    UNIQUE KEY `uk_promo_product_sku` (`promotion_id`, `product_id`, `sku_id`),
-    INDEX `idx_product` (`product_id`),
+    INDEX `idx_promotion` (`promotion_id`),
     INDEX `idx_merchant` (`merchant_id`),
     INDEX `idx_deleted_at` (`deleted_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='促销商品关联表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='促销适用商品表';
 
 
 CREATE TABLE `mkt_user_promotions` (

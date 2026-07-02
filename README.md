@@ -17,18 +17,8 @@
 ## 执行方式
 
 ```bash
-# 清理旧表（反向依赖顺序）
-mysql -u root -p < sql/00_drop_tables.sql
-
-# 按依赖顺序建表
-mysql -u root -p < sql/run.sql
-```
-
-## 种子数据
-
-```bash
-# 初始化 RBAC 数据（权限、角色、管理员/用户）
-mysql -u root -p eshop_db < sql/seed/run.sql
+# 清理旧表 → 建表 → 初始化 RBAC 种子数据（一次密码）
+bash run.sh
 
 # 批量生成测试数据（商品、库存、订单等）
 python sql/seed/seed_test_data.py

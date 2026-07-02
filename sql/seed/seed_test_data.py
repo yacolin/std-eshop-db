@@ -290,6 +290,9 @@ def connect():
 
 def clean(conn):
     tables = [
+        "mch_settlement_details", "mch_merchant_settlement_logs", "mch_merchant_withdrawals",
+        "mch_merchant_balances", "mch_merchant_users", "mch_merchant_qualifications",
+        "mch_merchant_bank_accounts", "mch_merchant_contacts", "mch_merchants",
         "mkt_promotion_usage_logs", "mkt_user_promotions", "mkt_promotion_products",
         "mkt_promotion_rules", "mkt_promotions",
         "tx_refunds", "tx_payment_logs", "tx_payments",
@@ -562,6 +565,94 @@ def seed_marketing(conn):
     print("营销中心 ✅\n")
 
 
+MERCHANTS = [
+    ("Apple 官方旗舰店", 3, 3, "苹果", "1000000000"),
+    ("小米官方旗舰店", 2, 3, "小米", "1000000001"),
+    ("华为官方旗舰店", 2, 3, "华为", "1000000002"),
+    ("耐克官方旗舰店", 2, 3, "耐克", "1000000003"),
+    ("欧莱雅官方旗舰店", 2, 2, "欧莱雅", "1000000004"),
+    ("三星官方旗舰店", 2, 2, "三星", "1000000005"),
+    ("优衣库旗舰店", 2, 2, "优衣库", "1000000006"),
+    ("个人数码小店", 1, 1, "小王", "1000000007"),
+]
+
+
+# ── 商户中心 ──────────────────────────────────────
+
+def seed_merchant(conn):
+    now = datetime.now()
+    with conn.cursor() as cur:
+        # 获取现有用户（用于分配商户员工）
+        cur.execute("SELECT id FROM usr_users WHERE deleted_at IS NULL")
+        users = [u[0] for u in cur.fetchall()]
+
+        for mch_name, mch_type, mch_level, contact, phone in MERCHANTS:
+            code = f"MCH{random.randint(10000, 99999)}"
+            cur.execute(
+                "INSERT INTO mch_merchants (merchant_name, merchant_code, merchant_type, merchant_level, "
+                "contact_person, contact_phone, status, audit_status, commission_rate, settlement_cycle, "
+                "settled_at, created_at, updated_at) "
+                "VALUES (%s, %s, %s, %s, %s, %s, 1, 1, %s, 1, %s, %s, %s)",
+                (mch_name, code, mch_type, mch_level, contact, phone,
+                 round(random.uniform(1.0, 8.0), 2),
+                 now.strftime(FMT), now.strftime(FMT), now.strftime(FMT)),
+            )
+            merchant_id = cur.lastrowid
+
+            # 联系人（1-2个）
+            for r in range(random.randint(1, 2)):
+                name = f"{random.choice(['张','李','王','赵','刘'])}{random.choice(['伟','芳','娜','强','敏'])}"
+                cur.execute(
+                    "INSERT INTO mch_merchant_contacts (merchant_id, contact_name, contact_phone, contact_role, is_primary) "
+                    "VALUES (%s, %s, %s, %s, %s)",
+                    (merchant_id, name, f"138{random.randint(10000000, 99999999)}",
+                     random.choice(["finance", "operation", "legal"]),
+                     1 if r == 0 else 0),
+                )
+
+            # 银行账户
+            cur.execute(
+                "INSERT INTO mch_merchant_bank_accounts (merchant_id, bank_name, bank_branch, account_name, account_no, "
+                "account_type, is_default, status) VALUES (%s, %s, %s, %s, %s, %s, 1, 1)",
+                (merchant_id,
+                 random.choice(["中国工商银行", "中国建设银行", "中国银行", "招商银行"]),
+                 random.choice(["上海分行", "北京分行", "深圳分行", "广州分行"]),
+                 mch_name, f"{random.randint(100000000000, 999999999999)}",
+                 random.choice([1, 2])),
+            )
+
+            # 资质
+            for qual in ["business_license", "brand_authorization"]:
+                cur.execute(
+                    "INSERT INTO mch_merchant_qualifications (merchant_id, qualification_type, qualification_name, "
+                    "file_url, expire_at, status) VALUES (%s, %s, %s, %s, %s, 1)",
+                    (merchant_id, qual, f"{mch_name}_{qual}",
+                     f"https://cdn.eshop.dev/qual/{merchant_id}/{qual}.pdf",
+                     (now + timedelta(days=random.randint(180, 730))).strftime(FMT)),
+                )
+
+            # 资金余额
+            cur.execute(
+                "INSERT INTO mch_merchant_balances (merchant_id, available_balance, freeze_balance, version) "
+                "VALUES (%s, %s, %s, 0)",
+                (merchant_id, round(random.uniform(10000, 500000), 2), round(random.uniform(0, 5000), 2)),
+            )
+
+            # 商户员工（随机分配1-3个用户为该商户的员工）
+            if users:
+                assigned = random.sample(users, min(len(users), random.randint(1, 3)))
+                for uid in assigned:
+                    cur.execute(
+                        "INSERT IGNORE INTO mch_merchant_users (merchant_id, user_id, role_id, status) "
+                        "VALUES (%s, %s, 7, 1)",
+                        (merchant_id, uid),
+                    )
+
+        print(f"  商户: {len(MERCHANTS)}")
+    conn.commit()
+    print("商户中心 ✅\n")
+
+
 # ── 订单中心 ──────────────────────────────────────
 
 ORDER_STATUSES = ["pending", "paid", "shipped", "delivered", "cancelled", "refunded"]
@@ -739,7 +830,7 @@ def seed_order(conn):
 def main():
     parser = argparse.ArgumentParser(description="为新表生成测试数据")
     parser.add_argument("--clean", action="store_true", help="先清空再生成")
-    parser.add_argument("--module", choices=["product", "inventory", "marketing", "order"],
+    parser.add_argument("--module", choices=["product", "inventory", "marketing", "merchant", "order"],
                         help="只生成指定模块")
     args = parser.parse_args()
 
@@ -751,6 +842,7 @@ def main():
         "product": seed_product,
         "inventory": seed_inventory,
         "marketing": seed_marketing,
+        "merchant": seed_merchant,
         "order": seed_order,
     }
 
@@ -768,7 +860,8 @@ def main():
         for table in ["sp_brands", "sp_categories", "sp_attributes", "sp_products",
                       "sp_skus", "sp_product_descriptions", "sp_product_attributes",
                       "sp_inventories", "mkt_promotions", "mkt_user_promotions",
-                      "tx_orders", "tx_order_items", "tx_payments"]:
+                      "tx_orders", "tx_order_items", "tx_payments",
+                      "mch_merchants", "mch_merchant_balances"]:
             cur.execute(f"SELECT COUNT(*) AS cnt FROM {table}")
             row = cur.fetchone()
             print(f"  {table}: {row[0]}")
