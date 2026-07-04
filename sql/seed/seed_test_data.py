@@ -328,9 +328,11 @@ def clean(conn):
         "tx_refunds", "tx_payment_logs", "tx_payments",
         "tx_order_logs", "tx_order_items", "tx_orders",
         "tx_cart_items", "tx_carts",
-        "sp_inventory_logs", "sp_inventories",
+        "sp_inventory_logs", "sp_inventories", "sp_product_versions",
         "sp_product_attributes", "sp_product_descriptions", "sp_skus",
         "sp_products", "sp_attributes", "sp_category_brands", "sp_categories", "sp_brands",
+        "usr_points", "usr_levels",
+        "tx_delivery_traces", "tx_delivery_items", "tx_deliveries",
         "base_notification_reads", "base_notifications", "base_notification_templates",
     ]
     with conn.cursor() as cur:
@@ -503,17 +505,17 @@ def seed_inventory(conn):
             roll = random.random()
             if roll < 0.10:
                 qty, reserved, threshold = 0, 0, random.randint(5, 30)
-                status = "outofstock"
+                status = 3  # 无货
             elif roll < 0.25:
                 threshold = random.randint(10, 30)
                 qty = random.randint(1, threshold - 1)
                 reserved = random.randint(0, min(qty, 5))
-                status = "lowstock"
+                status = 2  # 缺货
             else:
                 qty = random.randint(50, 1000)
                 reserved = random.randint(0, int(qty * 0.3))
                 threshold = random.randint(5, 50)
-                status = "instock" if qty > threshold else "lowstock"
+                status = 1 if qty > threshold else 2  # 充足/缺货
             cur.execute(
                 "INSERT INTO sp_inventories (sku_id, quantity, reserved, threshold, status) "
                 "VALUES (%s, %s, %s, %s, %s)",
@@ -580,8 +582,8 @@ def seed_marketing(conn):
             cur.execute(
                 "INSERT INTO mkt_promotion_rules (promotion_id, rule_name, condition_type, condition_value, "
                 "benefit_type, benefit_value, created_at) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                (promo_id, f"{name}规则", rule_condition, condition / 100,
-                 1 if ptype in [4, 5, 6, 7, 8] else 2, benefit / 100, now_str),
+                (promo_id, f"{name}规则", rule_condition, condition,
+                 1 if ptype in [4, 5, 6, 7, 8] else 2, benefit, now_str),
             )
 
             if ptype == 3:
@@ -661,7 +663,7 @@ def seed_merchant(conn):
                 "settled_at, created_at, updated_at) "
                 "VALUES (%s, %s, %s, %s, %s, %s, 1, 1, %s, 1, %s, %s, %s)",
                 (mch_name, code, mch_type, mch_level, contact, phone,
-                 round(random.uniform(1.0, 8.0), 2),
+                 random.randint(10, 80),  # 佣金率(千分比 1.0%-8.0%)
                  now.strftime(FMT), now.strftime(FMT), now.strftime(FMT)),
             )
             merchant_id = cur.lastrowid
@@ -702,7 +704,7 @@ def seed_merchant(conn):
             cur.execute(
                 "INSERT INTO mch_merchant_balances (merchant_id, available_balance, freeze_balance, version) "
                 "VALUES (%s, %s, %s, 0)",
-                (merchant_id, round(random.uniform(10000, 500000), 2), round(random.uniform(0, 5000), 2)),
+                (merchant_id, random.randint(1000000, 50000000), random.randint(0, 500000)),
             )
 
             # 商户员工（随机分配1-3个用户为该商户的员工）
@@ -852,7 +854,7 @@ def seed_order(conn):
                         cur.execute(
                             "UPDATE sp_inventories SET quantity = %s, reserved = %s, status = %s WHERE sku_id = %s",
                             (after_qty, after_reserved,
-                             "outofstock" if after_qty <= 0 else "lowstock" if after_qty < 10 else "instock", sku_id),
+                             3 if after_qty <= 0 else 2 if after_qty < 10 else 1, sku_id),
                         )
                         cur.execute(
                             """INSERT INTO sp_inventory_logs (sku_id, change_type, before_quantity, after_quantity,
