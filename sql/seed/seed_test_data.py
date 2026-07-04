@@ -737,6 +737,55 @@ def seed_merchant(conn):
     print("商户中心 ✅\n")
 
 
+# ── 用户中心 ──────────────────────────────────────
+
+def seed_users(conn):
+    """插入固定用户 admin(1) 和 colin(2)，密码均为 123456（bcrypt cost=10）"""
+    with conn.cursor() as cur:
+        # admin
+        cur.execute("""
+            INSERT IGNORE INTO usr_users (id, username, password_hash, nickname, email, phone, status, register_source)
+            VALUES (1, 'admin', '$2a$10$HFzEUNEVKJQCZ4aPYVb/YONrhix2jwj8iiJWM5TUZdXM4wPdkEllC',
+                    '管理员', 'admin@eshop.dev', '13800000001', 1, 'admin')
+        """)
+        if cur.lastrowid:
+            cur.execute("INSERT IGNORE INTO usr_infos (user_id) VALUES (1)")
+            cur.execute("INSERT IGNORE INTO usr_user_roles (user_id, role_id) "
+                        "VALUES (1, (SELECT id FROM usr_roles WHERE name = 'admin'))")
+
+        # colin
+        cur.execute("""
+            INSERT IGNORE INTO usr_users (id, username, password_hash, nickname, email, phone, status, register_source)
+            VALUES (2, 'colin', '$2a$10$HFzEUNEVKJQCZ4aPYVb/YONrhix2jwj8iiJWM5TUZdXM4wPdkEllC',
+                    'Colin', 'colin@eshop.dev', '13800000002', 1, 'web')
+        """)
+        if cur.lastrowid:
+            cur.execute("INSERT IGNORE INTO usr_infos (user_id) VALUES (2)")
+            cur.execute("INSERT IGNORE INTO usr_user_roles (user_id, role_id) "
+                        "VALUES (2, (SELECT id FROM usr_roles WHERE name = 'user'))")
+        # 收货地址
+        cur.execute("""
+            INSERT IGNORE INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
+            VALUES (1, '张管理', '13800138001', '中国', '北京市', '北京市', '朝阳区', '建国路88号SOHO现代城A座1508', '100022', 'office', TRUE)
+        """)
+        cur.execute("""
+            INSERT IGNORE INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
+            VALUES (1, '张管理', '13800138002', '中国', '北京市', '北京市', '海淀区', '中关村大街1号银谷大厦2005', '100080', 'office', FALSE)
+        """)
+        cur.execute("""
+            INSERT IGNORE INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
+            VALUES (2, '陈科林', '13900139001', '中国', '广东省', '深圳市', '南山区', '科技园南区高新南一道2号飞亚达科技大厦12F', '518057', 'company', TRUE)
+        """)
+        cur.execute("""
+            INSERT IGNORE INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
+            VALUES (2, '陈科林', '13900139002', '中国', '广东省', '广州市', '天河区', '珠江新城华夏路16号富力盈凯广场3001', '510623', 'company', FALSE)
+        """)
+    conn.commit()
+    print("  用户: admin, colin (固定)")
+    print("  地址: 4 条")
+    print("用户中心 ✅\n")
+
+
 # ── 订单中心 ──────────────────────────────────────
 
 PARENT_ORDER_STATUSES = ["pending", "paid", "completed", "cancelled", "refunded"]
@@ -966,7 +1015,7 @@ def seed_order(conn):
 def main():
     parser = argparse.ArgumentParser(description="为新表生成测试数据")
     parser.add_argument("--clean", action="store_true", help="先清空再生成")
-    parser.add_argument("--module", choices=["product", "inventory", "marketing", "merchant", "order", "notification"],
+    parser.add_argument("--module", choices=["product", "inventory", "marketing", "merchant", "users", "order", "notification"],
                         help="只生成指定模块")
     args = parser.parse_args()
 
@@ -979,6 +1028,7 @@ def main():
         "inventory": seed_inventory,
         "marketing": seed_marketing,
         "merchant": seed_merchant,
+        "users": seed_users,
         "order": seed_order,
         "notification": seed_notification,
     }
