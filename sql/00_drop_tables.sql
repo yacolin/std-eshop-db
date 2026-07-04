@@ -9,6 +9,7 @@ DROP TABLE IF EXISTS `tx_deliveries`;
 DROP TABLE IF EXISTS `mch_settlement_details`;
 DROP TABLE IF EXISTS `tx_after_sale_logs`;
 DROP TABLE IF EXISTS `tx_after_sales`;
+DROP TABLE IF EXISTS `sp_warehouse_skus`;
 DROP TABLE IF EXISTS `sp_warehouses`;
 
 -- ============================================================
