@@ -22,9 +22,8 @@ CREATE TABLE `tx_carts` (
 
 CREATE TABLE `tx_orders` (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '自增主键',
-  `order_no` varchar(32) NOT NULL COMMENT '订单号（业务唯一键，如 202612010001）',
+  `order_no` varchar(32) NOT NULL COMMENT '父订单号（业务唯一键，如 202612010001）',
   `user_id` bigint NOT NULL COMMENT '用户ID',
-  `merchant_id` bigint NOT NULL DEFAULT 0 COMMENT '所属商家ID',
 
   -- 金额
   `total_amount` bigint NOT NULL DEFAULT 0 COMMENT '商品总金额（分）',
@@ -33,7 +32,7 @@ CREATE TABLE `tx_orders` (
   `pay_amount` bigint NOT NULL DEFAULT 0 COMMENT '实付金额（分 = total - discount + shipping）',
 
   -- 状态
-  `status` varchar(20) NOT NULL DEFAULT 'pending' COMMENT '订单状态：pending-待支付 confirmed-已确认 paid-已支付 shipped-已发货 delivered-已签收 completed-已完成 cancelled-已取消 closed-已关闭 refunding-退款中 refunded-已退款',
+  `status` varchar(20) NOT NULL DEFAULT 'pending' COMMENT '父订单状态：pending-待支付 paid-已支付 partial_shipped-部分发货 completed-已完成 cancelled-已取消 closed-已关闭 refunding-退款中 refunded-已退款',
   `payment_status` varchar(20) NOT NULL DEFAULT 'unpaid' COMMENT '支付状态：unpaid-未支付 paying-支付中 paid-已支付 refunding-退款中 refunded-已退款',
   `payment_method` varchar(32) DEFAULT '' COMMENT '支付方式：wechat-微信 alipay-支付宝 wallet-余额',
 
@@ -68,10 +67,53 @@ CREATE TABLE `tx_orders` (
 
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_order_no` (`order_no`) COMMENT '订单号唯一',
-  KEY `idx_merchant` (`merchant_id`),
   KEY `idx_user_id` (`user_id`, `status`) COMMENT '用户订单列表',
   KEY `idx_status` (`status`) COMMENT '按状态批量查询',
   KEY `idx_payment_status` (`payment_status`),
   KEY `idx_created_at` (`created_at`) COMMENT '按时间查询',
   KEY `idx_deleted_at` (`deleted_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单主表';
+
+
+CREATE TABLE `tx_sub_orders` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '子订单ID',
+  `sub_order_no` varchar(32) NOT NULL COMMENT '子订单号（按商家拆单后的业务唯一键）',
+  `parent_order_id` bigint NOT NULL COMMENT '父订单ID',
+  `parent_order_no` varchar(32) NOT NULL COMMENT '父订单号（冗余，便于查询）',
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `merchant_id` bigint NOT NULL DEFAULT 0 COMMENT '所属商家ID',
+
+  -- 金额
+  `total_amount` bigint NOT NULL DEFAULT 0 COMMENT '商品总金额（分）',
+  `discount_amount` bigint NOT NULL DEFAULT 0 COMMENT '优惠金额（分）',
+  `shipping_fee` bigint NOT NULL DEFAULT 0 COMMENT '运费（分）',
+  `pay_amount` bigint NOT NULL DEFAULT 0 COMMENT '子订单实付金额（分）',
+
+  -- 状态
+  `status` varchar(20) NOT NULL DEFAULT 'pending' COMMENT '子订单状态：pending-待支付 paid-已支付 shipped-已发货 delivered-已签收 completed-已完成 cancelled-已取消 closed-已关闭 refunding-退款中 refunded-已退款',
+  `refund_status` varchar(20) NOT NULL DEFAULT 'none' COMMENT '退款状态：none-无 partial_refunded-部分退款 refunded-已退款',
+
+  -- 商家备注
+  `seller_remark` varchar(500) DEFAULT '' COMMENT '卖家备注',
+
+  -- 时间轴
+  `paid_at` datetime(3) DEFAULT NULL COMMENT '支付时间',
+  `shipped_at` datetime(3) DEFAULT NULL COMMENT '发货时间',
+  `delivered_at` datetime(3) DEFAULT NULL COMMENT '签收时间',
+  `completed_at` datetime(3) DEFAULT NULL COMMENT '完成时间',
+  `closed_at` datetime(3) DEFAULT NULL COMMENT '关闭时间',
+
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  `deleted_at` datetime(3) DEFAULT NULL,
+
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_sub_order_no` (`sub_order_no`),
+  CONSTRAINT `fk_tx_sub_orders_parent` FOREIGN KEY (`parent_order_id`) REFERENCES `tx_orders` (`id`),
+  KEY `idx_parent_order` (`parent_order_id`),
+  KEY `idx_parent_order_no` (`parent_order_no`),
+  KEY `idx_merchant_status` (`merchant_id`, `status`),
+  KEY `idx_user_status` (`user_id`, `status`),
+  KEY `idx_created_at` (`created_at`),
+  KEY `idx_deleted_at` (`deleted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='子订单表（父订单按商家拆分）';

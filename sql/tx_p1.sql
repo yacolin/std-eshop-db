@@ -26,8 +26,10 @@ CREATE TABLE `tx_cart_items` (
 CREATE TABLE `tx_order_items` (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '订单项ID',
   `order_id` bigint NOT NULL COMMENT '关联 tx_orders.id',
+  `sub_order_id` bigint NOT NULL COMMENT '子订单ID',
   `merchant_id` bigint NOT NULL DEFAULT 0 COMMENT '所属商家ID',
   `order_no` varchar(32) NOT NULL COMMENT '订单号（冗余，方便按订单号查）',
+  `sub_order_no` varchar(32) NOT NULL DEFAULT '' COMMENT '子订单号（冗余，方便按商家订单查）',
 
   -- 商品快照（下单时锁定，后续商品信息变更不影响已下单）
   `sku_id` bigint NOT NULL COMMENT '关联 skus.id(sp_skus)',
@@ -51,8 +53,11 @@ CREATE TABLE `tx_order_items` (
   `deleted_at` datetime(3) DEFAULT NULL,
 
   PRIMARY KEY (`id`),
+  CONSTRAINT `fk_tx_order_items_order` FOREIGN KEY (`order_id`) REFERENCES `tx_orders` (`id`),
+  CONSTRAINT `fk_tx_order_items_sub_order` FOREIGN KEY (`sub_order_id`) REFERENCES `tx_sub_orders` (`id`),
   KEY `idx_merchant` (`merchant_id`),
   KEY `idx_order_id` (`order_id`) COMMENT '按订单查明细',
+  KEY `idx_sub_order_id` (`sub_order_id`) COMMENT '按子订单查明细',
   KEY `idx_order_no` (`order_no`),
   KEY `idx_sku_id` (`sku_id`),
   KEY `idx_deleted_at` (`deleted_at`)
