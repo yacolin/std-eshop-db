@@ -1,12 +1,14 @@
 USE eshop_db;
 
 -- ============================================================
--- P4: MCH 扩展表（依赖 P2/P3）
+-- P4: MCH 扩展 + 物流配送（依赖 P2/P3）
 -- ============================================================
+DROP TABLE IF EXISTS `tx_delivery_traces`;
+DROP TABLE IF EXISTS `tx_delivery_items`;
+DROP TABLE IF EXISTS `tx_deliveries`;
 DROP TABLE IF EXISTS `mch_settlement_details`;
 DROP TABLE IF EXISTS `tx_after_sale_logs`;
 DROP TABLE IF EXISTS `tx_after_sales`;
-DROP TABLE IF EXISTS `sp_warehouse_skus`;
 DROP TABLE IF EXISTS `sp_warehouses`;
 
 -- ============================================================
@@ -18,6 +20,7 @@ DROP TABLE IF EXISTS `sp_inventories`;
 -- ============================================================
 -- P2: 关联业务表（依赖 P1）
 -- ============================================================
+DROP TABLE IF EXISTS `sp_product_versions`;
 DROP TABLE IF EXISTS `rev_review_audit_logs`;
 DROP TABLE IF EXISTS `rev_review_ratings`;
 DROP TABLE IF EXISTS `rev_review_replies`;
@@ -40,6 +43,8 @@ DROP TABLE IF EXISTS `sp_category_brands`;
 -- ============================================================
 -- P1: 核心业务表（依赖 P0）
 -- ============================================================
+DROP TABLE IF EXISTS `usr_points`;
+DROP TABLE IF EXISTS `usr_levels`;
 DROP TABLE IF EXISTS `mch_merchant_settlement_logs`;
 DROP TABLE IF EXISTS `mch_merchant_withdrawals`;
 DROP TABLE IF EXISTS `mch_merchant_balances`;
