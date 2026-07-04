@@ -17,7 +17,7 @@ CREATE TABLE `tx_carts` (
   KEY `idx_user_id` (`user_id`) COMMENT '按用户查询购物车',
   KEY `idx_session_id` (`session_id`) COMMENT '按会话查询购物车',
   KEY `idx_expired_at` (`expired_at`) COMMENT '清理过期购物车'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='购物车主表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='购物车主表（session型购物车30天过期，用户型购物车90天未更新自动清理，每日定时任务扫描 expired_at）';
 
 
 CREATE TABLE `tx_orders` (

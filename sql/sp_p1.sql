@@ -60,6 +60,11 @@ CREATE TABLE `sp_products` (
   -- 详情标志（详情内容独立存储）
   `has_description` tinyint NOT NULL DEFAULT 0 COMMENT '1-有图文详情（存于 sp_product_descriptions 表）',
 
+  -- SEO（搜索引擎优化）
+  `seo_title` varchar(200) DEFAULT '' COMMENT 'SEO标题（自定义title，留空则使用name）',
+  `seo_keywords` varchar(300) DEFAULT '' COMMENT 'SEO关键词（逗号分隔）',
+  `seo_description` varchar(500) DEFAULT '' COMMENT 'SEO描述（页面meta description）',
+
   -- 审计字段
   `created_by` varchar(50) DEFAULT '' COMMENT '创建人（运营工号）',
   `updated_by` varchar(50) DEFAULT '' COMMENT '最后更新人',
