@@ -13,6 +13,7 @@
 import os
 import random
 import sys
+import hashlib
 import argparse
 from datetime import datetime, timedelta
 
@@ -423,10 +424,11 @@ def seed_product(conn):
                 sku_price = max(price - int(price * 0.3), sku_price)
                 sku_code = f"SKU{spu_id}-{j+1:03d}"
                 barcode = f"{random.randint(1000000000000, 9999999999999)}"
+                spec_signature = hashlib.md5(spec_json.encode()).hexdigest()
                 cur.execute(
-                    "INSERT INTO sp_skus (product_id, sku_code, barcode, spec, price, market_price, cost_price, status) "
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s, 1)",
-                    (spu_id, sku_code, barcode, spec_json, sku_price,
+                    "INSERT INTO sp_skus (product_id, sku_code, barcode, spec, spec_signature, price, market_price, cost_price, status) "
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 1)",
+                    (spu_id, sku_code, barcode, spec_json, spec_signature, sku_price,
                      sku_price + random.randint(int(sku_price * 0.1), int(sku_price * 0.3)),
                      int(sku_price * 0.6)),
                 )
