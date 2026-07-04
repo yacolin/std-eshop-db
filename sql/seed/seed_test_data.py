@@ -517,8 +517,8 @@ def seed_inventory(conn):
                 threshold = random.randint(5, 50)
                 status = 1 if qty > threshold else 2  # 充足/缺货
             cur.execute(
-                "INSERT INTO sp_inventories (sku_id, quantity, reserved, threshold, status) "
-                "VALUES (%s, %s, %s, %s, %s)",
+                "INSERT INTO sp_inventories (sku_id, warehouse_id, quantity, reserved, threshold, status) "
+                "VALUES (%s, 0, %s, %s, %s, %s)",
                 (sku[0], qty, reserved, threshold, status),
             )
 
