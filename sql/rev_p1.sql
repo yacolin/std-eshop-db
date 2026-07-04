@@ -29,17 +29,6 @@ CREATE TABLE `rev_review_replies` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评价回复表';
 
 
-CREATE TABLE `rev_review_ratings` (
-    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
-    `review_id` BIGINT NOT NULL COMMENT '关联评价ID',
-    `rating_type` VARCHAR(30) NOT NULL COMMENT '评分维度：overall/quality/logistics/service',
-    `rating_value` TINYINT NOT NULL COMMENT '评分值（1-5）',
-    `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
-    UNIQUE KEY `uk_review_type` (`review_id`, `rating_type`),
-    INDEX `idx_type_value` (`rating_type`, `rating_value`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评价评分明细表';
-
-
 CREATE TABLE `rev_review_audit_logs` (
     `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
     `review_id` BIGINT NOT NULL COMMENT '评价ID',

@@ -21,7 +21,7 @@ CREATE TABLE `sp_skus` (
   `product_id` bigint NOT NULL COMMENT '关联 products.id',
   `merchant_id` bigint NOT NULL DEFAULT 0 COMMENT '所属商家ID',
   `sku_code` varchar(100) NOT NULL COMMENT '商家编码（唯一，用于ERP/WMS对接）',
-  `barcode` varchar(50) DEFAULT '' COMMENT '条码/EAN/UPC（仓库扫描用）',
+  `barcode` varchar(50) DEFAULT NULL COMMENT '条码/EAN/UPC（仓库扫描用，NULL表示无条码）',
 
   -- 规格信息
   `spec` json NOT NULL COMMENT '规格JSON（如{"颜色":"红色","内存":"256G"}）',
@@ -55,8 +55,10 @@ CREATE TABLE `sp_skus` (
   `deleted_at` datetime(3) DEFAULT NULL,
 
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_sku_code` (`sku_code`) COMMENT '商家编码唯一约束',
+  UNIQUE KEY `uk_merchant_sku_code` (`merchant_id`, `sku_code`) COMMENT '同一商家下SKU编码唯一',
+  UNIQUE KEY `uk_product_spec` (`product_id`, `spec_signature`) COMMENT '同一SPU下规格组合唯一',
   UNIQUE KEY `uk_barcode` (`barcode`) COMMENT '条码唯一约束',
+  CONSTRAINT `fk_sp_skus_product` FOREIGN KEY (`product_id`) REFERENCES `sp_products` (`id`),
   KEY `idx_merchant` (`merchant_id`),
   KEY `idx_product_id` (`product_id`) COMMENT '根据商品查SKU列表',
   KEY `idx_product_status` (`product_id`, `status`) COMMENT '查询有效SKU',

@@ -53,6 +53,7 @@ CREATE TABLE `mkt_promotion_products` (
 
 CREATE TABLE `mkt_user_promotions` (
     `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    `user_promotion_no` VARCHAR(32) NOT NULL COMMENT '用户促销资产编号',
     `user_id` BIGINT NOT NULL COMMENT '用户ID',
     `promotion_id` BIGINT NOT NULL COMMENT '促销ID',
     `merchant_id` BIGINT NOT NULL DEFAULT 0 COMMENT '所属商家ID',
@@ -76,12 +77,14 @@ CREATE TABLE `mkt_user_promotions` (
     `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
     `deleted_at` datetime(3) DEFAULT NULL COMMENT '软删除时间',
 
+    UNIQUE KEY `uk_user_promotion_no` (`user_promotion_no`),
+    CONSTRAINT `fk_mkt_user_promotions_promotion` FOREIGN KEY (`promotion_id`) REFERENCES `mkt_promotions` (`id`),
     INDEX `idx_user` (`user_id`),
     INDEX `idx_promotion` (`promotion_id`),
+    KEY `idx_user_promo` (`user_id`, `promotion_id`, `status`),
     INDEX `idx_merchant` (`merchant_id`),
     INDEX `idx_status_expire` (`status`, `expire_time`),
-    INDEX `idx_order` (`order_id`),
-    UNIQUE KEY `uk_user_promo` (`user_id`, `promotion_id`)
+    INDEX `idx_order` (`order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户促销资产表';
 
 

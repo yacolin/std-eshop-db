@@ -36,6 +36,11 @@ CREATE TABLE `sp_inventories` (
 
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_sku_warehouse` (`sku_id`, `warehouse_id`) COMMENT '同一SKU在同一仓库只有一条库存记录',
+  CONSTRAINT `fk_sp_inventories_sku` FOREIGN KEY (`sku_id`) REFERENCES `sp_skus` (`id`),
+  CONSTRAINT `fk_sp_inventories_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `sp_warehouses` (`id`),
+  CONSTRAINT `chk_inventory_quantity_nonnegative` CHECK (`quantity` >= 0),
+  CONSTRAINT `chk_inventory_reserved_nonnegative` CHECK (`reserved` >= 0),
+  CONSTRAINT `chk_inventory_reserved_lte_quantity` CHECK (`reserved` <= `quantity`),
   KEY `idx_merchant` (`merchant_id`),
   KEY `idx_sku_status` (`sku_id`, `status`) COMMENT '查询SKU库存状态',
   KEY `idx_warehouse_status` (`warehouse_id`, `status`) COMMENT '按仓库查库存',

@@ -6,11 +6,11 @@ USE eshop_db;
 
 CREATE TABLE `usr_users` (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
-  `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '用户名（唯一）',
+  `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '用户名（唯一，NULL表示未设置）',
   `password_hash` varchar(255) NOT NULL DEFAULT '' COMMENT 'bcrypt 密码哈希',
-  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '邮箱（唯一）',
+  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '邮箱（唯一，NULL表示未绑定）',
   `email_verified` tinyint(1) NOT NULL DEFAULT '0' COMMENT '邮箱是否已验证',
-  `phone` varchar(20) NOT NULL DEFAULT '' COMMENT '手机号（唯一）',
+  `phone` varchar(20) DEFAULT NULL COMMENT '手机号（唯一，NULL表示未绑定）',
   `phone_verified` tinyint(1) NOT NULL DEFAULT '0' COMMENT '手机号是否已验证',
   `avatar` varchar(512) NOT NULL DEFAULT '' COMMENT '头像URL',
   `nickname` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '昵称',
@@ -53,6 +53,7 @@ CREATE TABLE `usr_infos` (
   `deleted_at` datetime(3) DEFAULT NULL COMMENT '删除时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `uk_user_id` (`user_id`) USING BTREE,
+  CONSTRAINT `fk_usr_infos_user` FOREIGN KEY (`user_id`) REFERENCES `usr_users` (`id`),
   KEY `idx_deleted_at` (`deleted_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户扩展信息表';
 
@@ -75,5 +76,6 @@ CREATE TABLE `usr_addresses` (
   `deleted_at` datetime(3) DEFAULT NULL COMMENT '删除时间',
   PRIMARY KEY (`id`) USING BTREE,
   KEY `idx_user_id` (`user_id`) USING BTREE,
+  CONSTRAINT `fk_usr_addresses_user` FOREIGN KEY (`user_id`) REFERENCES `usr_users` (`id`),
   KEY `idx_deleted_at` (`deleted_at`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户收货地址';

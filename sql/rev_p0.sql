@@ -48,5 +48,6 @@ CREATE TABLE `rev_reviews` (
     INDEX `idx_sku` (`sku_id`),
     INDEX `idx_merchant` (`merchant_id`),
     INDEX `idx_status_created` (`status`, `created_at`),
-    INDEX `idx_rating` (`overall_rating`)
+    INDEX `idx_rating` (`overall_rating`),
+    UNIQUE KEY `uk_order_item_user` (`order_item_id`, `user_id`) COMMENT '同一用户同一订单明细只能评价一次'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评价主表';
