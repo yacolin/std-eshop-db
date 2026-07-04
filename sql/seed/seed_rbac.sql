@@ -67,7 +67,12 @@ INSERT INTO usr_permissions (name, display_name, resource, action, category, sor
 ('refund:create', '申请退款',   'refund', 'create', 'trade', 32550, 1),
 ('refund:update', '处理退款',   'refund', 'update', 'trade', 32600, 1);
 
--- marketing 模块 (40000-49999)
+-- delivery 模块 (33000-33999)
+
+INSERT INTO usr_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
+('delivery:read',   '查看物流',   'delivery', 'read',   'trade', 33000, 1),
+('delivery:create', '创建发货',   'delivery', 'create', 'trade', 33050, 1),
+('delivery:update', '编辑物流',   'delivery', 'update', 'trade', 33100, 1);
 
 INSERT INTO usr_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
 ('promotion:read',   '查看促销',   'promotion', 'read',   'marketing', 41000, 1),
@@ -100,7 +105,10 @@ INSERT INTO usr_permissions (name, display_name, resource, action, category, sor
 ('address:read',   '查看地址',   'address', 'read',   'user', 62000, 1),
 ('address:create', '创建地址',   'address', 'create', 'user', 62050, 1),
 ('address:update', '编辑地址',   'address', 'update', 'user', 62100, 1),
-('address:delete', '删除地址',   'address', 'delete', 'user', 62150, 1);
+('address:delete', '删除地址',   'address', 'delete', 'user', 62150, 1),
+
+('points:read',   '查看积分',   'points', 'read',   'user', 63000, 1),
+('level:read',    '查看等级',   'level',  'read',   'user', 63050, 1);
 
 -- base 模块 (70000-79999) — 通知
 
@@ -115,6 +123,14 @@ INSERT INTO usr_permissions (name, display_name, resource, action, category, sor
 INSERT INTO usr_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
 ('dashboard:read', '查看仪表盘', 'dashboard', 'read', 'dashboard', 81000, 1);
 
+
+-- ==================== 用户等级 ====================
+
+INSERT INTO usr_levels (name, level, min_points, max_points, discount_rate, free_shipping, points_multiplier, benefits) VALUES
+('青铜会员', 1, 0,     999,  1000, 0, 1.00, '{"birthday_gift": false}'),
+('白银会员', 2, 1000,  4999, 950,  0, 1.20, '{"birthday_gift": false}'),
+('黄金会员', 3, 5000,  19999, 900, 1, 1.50, '{"birthday_gift": true}'),
+('钻石会员', 4, 20000, 0,     850, 1, 2.00, '{"birthday_gift": true, "exclusive_coupon": true}');
 
 -- ==================== 角色 ====================
 
@@ -146,10 +162,12 @@ SELECT (SELECT id FROM usr_roles WHERE name = 'user'), id FROM usr_permissions W
     'cart:read', 'cart:create', 'cart:update', 'cart:delete',
     'payment:read', 'payment:create',
     'refund:read', 'refund:create',
+    'delivery:read',
     'review:read', 'review:create', 'review:delete',
     'notification:read', 'notification:update',
     'promotion:read',
-    'user:read', 'user:update'
+    'user:read', 'user:update',
+    'points:read', 'level:read'
 );
 
 -- operator：运营操作
@@ -159,10 +177,11 @@ SELECT (SELECT id FROM usr_roles WHERE name = 'operator'), id FROM usr_permissio
     'attr:read', 'attr_val:read', 'address:read',
     'order:read', 'order:update', 'order:cancel',
     'payment:read', 'refund:read', 'refund:update',
+    'delivery:read',
     'review:read', 'review:moderate', 'review:reply',
     'notification:read', 'notification:update', 'notification:send',
     'promotion:read',
-    'user:read'
+    'user:read', 'points:read', 'level:read'
 );
 
 -- editor：内容维护
@@ -186,6 +205,7 @@ SELECT (SELECT id FROM usr_roles WHERE name = 'warehouse'), id FROM usr_permissi
     'inventory:read', 'inventory:create', 'inventory:update', 'inventory:reserve',
     'sku:read', 'address:read',
     'order:read', 'order:update',
+    'delivery:read', 'delivery:create',
     'notification:read'
 );
 
@@ -207,11 +227,12 @@ SELECT (SELECT id FROM usr_roles WHERE name = 'merchant'), id FROM usr_permissio
     'attr:read', 'attr_val:read', 'address:read',
     'order:read', 'order:update', 'order:cancel',
     'payment:read', 'refund:read',
+    'delivery:read',
     'promotion:read',
     'review:read',
     'notification:read', 'notification:update',
     'dashboard:read',
-    'user:read'
+    'user:read', 'points:read', 'level:read'
 );
 
 -- support：客服售后
@@ -221,9 +242,10 @@ SELECT (SELECT id FROM usr_roles WHERE name = 'support'), id FROM usr_permission
     'attr:read', 'attr_val:read', 'address:read',
     'order:read', 'order:update', 'order:cancel',
     'payment:read', 'refund:read', 'refund:update',
+    'delivery:read',
     'review:read', 'review:moderate', 'review:reply',
     'notification:read', 'notification:update', 'notification:send',
-    'user:read', 'dashboard:read'
+    'user:read', 'dashboard:read', 'points:read', 'level:read'
 );
 
 -- analyst：数据分析
@@ -231,9 +253,10 @@ INSERT INTO usr_role_permissions (role_id, permission_id)
 SELECT (SELECT id FROM usr_roles WHERE name = 'analyst'), id FROM usr_permissions WHERE name IN (
     'product:read', 'category:read', 'brand:read', 'inventory:read',
     'order:read', 'cart:read', 'payment:read', 'refund:read',
+    'delivery:read',
     'promotion:read', 'review:read', 'notification:read', 'user:read',
     'sku:read', 'attr:read', 'attr_val:read', 'address:read',
-    'dashboard:read'
+    'dashboard:read', 'points:read', 'level:read'
 );
 
 
