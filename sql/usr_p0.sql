@@ -43,6 +43,11 @@ CREATE TABLE `usr_infos` (
   `zip_code` varchar(10) NOT NULL DEFAULT '' COMMENT '邮编',
   `language` varchar(10) NOT NULL DEFAULT 'zh-CN' COMMENT '语言',
   `timezone` varchar(32) NOT NULL DEFAULT 'Asia/Shanghai' COMMENT '时区',
+
+  -- 等级与积分
+  `level_id` bigint NOT NULL DEFAULT 0 COMMENT '当前等级ID（关联 usr_levels.id）',
+  `total_points` bigint NOT NULL DEFAULT 0 COMMENT '累计积分',
+
   `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
   `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
   `deleted_at` datetime(3) DEFAULT NULL COMMENT '删除时间',

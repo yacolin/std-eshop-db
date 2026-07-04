@@ -23,6 +23,9 @@ source sql/tx_p0.sql
 source sql/mkt_p0.sql
 source sql/rev_p0.sql
 
+-- ========== P1.5: 用户等级/积分（依赖 P0）==========
+source sql/usr_p2.sql
+
 -- ========== P2: 关联业务表（依赖 P1）==========
 source sql/sp_p2.sql
 source sql/tx_p1.sql
