@@ -37,3 +37,4 @@ source sql/sp_p3.sql
 source sql/mch_p2.sql
 source sql/sp_p4.sql
 source sql/tx_p3.sql
+source sql/tx_p4.sql
