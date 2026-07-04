@@ -326,8 +326,9 @@ def clean(conn):
         "mkt_promotion_usage_logs", "mkt_user_promotions", "mkt_promotion_products",
         "mkt_promotion_rules", "mkt_promotions",
         "tx_refunds", "tx_payment_logs", "tx_payments",
-        "tx_order_logs", "tx_order_items", "tx_orders",
+        "tx_order_logs", "tx_order_items", "tx_orders", "tx_sub_orders",
         "tx_cart_items", "tx_carts",
+        "tx_after_sale_evidences", "tx_after_sale_logs", "tx_after_sales",
         "sp_inventory_logs", "sp_inventories", "sp_product_versions",
         "sp_product_attributes", "sp_product_descriptions", "sp_skus",
         "sp_products", "sp_attributes", "sp_category_brands", "sp_categories", "sp_brands",
@@ -724,8 +725,15 @@ def seed_merchant(conn):
 
 # ── 订单中心 ──────────────────────────────────────
 
-ORDER_STATUSES = ["pending", "paid", "shipped", "delivered", "cancelled", "refunded"]
-ORDER_STATUS_WEIGHTS = [1, 2, 3, 4, 1, 1]
+PARENT_ORDER_STATUSES = ["pending", "paid", "completed", "cancelled", "refunded"]
+PARENT_ORDER_STATUS_WEIGHTS = [1, 3, 4, 1, 1]
+SUB_ORDER_STATUS_MAP = {
+    "pending": "pending",
+    "paid": "paid",
+    "completed": "delivered",
+    "cancelled": "cancelled",
+    "refunded": "refunded",
+}
 
 
 def seed_order(conn):
@@ -773,9 +781,9 @@ def seed_order(conn):
             for u in recipients:
                 expire = now + timedelta(days=random.randint(7, 60))
                 cur.execute(
-                    "INSERT IGNORE INTO mkt_user_promotions (user_id, promotion_id, expire_time, status) "
-                    "VALUES (%s, %s, %s, 1)",
-                    (u[0], promo_id, expire.strftime(FMT)),
+                    "INSERT IGNORE INTO mkt_user_promotions (user_promotion_no, user_id, promotion_id, expire_time, status) "
+                    "VALUES (%s, %s, %s, %s, 1)",
+                    (f"UPROMO{u[0]}-{promo_id}", u[0], promo_id, expire.strftime(FMT)),
                 )
 
         total_orders = 0
@@ -788,7 +796,8 @@ def seed_order(conn):
             )
             order_no = f"ORD{order_date.strftime('%Y%m%d%H%M%S')}{random.randint(1000,9999)}"
             user_id = random.choice(users)[0]
-            status = random.choices(ORDER_STATUSES, weights=ORDER_STATUS_WEIGHTS)[0]
+            parent_status = random.choices(PARENT_ORDER_STATUSES, weights=PARENT_ORDER_STATUS_WEIGHTS)[0]
+            sub_status = SUB_ORDER_STATUS_MAP[parent_status]
 
             item_count = random.randint(1, 4)
             order_skus = random.choices(skus, weights=sku_weights, k=item_count)
@@ -808,6 +817,10 @@ def seed_order(conn):
             if pay_amount <= 0:
                 pay_amount = total_amount
 
+            payment_status = "paid" if parent_status in ("paid", "completed") \
+                else "unpaid" if parent_status == "pending" \
+                else "refunded"
+
             consignee = f"用户{user_id}"
             phone = f"138{random.randint(10000000, 99999999)}"
 
@@ -817,8 +830,7 @@ def seed_order(conn):
                    province, city, district, detail_addr, source, created_at, updated_at)
                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                 (order_no, user_id, total_amount, discount, shipping_fee,
-                 pay_amount, status,
-                 "paid" if status in ("paid", "shipped", "delivered") else "unpaid" if status == "pending" else "refunded",
+                 pay_amount, parent_status, payment_status,
                  consignee, phone,
                  random.choice(["广东省", "浙江省", "北京市", "上海市", "四川省"]),
                  random.choice(["广州市", "杭州市", "海淀区", "浦东新区", "成都市"]),
@@ -829,19 +841,57 @@ def seed_order(conn):
             )
             order_id = cur.lastrowid
 
+            # 按商家拆分子订单（测试数据所有 SKU 都归为商家 0，但保留拆分结构）
+            sub_order_no = f"SO{order_date.strftime('%Y%m%d%H%M%S')}{random.randint(1000,9999)}"
+            sub_total = total_amount
+            sub_shipping = shipping_fee
+            sub_discount = discount
+            sub_pay = pay_amount
+
+            time_fields = {}
+            if parent_status in ("paid", "completed"):
+                time_fields["paid_at"] = (order_date + timedelta(minutes=random.randint(1, 60))).strftime(FMT)
+            if sub_status in ("shipped", "delivered"):
+                time_fields["shipped_at"] = (order_date + timedelta(hours=random.randint(2, 48))).strftime(FMT)
+            if sub_status == "delivered":
+                time_fields["delivered_at"] = (order_date + timedelta(hours=random.randint(48, 120))).strftime(FMT)
+            if parent_status == "completed":
+                time_fields["completed_at"] = (order_date + timedelta(days=random.randint(3, 7))).strftime(FMT)
+            if parent_status == "cancelled":
+                time_fields["closed_at"] = (order_date + timedelta(hours=random.randint(1, 24))).strftime(FMT)
+
+            cur.execute(
+                """INSERT INTO tx_sub_orders (sub_order_no, parent_order_id, parent_order_no, user_id,
+                   total_amount, discount_amount, shipping_fee, pay_amount, status,
+                   paid_at, shipped_at, delivered_at, completed_at, closed_at,
+                   created_at, updated_at)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,
+                   %s, %s, %s, %s, %s, %s, %s)""",
+                (sub_order_no, order_id, order_no, user_id,
+                 sub_total, sub_discount, sub_shipping, sub_pay, sub_status,
+                 time_fields.get("paid_at"), time_fields.get("shipped_at"),
+                 time_fields.get("delivered_at"), time_fields.get("completed_at"),
+                 time_fields.get("closed_at"),
+                 order_date.strftime(FMT), order_date.strftime(FMT)),
+            )
+            sub_order_id = cur.lastrowid
+
             for item in order_items:
                 sku_id, prod_id, sku_code, price, qty, subtotal, prod_name, image, spec = item
                 cur.execute(
-                    """INSERT INTO tx_order_items (order_id, order_no, sku_id, product_id, sku_code,
-                       product_name, sku_spec, image, price, quantity, subtotal, created_at, updated_at)
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                    (order_id, order_no, sku_id, prod_id, sku_code,
-                     prod_name, spec if spec and spec != "{}" else None, image, price, qty, subtotal,
+                    """INSERT INTO tx_order_items (order_id, sub_order_id, order_no, sub_order_no,
+                       sku_id, product_id, sku_code, product_name, sku_spec, image,
+                       price, quantity, subtotal, created_at, updated_at)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                    (order_id, sub_order_id, order_no, sub_order_no,
+                     sku_id, prod_id, sku_code, prod_name,
+                     spec if spec and spec != "{}" else None, image,
+                     price, qty, subtotal,
                      order_date.strftime(FMT), order_date.strftime(FMT)),
                 )
                 total_items += 1
 
-                if status not in ("cancelled", "pending"):
+                if parent_status not in ("cancelled", "pending"):
                     cur.execute(
                         "SELECT quantity, reserved FROM sp_inventories WHERE sku_id = %s FOR UPDATE",
                         (sku_id,),
@@ -864,30 +914,33 @@ def seed_order(conn):
                              before_reserved, after_reserved, -qty, order_no, "system", "订单扣减"),
                         )
 
-            if status in ("paid", "shipped", "delivered", "refunded"):
+            if parent_status in ("paid", "completed", "refunded"):
                 paid_at = order_date + timedelta(minutes=random.randint(1, 60))
                 payment_no = f"PAY{paid_at.strftime('%Y%m%d%H%M%S')}{random.randint(1000,9999)}"
                 payment_method = random.choice(["alipay", "wechat", "alipay", "wechat", "wallet"])
                 cur.execute(
                     """INSERT INTO tx_payments (payment_no, order_no, order_id, amount, payment_method,
-                       channel, status, paid_at, created_at, updated_at)
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                       channel, trade_type, status, paid_at, created_at, updated_at)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                     (payment_no, order_no, order_id, pay_amount, payment_method,
-                     payment_method, "success" if status != "refunded" else "refunded",
+                     payment_method, "native",
+                     "success" if parent_status != "refunded" else "refunded",
                      paid_at.strftime(FMT), order_date.strftime(FMT), paid_at.strftime(FMT)),
                 )
+                payment_id = cur.lastrowid
                 total_payments += 1
-                cur.execute("UPDATE tx_orders SET payment_method = %s, paid_at = %s, updated_at = %s WHERE id = %s",
-                           (payment_method, paid_at.strftime(FMT), paid_at.strftime(FMT), order_id))
 
-            if status in ("shipped", "delivered"):
-                shipped_at = order_date + timedelta(hours=random.randint(2, 48))
-                cur.execute("UPDATE tx_orders SET shipped_at = %s, updated_at = %s WHERE id = %s",
-                           (shipped_at.strftime(FMT), shipped_at.strftime(FMT), order_id))
-            if status == "delivered":
-                delivered_at = order_date + timedelta(hours=random.randint(48, 120))
-                cur.execute("UPDATE tx_orders SET delivered_at = %s, updated_at = %s WHERE id = %s",
-                           (delivered_at.strftime(FMT), delivered_at.strftime(FMT), order_id))
+                if parent_status == "refunded":
+                    refund_no = f"RFD{paid_at.strftime('%Y%m%d%H%M%S')}{random.randint(1000,9999)}"
+                    cur.execute(
+                        """INSERT INTO tx_refunds (refund_no, payment_id, payment_no, order_no, order_id,
+                           amount, reason, status, applied_at, success_at, created_at, updated_at)
+                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                        (refund_no, payment_id, payment_no, order_no, order_id,
+                         pay_amount, "测试退款", "success",
+                         (order_date + timedelta(days=1)).strftime(FMT),
+                         paid_at.strftime(FMT), order_date.strftime(FMT), paid_at.strftime(FMT)),
+                    )
 
             total_orders += 1
 
@@ -930,7 +983,8 @@ def main():
         for table in ["sp_brands", "sp_categories", "sp_attributes", "sp_products",
                       "sp_skus", "sp_product_descriptions", "sp_product_attributes",
                       "sp_inventories", "mkt_promotions", "mkt_user_promotions",
-                      "tx_orders", "tx_order_items", "tx_payments",
+                      "tx_orders", "tx_sub_orders", "tx_order_items", "tx_payments", "tx_refunds",
+                      "tx_deliveries", "usr_levels", "usr_points",
                       "mch_merchants", "mch_merchant_balances",
                       "base_notification_templates"]:
             cur.execute(f"SELECT COUNT(*) AS cnt FROM {table}")
