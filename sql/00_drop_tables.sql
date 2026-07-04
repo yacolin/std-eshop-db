@@ -1,5 +1,7 @@
 USE eshop_db;
 
+SET FOREIGN_KEY_CHECKS = 0;
+
 -- ============================================================
 -- P4: MCH 扩展 + 物流配送（依赖 P2/P3）
 -- ============================================================
@@ -8,6 +10,7 @@ DROP TABLE IF EXISTS `tx_delivery_items`;
 DROP TABLE IF EXISTS `tx_deliveries`;
 DROP TABLE IF EXISTS `mch_settlement_details`;
 DROP TABLE IF EXISTS `tx_after_sale_logs`;
+DROP TABLE IF EXISTS `tx_after_sale_evidences`;
 DROP TABLE IF EXISTS `tx_after_sales`;
 DROP TABLE IF EXISTS `sp_warehouse_skus`;
 DROP TABLE IF EXISTS `sp_warehouses`;
@@ -32,10 +35,11 @@ DROP TABLE IF EXISTS `mkt_promotion_products`;
 DROP TABLE IF EXISTS `mkt_promotion_rules`;
 DROP TABLE IF EXISTS `tx_order_logs`;
 DROP TABLE IF EXISTS `tx_order_items`;
+DROP TABLE IF EXISTS `tx_sub_orders`;
 DROP TABLE IF EXISTS `tx_cart_items`;
 DROP TABLE IF EXISTS `tx_payment_logs`;
-DROP TABLE IF EXISTS `tx_payments`;
 DROP TABLE IF EXISTS `tx_refunds`;
+DROP TABLE IF EXISTS `tx_payments`;
 DROP TABLE IF EXISTS `sp_product_descriptions`;
 DROP TABLE IF EXISTS `sp_product_attributes`;
 DROP TABLE IF EXISTS `sp_skus`;
@@ -77,3 +81,5 @@ DROP TABLE IF EXISTS `base_notification_templates`;
 DROP TABLE IF EXISTS `sp_categories`;
 DROP TABLE IF EXISTS `sp_brands`;
 DROP TABLE IF EXISTS `usr_users`;
+
+SET FOREIGN_KEY_CHECKS = 1;

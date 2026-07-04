@@ -4,8 +4,8 @@
 -- 每个文件内表已按依赖关系排序
 --
 -- 用法:
---   bash sql/run.sh          (推荐 - 自动拼接所有文件)
---   mysql -u root -p < sql/run_all.sql   (手动 - 先跑 run.sh 生成合并文件)
+--   bash run.sh              (推荐 - 根目录唯一 Shell 入口)
+--   mysql -u root -p < sql/run.sql       (仅执行建表，不包含种子清理/初始化)
 -- ============================================================
 USE eshop_db;
 
@@ -33,12 +33,12 @@ source sql/tx_p2.sql
 source sql/mkt_p1.sql
 source sql/rev_p1.sql
 
--- ========== P3: 库存相关（依赖 P2）==========
+-- ========== P3: 仓库与库存相关（依赖 P2）==========
+source sql/sp_p4.sql
 source sql/sp_p3.sql
 
 -- ========== P4: MCH 扩展表（依赖 P2/P3）==========
 source sql/mch_p2.sql
-source sql/sp_p4.sql
 source sql/tx_p3.sql
 source sql/tx_p4.sql
 
