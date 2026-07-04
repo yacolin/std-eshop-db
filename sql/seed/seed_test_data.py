@@ -333,7 +333,7 @@ def clean(conn):
         "sp_inventory_logs", "sp_inventories", "sp_product_versions",
         "sp_product_attributes", "sp_product_descriptions", "sp_skus",
         "sp_products", "sp_attributes", "sp_category_brands", "sp_categories", "sp_brands",
-        "usr_points", "usr_levels",
+        "usr_addresses", "usr_points", "usr_levels",
         "tx_delivery_traces", "tx_delivery_items", "tx_deliveries",
         "base_notification_reads", "base_notifications", "base_notification_templates",
     ]
@@ -763,21 +763,22 @@ def seed_users(conn):
             cur.execute("INSERT IGNORE INTO usr_infos (user_id) VALUES (2)")
             cur.execute("INSERT IGNORE INTO usr_user_roles (user_id, role_id) "
                         "VALUES (2, (SELECT id FROM usr_roles WHERE name = 'user'))")
-        # 收货地址
+        # 收货地址（先删后插，因 usr_addresses 无唯一约束，INSERT IGNORE 无效）
+        cur.execute("DELETE FROM usr_addresses WHERE user_id IN (1, 2)")
         cur.execute("""
-            INSERT IGNORE INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
+            INSERT INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
             VALUES (1, '张管理', '13800138001', '中国', '北京市', '北京市', '朝阳区', '建国路88号SOHO现代城A座1508', '100022', 'office', TRUE)
         """)
         cur.execute("""
-            INSERT IGNORE INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
+            INSERT INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
             VALUES (1, '张管理', '13800138002', '中国', '北京市', '北京市', '海淀区', '中关村大街1号银谷大厦2005', '100080', 'office', FALSE)
         """)
         cur.execute("""
-            INSERT IGNORE INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
+            INSERT INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
             VALUES (2, '陈科林', '13900139001', '中国', '广东省', '深圳市', '南山区', '科技园南区高新南一道2号飞亚达科技大厦12F', '518057', 'company', TRUE)
         """)
         cur.execute("""
-            INSERT IGNORE INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
+            INSERT INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
             VALUES (2, '陈科林', '13900139002', '中国', '广东省', '广州市', '天河区', '珠江新城华夏路16号富力盈凯广场3001', '510623', 'company', FALSE)
         """)
     conn.commit()
@@ -1048,7 +1049,7 @@ def main():
                       "sp_skus", "sp_product_descriptions", "sp_product_attributes",
                       "sp_inventories", "mkt_promotions", "mkt_user_promotions",
                       "tx_orders", "tx_sub_orders", "tx_order_items", "tx_payments", "tx_refunds",
-                      "tx_deliveries", "usr_levels", "usr_points",
+                      "tx_deliveries", "usr_addresses", "usr_levels", "usr_points",
                       "mch_merchants", "mch_merchant_balances",
                       "base_notification_templates"]:
             cur.execute(f"SELECT COUNT(*) AS cnt FROM {table}")
