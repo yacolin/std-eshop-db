@@ -12,11 +12,11 @@ CREATE TABLE `mkt_promotion_rules` (
 
     -- 触发条件
     `condition_type` TINYINT NOT NULL COMMENT '1-无门槛 2-满金额 3-满件数 4-指定用户等级',
-    `condition_value` DECIMAL(10,2) COMMENT '门槛值（满200则存200.00）',
+    `condition_value` bigint NOT NULL DEFAULT 0 COMMENT '门槛值（分，满20000则存20000）',
 
     -- 优惠内容
     `benefit_type` TINYINT NOT NULL COMMENT '1-减固定金额 2-打折扣 3-赠品 4-免运费 5-送积分',
-    `benefit_value` DECIMAL(10,2) COMMENT '优惠值（减30或打8折则存30/0.8）',
+    `benefit_value` bigint NOT NULL DEFAULT 0 COMMENT '优惠值（减固定金额填分如3000；打折扣填千分比如800=8折）',
 
     -- 叠加规则
     `is_stackable` TINYINT DEFAULT 0 COMMENT '是否可与其他促销叠加 0-否 1-是',
@@ -95,7 +95,7 @@ CREATE TABLE `mkt_promotion_usage_logs` (
 
     -- 使用信息
     `usage_type` TINYINT DEFAULT 1 COMMENT '1-下单使用 2-自动优惠',
-    `discount_amount` DECIMAL(10,2) DEFAULT 0.00 COMMENT '优惠金额',
+    `discount_amount` bigint NOT NULL DEFAULT 0 COMMENT '优惠金额（分）',
 
     -- 审计字段
     `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),

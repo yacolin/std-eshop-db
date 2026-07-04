@@ -35,12 +35,12 @@ CREATE TABLE `mch_merchants` (
     `frozen_reason` VARCHAR(200) COMMENT '冻结原因',
 
     -- 结算配置
-    `commission_rate` DECIMAL(5,2) DEFAULT 0.00 COMMENT '平台抽佣比例（如 5.00 表示5%）',
+    `commission_rate` bigint NOT NULL DEFAULT 0 COMMENT '平台抽佣比例（千分比，如 50 表示5%）',
     `settlement_cycle` TINYINT DEFAULT 1 COMMENT '结算周期 1-T+1 2-T+7 3-月结',
 
     -- 统计（冗余，提升性能）
     `total_orders` INT DEFAULT 0 COMMENT '历史总订单数',
-    `total_sales` DECIMAL(12,2) DEFAULT 0.00 COMMENT '历史总销售额',
+    `total_sales` bigint NOT NULL DEFAULT 0 COMMENT '历史总销售额（分）',
     `avg_rating` DECIMAL(2,1) DEFAULT 0.0 COMMENT '店铺平均评分',
     `product_count` INT DEFAULT 0 COMMENT '在售商品数量',
 

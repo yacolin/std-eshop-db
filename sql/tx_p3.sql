@@ -12,7 +12,7 @@ CREATE TABLE `tx_after_sales` (
     `user_id` BIGINT NOT NULL COMMENT '用户ID',
     `after_sale_type` TINYINT NOT NULL COMMENT '1-退款 2-退货 3-换货',
     `reason` VARCHAR(500) DEFAULT '' COMMENT '申请原因',
-    `amount` DECIMAL(12,2) NOT NULL DEFAULT 0.00 COMMENT '退款金额',
+    `amount` bigint NOT NULL DEFAULT 0 COMMENT '退款金额（分）',
     `status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-待处理 1-审核通过 2-处理中 3-已完成 4-已拒绝',
     `apply_at` datetime(3) DEFAULT NULL COMMENT '申请时间',
     `completed_at` datetime(3) DEFAULT NULL COMMENT '完成时间',
