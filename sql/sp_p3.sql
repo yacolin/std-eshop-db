@@ -10,7 +10,7 @@ CREATE TABLE `sp_inventories` (
   `merchant_id` bigint NOT NULL DEFAULT 0 COMMENT '所属商家ID',
 
   -- 仓库
-  `warehouse_id` bigint NOT NULL DEFAULT 0 COMMENT '仓库ID（0表示主仓，未来扩展多仓，关联 warehouse.id）',
+  `warehouse_id` bigint NOT NULL COMMENT '仓库ID（关联 sp_warehouses.id）',
 
   -- 库存数量
   `quantity` bigint NOT NULL DEFAULT 0 COMMENT '物理库存总量（含预占）',
@@ -23,7 +23,7 @@ CREATE TABLE `sp_inventories` (
   `max_threshold` bigint NOT NULL DEFAULT 999999 COMMENT '最大库存上限（入库不能超过此值）',
 
   -- 状态
-  `status` varchar(20) NOT NULL DEFAULT 'instock' COMMENT '库存状态：instock-充足 lowstock-缺货 outofstock-无货',
+  `status` tinyint NOT NULL DEFAULT 1 COMMENT '1-充足 2-缺货 3-无货',
 
   -- 盘点审计
   `last_counted_at` datetime(3) DEFAULT NULL COMMENT '最后盘点时间',
@@ -39,7 +39,7 @@ CREATE TABLE `sp_inventories` (
   KEY `idx_merchant` (`merchant_id`),
   KEY `idx_sku_status` (`sku_id`, `status`) COMMENT '查询SKU库存状态',
   KEY `idx_warehouse_status` (`warehouse_id`, `status`) COMMENT '按仓库查库存',
-  KEY `idx_available` (`available`) COMMENT '按可售库存排序',
+  KEY `idx_warehouse_id` (`warehouse_id`) COMMENT '按仓库查询',
   KEY `idx_deleted_at` (`deleted_at`),
   KEY `idx_sku_for_update` (`sku_id`, `warehouse_id`, `status`) COMMENT 'FOR UPDATE 锁定查询'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='库存表（支持多仓库）';

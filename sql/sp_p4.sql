@@ -1,7 +1,7 @@
 USE eshop_db;
 
 -- ============================================================
--- sp_p4.sql — 仓库相关表（MCH 多商户扩展，依赖 P2: skus）
+-- sp_p4.sql — 仓库表（依赖 P2: skus）
 -- ============================================================
 
 CREATE TABLE `sp_warehouses` (
@@ -21,20 +21,3 @@ CREATE TABLE `sp_warehouses` (
     KEY `idx_status` (`status`),
     KEY `idx_deleted_at` (`deleted_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='仓库表';
-
-
-CREATE TABLE `sp_warehouse_skus` (
-    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
-    `warehouse_id` BIGINT NOT NULL COMMENT '仓库ID',
-    `sku_id` BIGINT NOT NULL COMMENT 'SKU ID',
-    `merchant_id` BIGINT NOT NULL DEFAULT 0 COMMENT '所属商家ID',
-    `stock_qty` BIGINT NOT NULL DEFAULT 0 COMMENT '库存数量',
-    `reserved_qty` BIGINT NOT NULL DEFAULT 0 COMMENT '预占数量',
-    `status` TINYINT NOT NULL DEFAULT 1 COMMENT '1-可用 2-停用',
-    `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
-    `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-    `deleted_at` datetime(3) DEFAULT NULL,
-    UNIQUE KEY `uk_warehouse_sku` (`warehouse_id`, `sku_id`),
-    KEY `idx_merchant` (`merchant_id`),
-    KEY `idx_deleted_at` (`deleted_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='仓库SKU映射表';
