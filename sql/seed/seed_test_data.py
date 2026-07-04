@@ -500,6 +500,18 @@ def seed_product(conn):
 
 def seed_inventory(conn):
     with conn.cursor() as cur:
+        # 创建默认仓库（sp_inventories FK 引用 sp_warehouses.id）
+        cur.execute("SELECT id FROM sp_warehouses LIMIT 1")
+        wh = cur.fetchone()
+        if not wh:
+            cur.execute(
+                "INSERT INTO sp_warehouses (warehouse_name, warehouse_type, status) "
+                "VALUES (%s, 1, 1)", ("默认仓库",),
+            )
+            wh_id = cur.lastrowid
+        else:
+            wh_id = wh[0]
+
         cur.execute("SELECT id FROM sp_skus WHERE deleted_at IS NULL")
         skus = cur.fetchall()
         for sku in skus:
@@ -519,8 +531,8 @@ def seed_inventory(conn):
                 status = 1 if qty > threshold else 2  # 充足/缺货
             cur.execute(
                 "INSERT INTO sp_inventories (sku_id, warehouse_id, quantity, reserved, threshold, status) "
-                "VALUES (%s, 0, %s, %s, %s, %s)",
-                (sku[0], qty, reserved, threshold, status),
+                "VALUES (%s, %s, %s, %s, %s, %s)",
+                (sku[0], wh_id, qty, reserved, threshold, status),
             )
 
             if random.random() < 0.3:
@@ -530,7 +542,7 @@ def seed_inventory(conn):
                     "before_reserved, after_reserved, change_amount, "
                     "change_type, reference_id, operator, note) "
                     "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                    (sku[0], 0, qty - delta, qty, 0, reserved, delta,
+                    (sku[0], wh_id, qty - delta, qty, 0, reserved, delta,
                      "purchase", "", "admin", "初始入库"),
                 )
     conn.commit()
