@@ -7,6 +7,9 @@ USE eshop_db;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- 交易
+TRUNCATE TABLE tx_delivery_traces;
+TRUNCATE TABLE tx_delivery_items;
+TRUNCATE TABLE tx_deliveries;
 TRUNCATE TABLE tx_after_sale_logs;
 TRUNCATE TABLE tx_after_sales;
 TRUNCATE TABLE tx_refunds;
@@ -18,9 +21,9 @@ TRUNCATE TABLE tx_orders;
 TRUNCATE TABLE tx_cart_items;
 TRUNCATE TABLE tx_carts;
 
--- SPU/库存
-TRUNCATE TABLE sp_warehouse_skus;
+-- SPU/库存/版本
 TRUNCATE TABLE sp_warehouses;
+TRUNCATE TABLE sp_product_versions;
 TRUNCATE TABLE sp_inventory_logs;
 TRUNCATE TABLE sp_inventories;
 TRUNCATE TABLE sp_product_attributes;
@@ -46,7 +49,9 @@ TRUNCATE TABLE rev_review_replies;
 TRUNCATE TABLE rev_review_media;
 TRUNCATE TABLE rev_reviews;
 
--- 用户/RBAC
+-- 用户/积分/等级/RBAC
+TRUNCATE TABLE usr_points;
+TRUNCATE TABLE usr_levels;
 TRUNCATE TABLE usr_login_histories;
 TRUNCATE TABLE usr_role_permissions;
 TRUNCATE TABLE usr_user_roles;
