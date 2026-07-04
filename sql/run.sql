@@ -41,3 +41,6 @@ source sql/mch_p2.sql
 source sql/sp_p4.sql
 source sql/tx_p3.sql
 source sql/tx_p4.sql
+
+-- ========== P5: 商品版本表（依赖 P1: products）==========
+source sql/sp_p5.sql
