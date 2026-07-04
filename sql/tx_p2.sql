@@ -22,10 +22,10 @@ CREATE TABLE `tx_payments` (
   `status` varchar(20) NOT NULL DEFAULT 'pending' COMMENT '支付状态：pending-待支付 processing-处理中 success-已支付 failed-支付失败 refunding-退款中 refunded-已退款',
   `failure_reason` varchar(500) DEFAULT '' COMMENT '失败原因',
 
-  `paid_at` datetime DEFAULT NULL COMMENT '支付成功时间',
+  `paid_at` datetime(3) DEFAULT NULL COMMENT '支付成功时间',
 
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   `deleted_at` datetime(3) DEFAULT NULL,
 
   PRIMARY KEY (`id`),
@@ -49,7 +49,7 @@ CREATE TABLE `tx_payment_logs` (
   `request_body` text COMMENT '请求参数（渠道原始数据，用于对账排查）',
   `response_body` text COMMENT '响应结果（渠道原始数据）',
   `status` varchar(20) DEFAULT '' COMMENT '操作结果状态',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   PRIMARY KEY (`id`),
   KEY `idx_payment_id` (`payment_id`),
   KEY `idx_payment_no` (`payment_no`),
@@ -73,11 +73,11 @@ CREATE TABLE `tx_refunds` (
   `channel_transaction_id` varchar(128) DEFAULT '' COMMENT '渠道退款交易号',
   `failure_reason` varchar(500) DEFAULT '' COMMENT '失败原因',
 
-  `applied_at` datetime DEFAULT NULL COMMENT '申请时间',
-  `success_at` datetime DEFAULT NULL COMMENT '退款成功时间',
+  `applied_at` datetime(3) DEFAULT NULL COMMENT '申请时间',
+  `success_at` datetime(3) DEFAULT NULL COMMENT '退款成功时间',
 
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   `deleted_at` datetime(3) DEFAULT NULL,
 
   PRIMARY KEY (`id`),

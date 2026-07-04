@@ -13,8 +13,8 @@ CREATE TABLE `base_notification_templates` (
     `category` TINYINT COMMENT '默认分类',
     `priority` TINYINT DEFAULT 1 COMMENT '默认优先级',
     `status` TINYINT DEFAULT 1 COMMENT '1-启用 0-停用',
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
     INDEX `idx_code_channel` (`template_code`, `channel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='通知模板表';
 
@@ -55,9 +55,9 @@ CREATE TABLE `base_notifications` (
 
     -- 审计字段
     `created_by` BIGINT COMMENT '创建人（0表示系统自动）',
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `deleted_at` DATETIME DEFAULT NULL COMMENT '系统软删除（数据清理用）',
+    `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    `deleted_at` datetime(3) DEFAULT NULL COMMENT '系统软删除（数据清理用）',
 
     -- 索引
     INDEX `idx_user_id` (`user_id`),
@@ -73,7 +73,7 @@ CREATE TABLE `base_notification_reads` (
     `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
     `notification_id` BIGINT NOT NULL COMMENT '关联通知ID',
     `user_id` BIGINT NOT NULL COMMENT '用户ID',
-    `read_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '阅读时间',
+    `read_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) COMMENT '阅读时间',
 
     UNIQUE KEY `uk_notification_user` (`notification_id`, `user_id`),
     INDEX `idx_user` (`user_id`)

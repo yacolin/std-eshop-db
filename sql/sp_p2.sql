@@ -9,7 +9,7 @@ CREATE TABLE `sp_category_brands` (
   `category_id` bigint NOT NULL COMMENT '关联 categories.id',
   `brand_id` bigint NOT NULL COMMENT '关联 brands.id',
   `sort_order` int NOT NULL DEFAULT 0 COMMENT '排序权重（越小越靠前，控制该类目下品牌的展示顺序）',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_category_brand` (`category_id`, `brand_id`) COMMENT '同一类目下不重复关联同一品牌',
   KEY `idx_brand_id` (`brand_id`) COMMENT '查品牌覆盖了哪些类目'
@@ -50,8 +50,8 @@ CREATE TABLE `sp_skus` (
   `status` tinyint NOT NULL DEFAULT 1 COMMENT '1-正常 0-禁用（如某规格暂时缺货下架）',
 
   -- 审计字段
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   `deleted_at` datetime(3) DEFAULT NULL,
 
   PRIMARY KEY (`id`),
@@ -70,8 +70,8 @@ CREATE TABLE `sp_product_attributes` (
   `attribute_id` bigint NOT NULL COMMENT '关联 attributes.id',
   `value` varchar(500) NOT NULL COMMENT '属性值（如：A16）',
   `sort_order` int NOT NULL DEFAULT 0 COMMENT '排序权重（越小越靠前，用于控制前台展示顺序）',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   `deleted_at` datetime(3) DEFAULT NULL COMMENT '软删除',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_product_attribute` (`product_id`, `attribute_id`),
@@ -85,8 +85,8 @@ CREATE TABLE `sp_product_descriptions` (
   `product_id` bigint NOT NULL COMMENT '关联 products.id',
   `description` longtext COMMENT '商品详情（富文本HTML）',
   `mobile_description` longtext COMMENT '移动端详情（可选，适配手机展示）',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_product_id` (`product_id`) COMMENT '一个SPU只有一条详情记录'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品详情表（从主表拆出，减少主表体积）';

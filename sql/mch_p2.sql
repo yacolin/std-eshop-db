@@ -14,9 +14,9 @@ CREATE TABLE `mch_settlement_details` (
     `settlement_amount` DECIMAL(12,2) NOT NULL DEFAULT 0.00 COMMENT '应结算金额',
     `refund_amount` DECIMAL(12,2) NOT NULL DEFAULT 0.00 COMMENT '退款冲减金额',
     `status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-待结算 1-已结算 2-已冲减',
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted_at` DATETIME DEFAULT NULL,
+    `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+    `deleted_at` datetime(3) DEFAULT NULL,
     KEY `idx_merchant_order` (`merchant_id`, `order_id`),
     KEY `idx_settlement_log` (`settlement_log_id`),
     KEY `idx_deleted_at` (`deleted_at`)

@@ -38,9 +38,9 @@ CREATE TABLE `rev_reviews` (
     `helpful_count` INT DEFAULT 0 COMMENT '有用数',
 
     -- 审计
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted_at` DATETIME DEFAULT NULL COMMENT '软删除',
+    `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+    `deleted_at` datetime(3) DEFAULT NULL COMMENT '软删除',
 
     INDEX `idx_user` (`user_id`),
     INDEX `idx_order` (`order_id`),

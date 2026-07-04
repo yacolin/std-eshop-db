@@ -26,12 +26,12 @@ CREATE TABLE `sp_inventories` (
   `status` varchar(20) NOT NULL DEFAULT 'instock' COMMENT '库存状态：instock-充足 lowstock-缺货 outofstock-无货',
 
   -- 盘点审计
-  `last_counted_at` datetime DEFAULT NULL COMMENT '最后盘点时间',
+  `last_counted_at` datetime(3) DEFAULT NULL COMMENT '最后盘点时间',
   `last_counted_by` varchar(50) DEFAULT '' COMMENT '最后盘点人',
 
   -- 审计字段
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   `deleted_at` datetime(3) DEFAULT NULL,
 
   PRIMARY KEY (`id`),
@@ -59,7 +59,7 @@ CREATE TABLE `sp_inventory_logs` (
   `reference_id` varchar(64) DEFAULT '' COMMENT '关联单据ID（如订单号、入库单号）',
   `operator` varchar(50) DEFAULT '' COMMENT '操作人（系统操作填 system）',
   `note` varchar(500) DEFAULT '' COMMENT '备注',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   PRIMARY KEY (`id`),
   KEY `idx_merchant` (`merchant_id`),
   KEY `idx_sku_id` (`sku_id`, `warehouse_id`) COMMENT '按SKU查库存变更历史',

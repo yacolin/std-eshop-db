@@ -12,8 +12,8 @@ CREATE TABLE `mkt_promotions` (
     `promo_code` VARCHAR(50) UNIQUE COMMENT '优惠码（优惠券专用）',
 
     -- 时间范围
-    `start_time` DATETIME NOT NULL COMMENT '开始时间',
-    `end_time` DATETIME NOT NULL COMMENT '结束时间',
+    `start_time` datetime(3) NOT NULL COMMENT '开始时间',
+    `end_time` datetime(3) NOT NULL COMMENT '结束时间',
 
     -- 库存限制
     `total_quantity` INT DEFAULT 0 COMMENT '发行总量（0表示不限）',
@@ -29,9 +29,9 @@ CREATE TABLE `mkt_promotions` (
     -- 审计字段
     `created_by` BIGINT COMMENT '创建人',
     `updated_by` BIGINT COMMENT '更新人',
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `deleted_at` DATETIME DEFAULT NULL COMMENT '软删除时间',
+    `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    `deleted_at` datetime(3) DEFAULT NULL COMMENT '软删除时间',
 
     INDEX `idx_merchant` (`merchant_id`),
     INDEX `idx_time` (`start_time`, `end_time`),

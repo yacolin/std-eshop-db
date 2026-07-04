@@ -16,8 +16,8 @@ CREATE TABLE `sp_attributes` (
   `is_sku_spec` tinyint NOT NULL DEFAULT 0 COMMENT '1-是SKU规格（如颜色、内存） 0-仅SPU属性（如上市时间）',
   `sort_order` int NOT NULL DEFAULT 0,
   `status` tinyint NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   `deleted_at` datetime(3) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_category` (`category_id`),
@@ -63,8 +63,8 @@ CREATE TABLE `sp_products` (
   -- 审计字段
   `created_by` varchar(50) DEFAULT '' COMMENT '创建人（运营工号）',
   `updated_by` varchar(50) DEFAULT '' COMMENT '最后更新人',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
   `deleted_at` datetime(3) DEFAULT NULL COMMENT '软删除时间（NULL表示未删除）',
 
   PRIMARY KEY (`id`),

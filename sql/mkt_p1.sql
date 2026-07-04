@@ -25,9 +25,9 @@ CREATE TABLE `mkt_promotion_rules` (
     -- 审计字段
     `created_by` BIGINT COMMENT '创建人',
     `updated_by` BIGINT COMMENT '更新人',
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `deleted_at` DATETIME DEFAULT NULL COMMENT '软删除时间',
+    `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    `deleted_at` datetime(3) DEFAULT NULL COMMENT '软删除时间',
 
     INDEX `idx_promotion` (`promotion_id`),
     INDEX `idx_merchant` (`merchant_id`),
@@ -42,8 +42,8 @@ CREATE TABLE `mkt_promotion_products` (
     `product_type` TINYINT NOT NULL COMMENT '1-全站 2-指定分类 3-指定SPU 4-指定SKU',
     `product_id` BIGINT COMMENT '产品ID（product_type=3/4时使用）',
     `category_id` BIGINT COMMENT '分类ID（product_type=2时使用）',
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    `deleted_at` DATETIME DEFAULT NULL,
+    `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
+    `deleted_at` datetime(3) DEFAULT NULL,
 
     INDEX `idx_promotion` (`promotion_id`),
     INDEX `idx_merchant` (`merchant_id`),
@@ -58,12 +58,12 @@ CREATE TABLE `mkt_user_promotions` (
     `merchant_id` BIGINT NOT NULL DEFAULT 0 COMMENT '所属商家ID',
 
     -- 领取/获取信息
-    `acquire_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '领取时间',
-    `expire_time` DATETIME COMMENT '过期时间（优惠券必填）',
+    `acquire_time` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) COMMENT '领取时间',
+    `expire_time` datetime(3) COMMENT '过期时间（优惠券必填）',
 
     -- 使用状态
     `status` TINYINT DEFAULT 1 COMMENT '1-未使用 2-已使用 3-已过期 4-已作废',
-    `used_time` DATETIME COMMENT '使用时间',
+    `used_time` datetime(3) COMMENT '使用时间',
     `order_id` BIGINT COMMENT '使用的订单ID',
 
     -- 秒杀专用
@@ -72,9 +72,9 @@ CREATE TABLE `mkt_user_promotions` (
     -- 审计字段
     `created_by` BIGINT COMMENT '创建人',
     `updated_by` BIGINT COMMENT '更新人',
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `deleted_at` DATETIME DEFAULT NULL COMMENT '软删除时间',
+    `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    `deleted_at` datetime(3) DEFAULT NULL COMMENT '软删除时间',
 
     INDEX `idx_user` (`user_id`),
     INDEX `idx_promotion` (`promotion_id`),
@@ -98,7 +98,7 @@ CREATE TABLE `mkt_promotion_usage_logs` (
     `discount_amount` DECIMAL(10,2) DEFAULT 0.00 COMMENT '优惠金额',
 
     -- 审计字段
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
 
     INDEX `idx_promotion` (`promotion_id`),
     INDEX `idx_user` (`user_id`),
