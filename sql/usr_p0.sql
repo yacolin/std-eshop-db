@@ -79,3 +79,19 @@ CREATE TABLE `usr_addresses` (
   CONSTRAINT `fk_usr_addresses_user` FOREIGN KEY (`user_id`) REFERENCES `usr_users` (`id`),
   KEY `idx_deleted_at` (`deleted_at`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户收货地址';
+
+
+CREATE TABLE `usr_login_histories` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `login_ip` varchar(50) NOT NULL DEFAULT '' COMMENT '登录IP',
+  `login_device` varchar(100) NOT NULL DEFAULT '' COMMENT '登录设备信息（UA）',
+  `login_location` varchar(100) NOT NULL DEFAULT '' COMMENT '登录地点',
+  `login_method` varchar(20) NOT NULL DEFAULT '' COMMENT '登录方式：password/sms/oauth',
+  `login_status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '登录结果：1-成功 0-失败',
+  `failure_reason` varchar(100) NOT NULL DEFAULT '' COMMENT '失败原因',
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_user_id` (`user_id`) USING BTREE,
+  KEY `idx_created_at` (`created_at`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='C端消费者登录历史表';

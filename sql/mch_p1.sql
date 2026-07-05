@@ -4,22 +4,23 @@ USE eshop_db;
 -- mch_p1.sql — 商户运营相关表（依赖 P0: merchants）
 -- ============================================================
 
+-- 商家-员工关联表：指向 sys_staff（B端员工），非 C端消费者
 CREATE TABLE `mch_merchant_users` (
     `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
     `merchant_id` BIGINT NOT NULL COMMENT '商家ID',
-    `user_id` BIGINT NOT NULL COMMENT '系统用户ID',
-    `role_id` BIGINT NOT NULL DEFAULT 0 COMMENT '店铺角色ID',
+    `staff_id` BIGINT NOT NULL COMMENT '员工ID（关联 sys_staff.id）',
+    `role_id` BIGINT NOT NULL DEFAULT 0 COMMENT '店铺角色ID（关联 sys_roles.id）',
     `status` TINYINT NOT NULL DEFAULT 1 COMMENT '1-正常 2-禁用',
     `invited_at` datetime(3) DEFAULT NULL COMMENT '邀请时间',
     `last_login_at` datetime(3) DEFAULT NULL COMMENT '最后登录时间',
     `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
     `deleted_at` datetime(3) DEFAULT NULL,
-    UNIQUE KEY `uk_merchant_user` (`merchant_id`, `user_id`),
+    UNIQUE KEY `uk_merchant_staff` (`merchant_id`, `staff_id`),
     KEY `idx_merchant_status` (`merchant_id`, `status`),
-    KEY `idx_user_id` (`user_id`),
+    KEY `idx_staff_id` (`staff_id`),
     KEY `idx_deleted_at` (`deleted_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家员工/管理员关联表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家-员工关联表（B端员工通过此表绑定商户）';
 
 
 CREATE TABLE `mch_merchant_balances` (

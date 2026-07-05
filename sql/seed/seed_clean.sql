@@ -49,17 +49,21 @@ TRUNCATE TABLE rev_review_replies;
 TRUNCATE TABLE rev_review_media;
 TRUNCATE TABLE rev_reviews;
 
+-- 系统/B端员工
+TRUNCATE TABLE sys_login_histories;
+TRUNCATE TABLE sys_staff_roles;
+TRUNCATE TABLE sys_staff;
+TRUNCATE TABLE sys_role_permissions;
+TRUNCATE TABLE sys_permissions;
+TRUNCATE TABLE sys_roles;
+
 -- 用户/积分/等级/RBAC
 TRUNCATE TABLE usr_points;
 TRUNCATE TABLE usr_levels;
 TRUNCATE TABLE usr_login_histories;
-TRUNCATE TABLE usr_role_permissions;
-TRUNCATE TABLE usr_user_roles;
 TRUNCATE TABLE usr_addresses;
 TRUNCATE TABLE usr_infos;
 TRUNCATE TABLE usr_users;
-TRUNCATE TABLE usr_permissions;
-TRUNCATE TABLE usr_roles;
 
 -- 消息
 TRUNCATE TABLE base_notification_reads;
@@ -80,13 +84,15 @@ TRUNCATE TABLE mch_merchants;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- 重置自增
-ALTER TABLE usr_roles AUTO_INCREMENT = 1;
-ALTER TABLE usr_permissions AUTO_INCREMENT = 1;
 ALTER TABLE usr_users AUTO_INCREMENT = 1;
 ALTER TABLE usr_infos AUTO_INCREMENT = 1;
 ALTER TABLE usr_addresses AUTO_INCREMENT = 1;
-ALTER TABLE usr_user_roles AUTO_INCREMENT = 1;
-ALTER TABLE usr_role_permissions AUTO_INCREMENT = 1;
+ALTER TABLE sys_roles AUTO_INCREMENT = 1;
+ALTER TABLE sys_permissions AUTO_INCREMENT = 1;
+ALTER TABLE sys_role_permissions AUTO_INCREMENT = 1;
+ALTER TABLE sys_staff AUTO_INCREMENT = 1;
+ALTER TABLE sys_staff_roles AUTO_INCREMENT = 1;
+ALTER TABLE sys_login_histories AUTO_INCREMENT = 1;
 ALTER TABLE sp_categories AUTO_INCREMENT = 1;
 ALTER TABLE sp_brands AUTO_INCREMENT = 1;
 ALTER TABLE sp_attributes AUTO_INCREMENT = 1;

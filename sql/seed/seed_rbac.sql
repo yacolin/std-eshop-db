@@ -8,7 +8,7 @@ USE eshop_db;
 -- ==================== 权限 ====================
 -- product 模块 (10000-19999)
 
-INSERT INTO usr_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
+INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
 ('product:read',   '查看产品',   'product',  'read',   'product', 11000, 1),
 ('product:create', '创建产品',   'product',  'create', 'product', 11050, 1),
 ('product:update', '编辑产品',   'product',  'update', 'product', 11100, 1),
@@ -40,7 +40,7 @@ INSERT INTO usr_permissions (name, display_name, resource, action, category, sor
 
 -- inventory 模块 (20000-29999)
 
-INSERT INTO usr_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
+INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
 ('inventory:read',    '查看库存',   'inventory', 'read',    'inventory', 21000, 1),
 ('inventory:create',  '创建库存',   'inventory', 'create',  'inventory', 21050, 1),
 ('inventory:update',  '编辑库存',   'inventory', 'update',  'inventory', 21100, 1),
@@ -48,7 +48,7 @@ INSERT INTO usr_permissions (name, display_name, resource, action, category, sor
 
 -- trade 模块 (30000-39999)
 
-INSERT INTO usr_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
+INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
 ('order:read',         '查看订单',   'order', 'read',   'trade', 31000, 1),
 ('order:create',       '创建订单',   'order', 'create', 'trade', 31050, 1),
 ('order:update',       '编辑订单',   'order', 'update', 'trade', 31100, 1),
@@ -69,12 +69,12 @@ INSERT INTO usr_permissions (name, display_name, resource, action, category, sor
 
 -- delivery 模块 (33000-33999)
 
-INSERT INTO usr_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
+INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
 ('delivery:read',   '查看物流',   'delivery', 'read',   'trade', 33000, 1),
 ('delivery:create', '创建发货',   'delivery', 'create', 'trade', 33050, 1),
 ('delivery:update', '编辑物流',   'delivery', 'update', 'trade', 33100, 1);
 
-INSERT INTO usr_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
+INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
 ('promotion:read',   '查看促销',   'promotion', 'read',   'marketing', 41000, 1),
 ('promotion:create', '创建促销',   'promotion', 'create', 'marketing', 41050, 1),
 ('promotion:update', '编辑促销',   'promotion', 'update', 'marketing', 41100, 1),
@@ -82,7 +82,7 @@ INSERT INTO usr_permissions (name, display_name, resource, action, category, sor
 
 -- review 模块 (50000-59999)
 
-INSERT INTO usr_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
+INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
 ('review:read',     '查看评论',   'review', 'read',     'review', 51000, 1),
 ('review:create',   '发表评论',   'review', 'create',   'review', 51050, 1),
 ('review:delete',   '删除评论',   'review', 'delete',   'review', 51100, 1),
@@ -91,7 +91,7 @@ INSERT INTO usr_permissions (name, display_name, resource, action, category, sor
 
 -- user 模块 (60000-69999)
 
-INSERT INTO usr_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
+INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
 ('user:read',   '查看用户',   'user', 'read',   'user', 61000, 1),
 ('user:create', '创建用户',   'user', 'create', 'user', 61050, 1),
 ('user:update', '编辑用户',   'user', 'update', 'user', 61100, 1),
@@ -112,7 +112,7 @@ INSERT INTO usr_permissions (name, display_name, resource, action, category, sor
 
 -- base 模块 (70000-79999) — 通知
 
-INSERT INTO usr_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
+INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
 ('notification:read',   '查看通知',   'notification', 'read',   'base', 71000, 1),
 ('notification:update', '标记已读',   'notification', 'update', 'base', 71050, 1),
 ('notification:delete', '删除通知',   'notification', 'delete', 'base', 71100, 1),
@@ -120,7 +120,7 @@ INSERT INTO usr_permissions (name, display_name, resource, action, category, sor
 
 -- dashboard 模块 (80000-89999)
 
-INSERT INTO usr_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
+INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
 ('dashboard:read', '查看仪表盘', 'dashboard', 'read', 'dashboard', 81000, 1);
 
 
@@ -134,7 +134,7 @@ INSERT INTO usr_levels (name, level, min_points, max_points, discount_rate, free
 
 -- ==================== 角色 ====================
 
-INSERT INTO usr_roles (name, display_name, description, role_type, sort_order, status) VALUES
+INSERT INTO sys_roles (name, display_name, description, role_type, sort_order, status) VALUES
 ('admin',     '管理员',     '系统管理员，拥有所有权限',                         'builtin', 1,  1),
 ('operator',  '运营人员',   '订单处理、退款审核、评论管理、通知发送',          'builtin', 2,  1),
 ('editor',    '内容编辑',   '商品/分类内容维护',                                'builtin', 3,  1),
@@ -149,12 +149,12 @@ INSERT INTO usr_roles (name, display_name, description, role_type, sort_order, s
 -- ==================== 角色-权限关联 ====================
 
 -- admin：所有权限
-INSERT INTO usr_role_permissions (role_id, permission_id)
-SELECT (SELECT id FROM usr_roles WHERE name = 'admin'), id FROM usr_permissions;
+INSERT INTO sys_role_permissions (role_id, permission_id)
+SELECT (SELECT id FROM sys_roles WHERE name = 'admin'), id FROM sys_permissions;
 
 -- user：基础购物操作
-INSERT INTO usr_role_permissions (role_id, permission_id)
-SELECT (SELECT id FROM usr_roles WHERE name = 'user'), id FROM usr_permissions WHERE name IN (
+INSERT INTO sys_role_permissions (role_id, permission_id)
+SELECT (SELECT id FROM sys_roles WHERE name = 'user'), id FROM sys_permissions WHERE name IN (
     'product:read', 'category:read', 'brand:read', 'inventory:read', 'sku:read',
     'attr:read', 'attr_val:read',
     'address:read', 'address:create', 'address:update', 'address:delete',
@@ -171,8 +171,8 @@ SELECT (SELECT id FROM usr_roles WHERE name = 'user'), id FROM usr_permissions W
 );
 
 -- operator：运营操作
-INSERT INTO usr_role_permissions (role_id, permission_id)
-SELECT (SELECT id FROM usr_roles WHERE name = 'operator'), id FROM usr_permissions WHERE name IN (
+INSERT INTO sys_role_permissions (role_id, permission_id)
+SELECT (SELECT id FROM sys_roles WHERE name = 'operator'), id FROM sys_permissions WHERE name IN (
     'product:read', 'category:read', 'brand:read', 'inventory:read', 'sku:read',
     'attr:read', 'attr_val:read', 'address:read',
     'order:read', 'order:update', 'order:cancel',
@@ -185,8 +185,8 @@ SELECT (SELECT id FROM usr_roles WHERE name = 'operator'), id FROM usr_permissio
 );
 
 -- editor：内容维护
-INSERT INTO usr_role_permissions (role_id, permission_id)
-SELECT (SELECT id FROM usr_roles WHERE name = 'editor'), id FROM usr_permissions WHERE name IN (
+INSERT INTO sys_role_permissions (role_id, permission_id)
+SELECT (SELECT id FROM sys_roles WHERE name = 'editor'), id FROM sys_permissions WHERE name IN (
     'product:read', 'product:create', 'product:update',
     'category:read', 'category:create', 'category:update',
     'inventory:read', 'sku:read',
@@ -199,8 +199,8 @@ SELECT (SELECT id FROM usr_roles WHERE name = 'editor'), id FROM usr_permissions
 );
 
 -- warehouse：库存与发货
-INSERT INTO usr_role_permissions (role_id, permission_id)
-SELECT (SELECT id FROM usr_roles WHERE name = 'warehouse'), id FROM usr_permissions WHERE name IN (
+INSERT INTO sys_role_permissions (role_id, permission_id)
+SELECT (SELECT id FROM sys_roles WHERE name = 'warehouse'), id FROM sys_permissions WHERE name IN (
     'product:read', 'category:read',
     'inventory:read', 'inventory:create', 'inventory:update', 'inventory:reserve',
     'sku:read', 'address:read',
@@ -210,8 +210,8 @@ SELECT (SELECT id FROM usr_roles WHERE name = 'warehouse'), id FROM usr_permissi
 );
 
 -- finance：财务与退款
-INSERT INTO usr_role_permissions (role_id, permission_id)
-SELECT (SELECT id FROM usr_roles WHERE name = 'finance'), id FROM usr_permissions WHERE name IN (
+INSERT INTO sys_role_permissions (role_id, permission_id)
+SELECT (SELECT id FROM sys_roles WHERE name = 'finance'), id FROM sys_permissions WHERE name IN (
     'order:read', 'payment:read', 'payment:update',
     'refund:read', 'refund:update',
     'product:read', 'sku:read', 'address:read',
@@ -219,8 +219,8 @@ SELECT (SELECT id FROM usr_roles WHERE name = 'finance'), id FROM usr_permission
 );
 
 -- merchant：商户管理
-INSERT INTO usr_role_permissions (role_id, permission_id)
-SELECT (SELECT id FROM usr_roles WHERE name = 'merchant'), id FROM usr_permissions WHERE name IN (
+INSERT INTO sys_role_permissions (role_id, permission_id)
+SELECT (SELECT id FROM sys_roles WHERE name = 'merchant'), id FROM sys_permissions WHERE name IN (
     'product:read', 'product:create', 'product:update',
     'category:read', 'inventory:read',
     'sku:read', 'sku:create', 'sku:update',
@@ -236,8 +236,8 @@ SELECT (SELECT id FROM usr_roles WHERE name = 'merchant'), id FROM usr_permissio
 );
 
 -- support：客服售后
-INSERT INTO usr_role_permissions (role_id, permission_id)
-SELECT (SELECT id FROM usr_roles WHERE name = 'support'), id FROM usr_permissions WHERE name IN (
+INSERT INTO sys_role_permissions (role_id, permission_id)
+SELECT (SELECT id FROM sys_roles WHERE name = 'support'), id FROM sys_permissions WHERE name IN (
     'product:read', 'category:read', 'sku:read',
     'attr:read', 'attr_val:read', 'address:read',
     'order:read', 'order:update', 'order:cancel',
@@ -249,8 +249,8 @@ SELECT (SELECT id FROM usr_roles WHERE name = 'support'), id FROM usr_permission
 );
 
 -- analyst：数据分析
-INSERT INTO usr_role_permissions (role_id, permission_id)
-SELECT (SELECT id FROM usr_roles WHERE name = 'analyst'), id FROM usr_permissions WHERE name IN (
+INSERT INTO sys_role_permissions (role_id, permission_id)
+SELECT (SELECT id FROM sys_roles WHERE name = 'analyst'), id FROM sys_permissions WHERE name IN (
     'product:read', 'category:read', 'brand:read', 'inventory:read',
     'order:read', 'cart:read', 'payment:read', 'refund:read',
     'delivery:read',
@@ -260,30 +260,27 @@ SELECT (SELECT id FROM usr_roles WHERE name = 'analyst'), id FROM usr_permission
 );
 
 
--- ==================== 用户 ====================
+-- ==================== B端员工（sys_staff） ====================
 -- 密码均为 "123456"，bcrypt hash（cost=10）
 
-INSERT INTO usr_users (username, password_hash, nickname, email, phone, status, register_source) VALUES
-('admin', '$2a$10$HFzEUNEVKJQCZ4aPYVb/YONrhix2jwj8iiJWM5TUZdXM4wPdkEllC', '管理员', 'admin@eshop.dev', '13800000001', 1, 'admin');
+INSERT INTO sys_staff (username, password_hash, real_name, email, phone, status) VALUES
+('admin', '$2a$10$HFzEUNEVKJQCZ4aPYVb/YONrhix2jwj8iiJWM5TUZdXM4wPdkEllC', '管理员', 'admin@eshop.dev', '13800000001', 1);
 
-INSERT INTO usr_infos (user_id) VALUES (1);
+INSERT INTO sys_staff_roles (staff_id, role_id) VALUES (1, (SELECT id FROM sys_roles WHERE name = 'admin'));
 
-INSERT INTO usr_user_roles (user_id, role_id) VALUES (1, (SELECT id FROM usr_roles WHERE name = 'admin'));
+
+-- ==================== C端消费者（usr_users） ====================
 
 INSERT INTO usr_users (username, password_hash, nickname, email, phone, status, register_source) VALUES
 ('colin', '$2a$10$HFzEUNEVKJQCZ4aPYVb/YONrhix2jwj8iiJWM5TUZdXM4wPdkEllC', 'Colin', 'colin@eshop.dev', '13800000002', 1, 'web');
 
-INSERT INTO usr_infos (user_id) VALUES (2);
+INSERT INTO usr_infos (user_id) VALUES (1);
 
-INSERT INTO usr_user_roles (user_id, role_id) VALUES (2, (SELECT id FROM usr_roles WHERE name = 'user'));
+-- C端用户不分配 B 端角色，通过接口权限和数据归属实现鉴权
 
 
 -- ==================== 收货地址 ====================
 
 INSERT INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default) VALUES
-(1, '张管理', '13800138001', '中国', '北京市', '北京市', '朝阳区', '建国路88号SOHO现代城A座1508', '100022', 'office', TRUE),
-(1, '张管理', '13800138002', '中国', '北京市', '北京市', '海淀区', '中关村大街1号银谷大厦2005', '100080', 'office', FALSE);
-
-INSERT INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default) VALUES
-(2, '陈科林', '13900139001', '中国', '广东省', '深圳市', '南山区', '科技园南区高新南一道2号飞亚达科技大厦12F', '518057', 'company', TRUE),
-(2, '陈科林', '13900139002', '中国', '广东省', '广州市', '天河区', '珠江新城华夏路16号富力盈凯广场3001', '510623', 'company', FALSE);
+(1, '陈科林', '13900139001', '中国', '广东省', '深圳市', '南山区', '科技园南区高新南一道2号飞亚达科技大厦12F', '518057', 'company', TRUE),
+(1, '陈科林', '13900139002', '中国', '广东省', '广州市', '天河区', '珠江新城华夏路16号富力盈凯广场3001', '510623', 'company', FALSE);
