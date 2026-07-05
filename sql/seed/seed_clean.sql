@@ -44,7 +44,7 @@ TRUNCATE TABLE mkt_promotions;
 
 -- 评价
 TRUNCATE TABLE rev_review_audit_logs;
-TRUNCATE TABLE rev_review_ratings;
+
 TRUNCATE TABLE rev_review_replies;
 TRUNCATE TABLE rev_review_media;
 TRUNCATE TABLE rev_reviews;

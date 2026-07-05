@@ -666,9 +666,9 @@ MERCHANTS = [
 def seed_merchant(conn):
     now = datetime.now()
     with conn.cursor() as cur:
-        # 获取现有用户（用于分配商户员工）
-        cur.execute("SELECT id FROM usr_users WHERE deleted_at IS NULL")
-        users = [u[0] for u in cur.fetchall()]
+        # 获取 B 端员工（用于分配商户员工）
+        cur.execute("SELECT id FROM sys_staff WHERE deleted_at IS NULL")
+        staff = [u[0] for u in cur.fetchall()]
 
         for mch_name, mch_type, mch_level, contact, phone in MERCHANTS:
             code = f"MCH{random.randint(10000, 99999)}"
@@ -722,14 +722,14 @@ def seed_merchant(conn):
                 (merchant_id, random.randint(1000000, 50000000), random.randint(0, 500000)),
             )
 
-            # 商户员工（随机分配1-3个用户为该商户的员工）
-            if users:
-                assigned = random.sample(users, min(len(users), random.randint(1, 3)))
-                for uid in assigned:
+            # 商户员工（随机分配1-3个员工为该商户的员工）
+            if staff:
+                assigned = random.sample(staff, min(len(staff), random.randint(1, 3)))
+                for sid in assigned:
                     cur.execute(
-                        "INSERT IGNORE INTO mch_merchant_users (merchant_id, user_id, role_id, status) "
+                        "INSERT IGNORE INTO mch_merchant_users (merchant_id, staff_id, role_id, status) "
                         "VALUES (%s, %s, 7, 1)",
-                        (merchant_id, uid),
+                        (merchant_id, sid),
                     )
 
         print(f"  商户: {len(MERCHANTS)}")
@@ -740,50 +740,51 @@ def seed_merchant(conn):
 # ── 用户中心 ──────────────────────────────────────
 
 def seed_users(conn):
-    """插入固定用户 admin(1) 和 colin(2)，密码均为 123456（bcrypt cost=10）"""
+    """插入 B 端员工 admin 和 C 端消费者 colin，密码均为 123456（bcrypt cost=10）"""
     with conn.cursor() as cur:
-        # admin
+        # admin — B 端员工
         cur.execute("""
-            INSERT IGNORE INTO usr_users (id, username, password_hash, nickname, email, phone, status, register_source)
+            INSERT IGNORE INTO sys_staff (id, username, password_hash, real_name, email, phone, status)
             VALUES (1, 'admin', '$2a$10$HFzEUNEVKJQCZ4aPYVb/YONrhix2jwj8iiJWM5TUZdXM4wPdkEllC',
-                    '管理员', 'admin@eshop.dev', '13800000001', 1, 'admin')
+                    '管理员', 'admin@eshop.dev', '13800000001', 1)
         """)
         if cur.lastrowid:
-            cur.execute("INSERT IGNORE INTO usr_infos (user_id) VALUES (1)")
-            cur.execute("INSERT IGNORE INTO usr_user_roles (user_id, role_id) "
-                        "VALUES (1, (SELECT id FROM usr_roles WHERE name = 'admin'))")
+            cur.execute("INSERT IGNORE INTO sys_staff_roles (staff_id, role_id) "
+                        "VALUES (1, (SELECT id FROM sys_roles WHERE name = 'admin'))")
 
-        # colin
+        # colin — B 端员工 + C 端消费者
+        cur.execute("""
+            INSERT IGNORE INTO sys_staff (username, password_hash, real_name, email, phone, status)
+            VALUES ('colin', '$2a$10$HFzEUNEVKJQCZ4aPYVb/YONrhix2jwj8iiJWM5TUZdXM4wPdkEllC',
+                    '陈科林', 'colin@eshop.dev', '13800000002', 1)
+        """)
+        if cur.lastrowid:
+            cur.execute("INSERT IGNORE INTO sys_staff_roles (staff_id, role_id) "
+                        "VALUES (%s, (SELECT id FROM sys_roles WHERE name = 'user'))",
+                        (cur.lastrowid,))
+
         cur.execute("""
             INSERT IGNORE INTO usr_users (id, username, password_hash, nickname, email, phone, status, register_source)
-            VALUES (2, 'colin', '$2a$10$HFzEUNEVKJQCZ4aPYVb/YONrhix2jwj8iiJWM5TUZdXM4wPdkEllC',
+            VALUES (1, 'colin', '$2a$10$HFzEUNEVKJQCZ4aPYVb/YONrhix2jwj8iiJWM5TUZdXM4wPdkEllC',
                     'Colin', 'colin@eshop.dev', '13800000002', 1, 'web')
         """)
         if cur.lastrowid:
-            cur.execute("INSERT IGNORE INTO usr_infos (user_id) VALUES (2)")
-            cur.execute("INSERT IGNORE INTO usr_user_roles (user_id, role_id) "
-                        "VALUES (2, (SELECT id FROM usr_roles WHERE name = 'user'))")
-        # 收货地址（先删后插，因 usr_addresses 无唯一约束，INSERT IGNORE 无效）
-        cur.execute("DELETE FROM usr_addresses WHERE user_id IN (1, 2)")
+            cur.execute("INSERT IGNORE INTO usr_infos (user_id) VALUES (1)")
+
+        # colin 的收货地址（公司 + 家）
+        cur.execute("DELETE FROM usr_addresses WHERE user_id = 1")
         cur.execute("""
             INSERT INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
-            VALUES (1, '张管理', '13800138001', '中国', '北京市', '北京市', '朝阳区', '建国路88号SOHO现代城A座1508', '100022', 'office', TRUE)
+            VALUES (1, '陈科林', '13900139001', '中国', '广东省', '深圳市', '南山区', '科技园南区高新南一道2号飞亚达科技大厦12F', '518057', 'company', TRUE)
         """)
         cur.execute("""
             INSERT INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
-            VALUES (1, '张管理', '13800138002', '中国', '北京市', '北京市', '海淀区', '中关村大街1号银谷大厦2005', '100080', 'office', FALSE)
-        """)
-        cur.execute("""
-            INSERT INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
-            VALUES (2, '陈科林', '13900139001', '中国', '广东省', '深圳市', '南山区', '科技园南区高新南一道2号飞亚达科技大厦12F', '518057', 'company', TRUE)
-        """)
-        cur.execute("""
-            INSERT INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
-            VALUES (2, '陈科林', '13900139002', '中国', '广东省', '广州市', '天河区', '珠江新城华夏路16号富力盈凯广场3001', '510623', 'company', FALSE)
+            VALUES (1, '陈科林', '13900139002', '中国', '广东省', '广州市', '天河区', '珠江新城华夏路16号富力盈凯广场3001', '510623', 'home', FALSE)
         """)
     conn.commit()
-    print("  用户: admin, colin (固定)")
-    print("  地址: 4 条")
+    print("  B端员工: admin, colin (固定)")
+    print("  C端用户: colin (固定)")
+    print("  地址: 公司 + 家 (2 条)")
     print("用户中心 ✅\n")
 
 
@@ -1028,8 +1029,8 @@ def main():
         "product": seed_product,
         "inventory": seed_inventory,
         "marketing": seed_marketing,
-        "merchant": seed_merchant,
         "users": seed_users,
+        "merchant": seed_merchant,
         "order": seed_order,
         "notification": seed_notification,
     }
