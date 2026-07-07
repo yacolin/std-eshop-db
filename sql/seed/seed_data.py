@@ -702,7 +702,21 @@ USER_LEVEL = [
     }
 ]
 
+# ── 积分规则 ──────────────────────────────────
+POINTS_RULES = [
+    {"name": "消费返积分比例",   "rule_key": "earn_rate",     "rule_value": "1",   "description": "每消费1元获得1积分",      "sort_order": 1, "status": 1},
+    {"name": "积分过期天数",     "rule_key": "expire_days",   "rule_value": "365", "description": "积分获取后365天过期",      "sort_order": 2, "status": 1},
+    {"name": "签到奖励积分",     "rule_key": "signin_points", "rule_value": "5",   "description": "每日签到奖励5积分",        "sort_order": 3, "status": 1},
+    {"name": "评价奖励积分",     "rule_key": "review_points", "rule_value": "20",  "description": "撰写评价奖励20积分",       "sort_order": 4, "status": 1},
+]
 
+# ── 等级升降级规则 ────────────────────────────
+LEVEL_RULES = [
+    {"name": "青铜→白银自动升级",  "rule_type": "upgrade",   "from_level_id": 0, "to_level_id": 0, "condition_type": "points",        "condition_value": 1000,  "description": "累计积分达到1000分自动从青铜升至白银", "sort_order": 1, "status": 1},
+    {"name": "白银→黄金自动升级",  "rule_type": "upgrade",   "from_level_id": 0, "to_level_id": 0, "condition_type": "points",        "condition_value": 5000,  "description": "累计积分达到5000分自动从白银升至黄金", "sort_order": 2, "status": 1},
+    {"name": "黄金→钻石自动升级",  "rule_type": "upgrade",   "from_level_id": 0, "to_level_id": 0, "condition_type": "points",        "condition_value": 20000, "description": "累计积分达到20000分自动从黄金升至钻石", "sort_order": 3, "status": 1},
+    {"name": "连续30天无消费降级",   "rule_type": "downgrade", "from_level_id": 0, "to_level_id": 0, "condition_type": "inactive_days", "condition_value": 30,    "description": "连续30天无消费自动降一级",          "sort_order": 4, "status": 1},
+]
 
 
 # ── 订单常量 ──────────────────────────────────

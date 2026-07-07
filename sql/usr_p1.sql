@@ -8,6 +8,7 @@ CREATE TABLE `usr_levels` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '等级ID',
     `name` varchar(50) NOT NULL COMMENT '等级名称（如：青铜会员、白银会员、黄金会员、钻石会员）',
     `level` int NOT NULL COMMENT '等级数值（1=青铜 2=白银 3=黄金 4=钻石）',
+    `icon` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '等级图标URL',
 
     -- 门槛
     `min_points` bigint NOT NULL DEFAULT 0 COMMENT '该等级所需最低累计积分',
@@ -33,6 +34,24 @@ CREATE TABLE `usr_levels` (
     KEY `idx_status` (`status`),
     KEY `idx_deleted_at` (`deleted_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户等级定义表';
+
+
+
+CREATE TABLE `usr_level_rules` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL DEFAULT '' COMMENT '规则名称',
+  `rule_type` varchar(20) NOT NULL DEFAULT '' COMMENT '规则类型：upgrade-自动升级 downgrade-自动降级',
+  `from_level_id` bigint NOT NULL DEFAULT '0' COMMENT '源等级ID（0=任意等级）',
+  `to_level_id` bigint NOT NULL DEFAULT '0' COMMENT '目标等级ID',
+  `condition_type` varchar(50) NOT NULL DEFAULT '' COMMENT '条件类型：points-累计积分 order_count-订单数 order_amount-消费金额',
+  `condition_value` bigint NOT NULL DEFAULT '0' COMMENT '条件阈值',
+  `description` text COMMENT '规则说明',
+  `sort_order` int NOT NULL DEFAULT '0' COMMENT '排序',
+  `status` tinyint NOT NULL DEFAULT '1' COMMENT '状态：0-禁用 1-启用',
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='等级升降级规则配置';
 
 
 CREATE TABLE `usr_points` (
@@ -61,3 +80,18 @@ CREATE TABLE `usr_points` (
     KEY `idx_expire_at` (`expire_at`) COMMENT '定时扫描过期积分',
     KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户积分流水表';
+
+
+CREATE TABLE `usr_points_rules` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL DEFAULT '' COMMENT '规则名称',
+  `rule_key` varchar(50) NOT NULL DEFAULT '' COMMENT '规则键名：earn_rate-消费返积分比例 expire_days-积分过期天数 signin_points-签到奖励积分 review_points-评价奖励积分',
+  `rule_value` varchar(255) NOT NULL DEFAULT '' COMMENT '规则值',
+  `description` text COMMENT '规则说明',
+  `sort_order` int NOT NULL DEFAULT '0' COMMENT '排序',
+  `status` tinyint NOT NULL DEFAULT '1' COMMENT '状态：0-禁用 1-启用',
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_rule_key` (`rule_key`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='积分规则配置';
