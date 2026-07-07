@@ -630,6 +630,80 @@ NOTIFICATION_TEMPLATES = [
      "{{promotion_name}} 活动进行中，{{message}}", 3, 3),
 ]
 
+# ── 用户等级 ──────────────────────────────────
+USER_LEVEL = [
+    {
+        'name': '青铜会员',
+        'level': 1,
+        'min_points': 0,
+        'max_points': 999,
+        'discount_rate': 1000,
+        'free_shipping': 0,
+        'points_multiplier': 1.00,
+        'benefits': {
+            'birthday_gift': False,
+            'exclusive_coupon': False,
+            'priority_service': False,
+            'early_access': False
+        },
+        'status': 1,
+        'sort_order': 1
+    },
+    {
+        'name': '白银会员',
+        'level': 2,
+        'min_points': 1000,
+        'max_points': 4999,
+        'discount_rate': 950,
+        'free_shipping': 0,
+        'points_multiplier': 1.20,
+        'benefits': {
+            'birthday_gift': True,
+            'exclusive_coupon': False,
+            'priority_service': False,
+            'early_access': False
+        },
+        'status': 1,
+        'sort_order': 2
+    },
+    {
+        'name': '黄金会员',
+        'level': 3,
+        'min_points': 5000,
+        'max_points': 19999,
+        'discount_rate': 900,
+        'free_shipping': 1,
+        'points_multiplier': 1.50,
+        'benefits': {
+            'birthday_gift': True,
+            'exclusive_coupon': True,
+            'priority_service': False,
+            'early_access': False
+        },
+        'status': 1,
+        'sort_order': 3
+    },
+    {
+        'name': '钻石会员',
+        'level': 4,
+        'min_points': 20000,
+        'max_points': 0,  # 0 表示无上限
+        'discount_rate': 850,
+        'free_shipping': 1,
+        'points_multiplier': 2.00,
+        'benefits': {
+            'birthday_gift': True,
+            'exclusive_coupon': True,
+            'priority_service': True,
+            'early_access': True
+        },
+        'status': 1,
+        'sort_order': 4
+    }
+]
+
+
+
 
 # ── 订单常量 ──────────────────────────────────
 

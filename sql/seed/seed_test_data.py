@@ -11,6 +11,7 @@
     pip install pymysql
 """
 import os
+import json
 import random
 import sys
 import argparse
@@ -22,6 +23,7 @@ from seed_data import (BRANDS, CATEGORIES, ATTRS, CATEGORY_PROD_CFG,
                        PRODUCTS_PER_CATEGORY, MERCHANTS, NOTIFICATION_TEMPLATES,
                        COLORS, STORAGES, RAMS, LIPSTICK_SHADES, CLOTHES_SIZES, SHOE_SIZES,
                        PARENT_ORDER_STATUSES, PARENT_ORDER_STATUS_WEIGHTS, SUB_ORDER_STATUS_MAP,
+                       USER_LEVEL,
                        generate_spec, generate_products, _GENERATED_PRODUCTS)
 
 FMT = "%Y-%m-%d %H:%M:%S"
@@ -477,6 +479,36 @@ def seed_users(conn):
     print("  地址: 公司 + 家 (2 条)")
     print("用户中心 ✅\n")
 
+# ── 用户中心 等级──────────────────────────────────
+
+def seed_level(conn):
+    now = datetime.now()
+    now_str = now.strftime(FMT)
+
+    with conn.cursor() as cur:
+        for level_data in USER_LEVEL:
+            cur.execute(
+                "INSERT INTO usr_levels (name, level, min_points, max_points, discount_rate, "
+                "free_shipping, points_multiplier, benefits, status, sort_order, created_at, updated_at) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (
+                    level_data['name'],
+                    level_data['level'],
+                    level_data['min_points'],
+                    level_data['max_points'],
+                    level_data['discount_rate'],
+                    level_data['free_shipping'],
+                    level_data['points_multiplier'],
+                    json.dumps(level_data['benefits'], ensure_ascii=False),
+                    level_data['status'],
+                    level_data['sort_order'],
+                    now_str,
+                    now_str,
+                )
+            )
+    conn.commit()
+    print(f"  用户等级: {len(USER_LEVEL)} 条")
+    print("用户等级 ✅\n")
 
 # ── 订单中心 ──────────────────────────────────────
 
@@ -696,7 +728,7 @@ def seed_order(conn):
 def main():
     parser = argparse.ArgumentParser(description="为新表生成测试数据")
     parser.add_argument("--clean", action="store_true", help="先清空再生成")
-    parser.add_argument("--module", choices=["product", "inventory", "marketing", "merchant", "users", "order", "notification"],
+    parser.add_argument("--module", choices=["product", "inventory", "marketing", "merchant", "users", "level", "order", "notification"],
                         help="只生成指定模块")
     args = parser.parse_args()
 
@@ -709,6 +741,7 @@ def main():
         "inventory": seed_inventory,
         "marketing": seed_marketing,
         "users": seed_users,
+        "level": seed_level,
         "merchant": seed_merchant,
         "order": seed_order,
         "notification": seed_notification,
