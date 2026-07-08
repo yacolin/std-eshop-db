@@ -24,7 +24,7 @@ echo "=== 种子: 清理旧数据 + 初始化 RBAC ===" >&2
   cat sql/sp_p4.sql sql/sp_p3.sql
   cat sql/mch_p2.sql sql/tx_p3.sql sql/tx_p4.sql
   cat sql/sp_p5.sql
-  cat sql/seed/seed_clean.sql sql/seed/seed_rbac.sql
+  cat sql/seed/seed_rbac.sql
 } | $MYSQL
 
 TOTAL=$(grep -rh "CREATE TABLE" sql/*.sql | wc -l | tr -d ' ')
