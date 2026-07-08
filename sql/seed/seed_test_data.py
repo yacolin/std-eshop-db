@@ -64,7 +64,7 @@ def clean(conn):
         "sp_inventory_logs", "sp_inventories", "sp_product_versions",
         "sp_product_attributes", "sp_product_descriptions", "sp_skus",
         "sp_products", "sp_attributes", "sp_category_brands", "sp_categories", "sp_brands",
-        "mch_role_permissions", "mch_roles",
+        "mch_merchant_role_permissions", "mch_merchant_roles",
         "usr_addresses", "usr_points", "usr_points_rules", "usr_levels", "usr_level_rules",
         "tx_delivery_traces", "tx_delivery_items", "tx_deliveries",
         "base_notification_reads", "base_notifications", "base_notification_templates",
@@ -89,6 +89,12 @@ def seed_product(conn):
     products = _GENERATED_PRODUCTS
 
     with conn.cursor() as cur:
+        # 获取已 seeded 的商家 ID
+        cur.execute("SELECT id FROM mch_merchants WHERE deleted_at IS NULL ORDER BY id")
+        merchant_ids = [row[0] for row in cur.fetchall()]
+        if not merchant_ids:
+            print("  ⚠ 无商家数据，商品将绑定 merchant_id=0")
+            merchant_ids = [0]
         brand_id_map = {}
         for name, cname, letter in BRANDS:
             cur.execute(
@@ -131,11 +137,12 @@ def seed_product(conn):
         product_count = 0
         for name, subtitle, cat_idx, brand_idx, price, market, unit in products:
             brand_id = brand_idx
+            merchant_id = random.choice(merchant_ids)
             cur.execute(
-                "INSERT INTO sp_products (name, subtitle, category_id, brand_id, unit, main_image, "
+                "INSERT INTO sp_products (merchant_id, name, subtitle, category_id, brand_id, unit, main_image, "
                 "min_price, max_price, status) "
-                "VALUES (%s, %s, %s, %s, %s, '', %s, %s, 2)",
-                (name, subtitle, cat_ids[cat_idx], brand_id, unit, price, market),
+                "VALUES (%s, %s, %s, %s, %s, %s, '', %s, %s, 2)",
+                (merchant_id, name, subtitle, cat_ids[cat_idx], brand_id, unit, price, market),
             )
             spu_id = cur.lastrowid
             product_count += 1
@@ -160,9 +167,9 @@ def seed_product(conn):
                 import hashlib
                 spec_signature = hashlib.md5(spec_json.encode()).hexdigest()
                 cur.execute(
-                    "INSERT INTO sp_skus (product_id, sku_code, barcode, spec, spec_signature, price, market_price, cost_price, status) "
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 1)",
-                    (spu_id, sku_code, barcode, spec_json, spec_signature, sku_price,
+                    "INSERT INTO sp_skus (product_id, merchant_id, sku_code, barcode, spec, spec_signature, price, market_price, cost_price, status) "
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 1)",
+                    (spu_id, merchant_id, sku_code, barcode, spec_json, spec_signature, sku_price,
                      sku_price + random.randint(int(sku_price * 0.1), int(sku_price * 0.3)),
                      int(sku_price * 0.6)),
                 )
@@ -236,20 +243,24 @@ def seed_product(conn):
 
 def seed_inventory(conn):
     with conn.cursor() as cur:
+        cur.execute("SELECT id FROM mch_merchants WHERE deleted_at IS NULL ORDER BY id")
+        merchant_ids = [row[0] for row in cur.fetchall()] or [0]
+
         cur.execute("SELECT id FROM sp_warehouses LIMIT 1")
         wh = cur.fetchone()
         if not wh:
+            merchant_id = random.choice(merchant_ids)
             cur.execute(
-                "INSERT INTO sp_warehouses (warehouse_name, warehouse_type, status) "
-                "VALUES (%s, 1, 1)", ("默认仓库",),
+                "INSERT INTO sp_warehouses (merchant_id, warehouse_name, warehouse_type, status) "
+                "VALUES (%s, %s, 1, 1)", (merchant_id, "默认仓库"),
             )
             wh_id = cur.lastrowid
         else:
             wh_id = wh[0]
 
-        cur.execute("SELECT id FROM sp_skus WHERE deleted_at IS NULL")
+        cur.execute("SELECT id, merchant_id FROM sp_skus WHERE deleted_at IS NULL")
         skus = cur.fetchall()
-        for sku in skus:
+        for sku_id, sku_merchant_id in skus:
             roll = random.random()
             if roll < 0.10:
                 qty, reserved, threshold = 0, 0, random.randint(5, 30)
@@ -265,19 +276,19 @@ def seed_inventory(conn):
                 threshold = random.randint(5, 50)
                 status = 1 if qty > threshold else 2
             cur.execute(
-                "INSERT INTO sp_inventories (sku_id, warehouse_id, quantity, reserved, threshold, status) "
-                "VALUES (%s, %s, %s, %s, %s, %s)",
-                (sku[0], wh_id, qty, reserved, threshold, status),
+                "INSERT INTO sp_inventories (sku_id, merchant_id, warehouse_id, quantity, reserved, threshold, status) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                (sku_id, sku_merchant_id, wh_id, qty, reserved, threshold, status),
             )
 
             if random.random() < 0.3:
                 delta = random.randint(10, 50)
                 cur.execute(
-                    "INSERT INTO sp_inventory_logs (sku_id, warehouse_id, before_quantity, after_quantity, "
+                    "INSERT INTO sp_inventory_logs (sku_id, merchant_id, warehouse_id, before_quantity, after_quantity, "
                     "before_reserved, after_reserved, change_amount, "
                     "change_type, reference_id, operator, note) "
                     "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                    (sku[0], wh_id, qty - delta, qty, 0, reserved, delta,
+                    (sku_id, sku_merchant_id, wh_id, qty - delta, qty, 0, reserved, delta,
                      "purchase", "", "admin", "初始入库"),
                 )
     conn.commit()
@@ -312,25 +323,29 @@ def seed_marketing(conn):
     ]
 
     with conn.cursor() as cur:
+        cur.execute("SELECT id FROM mch_merchants WHERE deleted_at IS NULL ORDER BY id")
+        merchant_ids = [row[0] for row in cur.fetchall()] or [0]
+
         for i, (name, ptype, condition, benefit, per_limit, total_qty) in enumerate(promos, 1):
             start = (now - timedelta(days=random.randint(0, 5))).strftime(FMT)
             end = (now + timedelta(days=random.randint(3, 30))).strftime(FMT)
             status = random.choices([1, 2, 3], weights=[1, 8, 1])[0]
+            merchant_id = random.choice(merchant_ids)
 
             cur.execute(
-                "INSERT INTO mkt_promotions (promo_name, promo_type, promo_code, start_time, end_time, "
+                "INSERT INTO mkt_promotions (merchant_id, promo_name, promo_type, promo_code, start_time, end_time, "
                 "total_quantity, per_user_limit, used_quantity, status, created_at) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (name, ptype, f"PROMO{i:04d}", start, end,
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (merchant_id, name, ptype, f"PROMO{i:04d}", start, end,
                  total_qty, per_limit, random.randint(0, int(total_qty * 0.5)), status, now_str),
             )
             promo_id = cur.lastrowid
 
             rule_condition = 2 if condition > 0 else 1
             cur.execute(
-                "INSERT INTO mkt_promotion_rules (promotion_id, rule_name, condition_type, condition_value, "
-                "benefit_type, benefit_value, created_at) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                (promo_id, f"{name}规则", rule_condition, condition,
+                "INSERT INTO mkt_promotion_rules (promotion_id, merchant_id, rule_name, condition_type, condition_value, "
+                "benefit_type, benefit_value, created_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                (promo_id, merchant_id, f"{name}规则", rule_condition, condition,
                  1 if ptype in [4, 5, 6, 7, 8] else 2, benefit, now_str),
             )
 
@@ -338,8 +353,8 @@ def seed_marketing(conn):
                 cur.execute("SELECT id FROM sp_products ORDER BY RAND() LIMIT %s", (random.randint(3, 8),))
                 for p in cur.fetchall():
                     cur.execute(
-                        "INSERT INTO mkt_promotion_products (promotion_id, product_type, product_id, created_at) "
-                        "VALUES (%s, 3, %s, %s)", (promo_id, p[0], now_str),
+                        "INSERT INTO mkt_promotion_products (promotion_id, merchant_id, product_type, product_id, created_at) "
+                        "VALUES (%s, %s, 3, %s, %s)", (promo_id, merchant_id, p[0], now_str),
                     )
 
     conn.commit()
@@ -418,21 +433,84 @@ def seed_merchant(conn):
                 (merchant_id, random.randint(1000000, 50000000), random.randint(0, 500000)),
             )
 
-            # 创建商家默认角色
-            cur.execute(
-                "INSERT INTO mch_roles (merchant_id, name, display_name, description, role_type, sort_order, status) "
-                "VALUES (%s, %s, %s, %s, 'builtin', 1, 1)",
-                (merchant_id, 'manager', '店长', '商家管理员，拥有商家所有权限'),
-            )
-            mch_role_id = cur.lastrowid
+            # 创建商家角色
+            MCH_ROLES = [
+                ('manager',          '店长',   '商家管理员，拥有商家所有权限',                       1),
+                ('editor',           '编辑',   '商品/分类/品牌/属性内容维护',                       2),
+                ('customer_service', '客服',   '订单处理和售后服务',                               3),
+                ('finance',          '财务',   '资金结算和提现管理',                               4),
+                ('warehouse',        '仓库',   '库存管理和订单发货',                               5),
+            ]
 
+            # 角色→权限映射
+            MCH_ROLE_PERMS = {
+                'manager':          ['*'],
+                'editor':           ['product:read', 'product:create', 'product:update',
+                                     'category:read', 'brand:read',
+                                     'sku:read', 'sku:create', 'sku:update',
+                                     'attribute:read', 'attribute_val:read',
+                                     'inventory:read',
+                                     'promotion:read', 'review:read',
+                                     'merchant:read',
+                                     'notification:read', 'notification:create'],
+                'customer_service': ['product:read', 'category:read', 'sku:read',
+                                     'order:read', 'order:update', 'order:cancel',
+                                     'payment:read', 'refund:read', 'refund:update',
+                                     'delivery:read',
+                                     'review:read', 'review:reply',
+                                     'merchant:read',
+                                     'notification:read', 'notification:create', 'notification:update',
+                                     'user:read', 'points:read', 'level:read'],
+                'finance':          ['order:read', 'payment:read', 'refund:read', 'refund:update',
+                                     'merchant_balance:read', 'merchant_withdraw:read',
+                                     'merchant:read', 'merchant_bank:read',
+                                     'product:read', 'sku:read',
+                                     'notification:read'],
+                'warehouse':        ['product:read', 'sku:read',
+                                     'inventory:read', 'inventory:create', 'inventory:update', 'inventory:reserve',
+                                     'order:read', 'order:update',
+                                     'delivery:read', 'delivery:create', 'delivery:update',
+                                     'notification:read'],
+            }
+
+            created_roles = {}
+            for rname, rdisplay, rdesc, rsort in MCH_ROLES:
+                cur.execute(
+                    "INSERT INTO mch_merchant_roles (merchant_id, name, display_name, description, role_type, sort_order, status) "
+                    "VALUES (%s, %s, %s, %s, 'builtin', %s, 1)",
+                    (merchant_id, rname, rdisplay, rdesc, rsort),
+                )
+                role_id = cur.lastrowid
+                created_roles[rname] = role_id
+
+                # 分配权限
+                perms = MCH_ROLE_PERMS.get(rname, [])
+                if perms == ['*']:
+                    cur.execute(
+                        "INSERT INTO mch_merchant_role_permissions (merchant_id, role_id, permission_name) "
+                        "SELECT %s, %s, name FROM sys_permissions",
+                        (merchant_id, role_id),
+                    )
+                else:
+                    for perm in perms:
+                        cur.execute(
+                            "INSERT IGNORE INTO mch_merchant_role_permissions (merchant_id, role_id, permission_name) "
+                            "VALUES (%s, %s, %s)",
+                            (merchant_id, role_id, perm),
+                        )
+
+            # 将员工分配到不同角色
             if staff_list:
-                assigned = random.sample(staff_list, min(len(staff_list), random.randint(1, 3)))
-                for sid in assigned:
+                shuffled = staff_list[:]
+                random.shuffle(shuffled)
+                role_names = list(created_roles.keys())
+                for idx, sid in enumerate(shuffled[:min(len(shuffled), 5)]):
+                    role_name = role_names[idx % len(role_names)]
+                    role_id = created_roles[role_name]
                     cur.execute(
                         "INSERT IGNORE INTO mch_merchant_users (merchant_id, staff_id, role_id, status) "
                         "VALUES (%s, %s, %s, 1)",
-                        (merchant_id, sid, mch_role_id),
+                        (merchant_id, sid, role_id),
                     )
 
         print(f"  商户: {len(MERCHANTS)}")
@@ -525,8 +603,11 @@ def seed_order(conn):
     now = datetime.now()
 
     with conn.cursor() as cur:
+        cur.execute("SELECT id FROM mch_merchants WHERE deleted_at IS NULL ORDER BY id")
+        merchant_ids = [row[0] for row in cur.fetchall()] or [0]
+
         cur.execute("""
-            SELECT s.id, s.product_id, s.sku_code, s.price, s.spec, p.name, p.main_image
+            SELECT s.id, s.product_id, s.sku_code, s.price, s.spec, p.name, p.main_image, p.merchant_id
             FROM sp_skus s JOIN sp_products p ON p.id = s.product_id
             WHERE s.deleted_at IS NULL AND p.deleted_at IS NULL
         """)
@@ -589,11 +670,11 @@ def seed_order(conn):
             order_items = []
 
             for sku in order_skus:
-                sku_id, prod_id, sku_code, price, spec, prod_name, image = sku
+                sku_id, prod_id, sku_code, price, spec, prod_name, image, sku_merchant_id = sku
                 qty = random.randint(1, 3)
                 subtotal = price * qty
                 total_amount += subtotal
-                order_items.append((sku_id, prod_id, sku_code, price, qty, subtotal, prod_name, image, spec))
+                order_items.append((sku_id, prod_id, sku_code, price, qty, subtotal, prod_name, image, spec, sku_merchant_id))
 
             shipping_fee = random.choice([0, 0, 0, 800, 1200])
             discount = random.randint(0, int(total_amount * 0.1))
@@ -608,12 +689,15 @@ def seed_order(conn):
             consignee = f"用户{user_id}"
             phone = f"138{random.randint(10000000, 99999999)}"
 
+            # 取第一个订单项的商品所属商家作为整个订单的商家
+            order_merchant_id = order_items[0][9] if order_items else random.choice(merchant_ids)
+
             cur.execute(
-                """INSERT INTO tx_orders (order_no, user_id, total_amount, discount_amount, shipping_fee,
+                """INSERT INTO tx_orders (order_no, user_id, merchant_id, total_amount, discount_amount, shipping_fee,
                    pay_amount, status, payment_status, consignee, phone,
                    province, city, district, detail_addr, source, created_at, updated_at)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                (order_no, user_id, total_amount, discount, shipping_fee,
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                (order_no, user_id, order_merchant_id, total_amount, discount, shipping_fee,
                  pay_amount, parent_status, payment_status,
                  consignee, phone,
                  random.choice(["广东省", "浙江省", "北京市", "上海市", "四川省"]),
@@ -644,13 +728,13 @@ def seed_order(conn):
                 time_fields["closed_at"] = (order_date + timedelta(hours=random.randint(1, 24))).strftime(FMT)
 
             cur.execute(
-                """INSERT INTO tx_sub_orders (sub_order_no, parent_order_id, parent_order_no, user_id,
+                """INSERT INTO tx_sub_orders (sub_order_no, parent_order_id, parent_order_no, user_id, merchant_id,
                    total_amount, discount_amount, shipping_fee, pay_amount, status,
                    paid_at, shipped_at, delivered_at, completed_at, closed_at,
                    created_at, updated_at)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                    %s, %s, %s, %s, %s, %s, %s)""",
-                (sub_order_no, order_id, order_no, user_id,
+                (sub_order_no, order_id, order_no, user_id, order_merchant_id,
                  sub_total, sub_discount, sub_shipping, sub_pay, sub_status,
                  time_fields.get("paid_at"), time_fields.get("shipped_at"),
                  time_fields.get("delivered_at"), time_fields.get("completed_at"),
@@ -660,13 +744,13 @@ def seed_order(conn):
             sub_order_id = cur.lastrowid
 
             for item in order_items:
-                sku_id, prod_id, sku_code, price, qty, subtotal, prod_name, image, spec = item
+                sku_id, prod_id, sku_code, price, qty, subtotal, prod_name, image, spec, sku_merchant_id = item
                 cur.execute(
-                    """INSERT INTO tx_order_items (order_id, sub_order_id, order_no, sub_order_no,
+                    """INSERT INTO tx_order_items (order_id, sub_order_id, merchant_id, order_no, sub_order_no,
                        sku_id, product_id, sku_code, product_name, sku_spec, image,
                        price, quantity, subtotal, created_at, updated_at)
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                    (order_id, sub_order_id, order_no, sub_order_no,
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                    (order_id, sub_order_id, sku_merchant_id, order_no, sub_order_no,
                      sku_id, prod_id, sku_code, prod_name,
                      spec if spec and spec != "{}" else None, image,
                      price, qty, subtotal,
@@ -690,10 +774,10 @@ def seed_order(conn):
                              3 if after_qty <= 0 else 2 if after_qty < 10 else 1, sku_id),
                         )
                         cur.execute(
-                            """INSERT INTO sp_inventory_logs (sku_id, change_type, before_quantity, after_quantity,
+                            """INSERT INTO sp_inventory_logs (sku_id, merchant_id, change_type, before_quantity, after_quantity,
                                before_reserved, after_reserved, change_amount, reference_id, operator, note)
-                               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                            (sku_id, "order", before_qty, after_qty,
+                               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                            (sku_id, sku_merchant_id, "order", before_qty, after_qty,
                              before_reserved, after_reserved, -qty, order_no, "system", "订单扣减"),
                         )
 
@@ -702,10 +786,10 @@ def seed_order(conn):
                 payment_no = f"PAY{paid_at.strftime('%Y%m%d%H%M%S')}{random.randint(1000,9999)}"
                 payment_method = random.choice(["alipay", "wechat", "alipay", "wechat", "wallet"])
                 cur.execute(
-                    """INSERT INTO tx_payments (payment_no, order_no, order_id, amount, payment_method,
+                    """INSERT INTO tx_payments (payment_no, order_no, order_id, merchant_id, amount, payment_method,
                        channel, trade_type, status, paid_at, created_at, updated_at)
-                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                    (payment_no, order_no, order_id, pay_amount, payment_method,
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                    (payment_no, order_no, order_id, order_merchant_id, pay_amount, payment_method,
                      payment_method, "native",
                      "success" if parent_status != "refunded" else "refunded",
                      paid_at.strftime(FMT), order_date.strftime(FMT), paid_at.strftime(FMT)),
@@ -716,10 +800,10 @@ def seed_order(conn):
                 if parent_status == "refunded":
                     refund_no = f"RFD{paid_at.strftime('%Y%m%d%H%M%S')}{random.randint(1000,9999)}"
                     cur.execute(
-                        """INSERT INTO tx_refunds (refund_no, payment_id, payment_no, order_no, order_id,
+                        """INSERT INTO tx_refunds (refund_no, payment_id, payment_no, order_no, order_id, merchant_id,
                            amount, reason, status, applied_at, success_at, created_at, updated_at)
-                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                        (refund_no, payment_id, payment_no, order_no, order_id,
+                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                        (refund_no, payment_id, payment_no, order_no, order_id, order_merchant_id,
                          pay_amount, "测试退款", "success",
                          (order_date + timedelta(days=1)).strftime(FMT),
                          paid_at.strftime(FMT), order_date.strftime(FMT), paid_at.strftime(FMT)),
@@ -894,7 +978,7 @@ def seed_review(conn):
     with conn.cursor() as cur:
         cur.execute("""
             SELECT oi.id, oi.order_id, oi.product_id, oi.sku_id,
-                   o.user_id, o.created_at
+                   o.user_id, o.created_at, oi.merchant_id
             FROM tx_order_items oi
             JOIN tx_orders o ON o.id = oi.order_id
             WHERE o.status IN ('paid','completed') AND o.deleted_at IS NULL
@@ -944,7 +1028,7 @@ def seed_review(conn):
         total_audit_logs = 0
 
         for item in review_items:
-            item_id, order_id, spu_id, sku_id, user_id, order_time = item
+            item_id, order_id, spu_id, sku_id, user_id, order_time, item_merchant_id = item
 
             rating_weights = [1, 2, 10, 30, 57]
             overall = random.choices([1, 2, 3, 4, 5], weights=rating_weights)[0]
@@ -977,12 +1061,12 @@ def seed_review(conn):
                     content, is_anonymous, status, reject_reason,
                     reply_count, like_count, helpful_count,
                     created_at, updated_at)
-                   VALUES (%s, %s, %s, %s, %s, 0,
-                    %s, %s, %s, %s, %s, %s, %s, %s, 0, %s, %s, %s, %s)""",
-                (user_id, order_id, item_id, spu_id, sku_id,
+                   VALUES (%s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                (user_id, order_id, item_id, spu_id, sku_id, item_merchant_id,
                  overall, quality, logistics, service,
                  content, is_anonymous, status, reject_reason,
-                 random.randint(0, 20), random.randint(0, 10),
+                 0, random.randint(0, 20), random.randint(0, 10),
                  review_time.strftime(FMT), review_time.strftime(FMT)),
             )
             review_id = cur.lastrowid
@@ -1086,6 +1170,7 @@ def main():
         clean(conn)
 
     modules = {
+        "merchant": seed_merchant,
         "product": seed_product,
         "inventory": seed_inventory,
         "marketing": seed_marketing,
