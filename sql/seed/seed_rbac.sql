@@ -8,6 +8,9 @@ USE eshop_db;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+TRUNCATE TABLE sys_operation_logs;
+TRUNCATE TABLE sys_staff_departments;
+TRUNCATE TABLE sys_departments;
 TRUNCATE TABLE sys_role_permissions;
 TRUNCATE TABLE sys_permissions;
 TRUNCATE TABLE sys_roles;
@@ -25,157 +28,169 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- ==================== 权限 ====================
 -- product 模块 (10000-19999)
 
-INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
-('product:read',     '查看产品',   'product',   'read',   'product', 11000, 1),
-('product:create',   '创建产品',   'product',   'create', 'product', 11050, 1),
-('product:update',   '编辑产品',   'product',   'update', 'product', 11100, 1),
-('product:delete',   '删除产品',   'product',   'delete', 'product', 11150, 1),
+INSERT INTO sys_permissions (name, display_name, resource, action, parent_id, category, sort_order, status) VALUES
+('product:read',     '查看产品',   'product',   'read',   0, 'product', 11000, 1),
+('product:create',   '创建产品',   'product',   'create', 0, 'product', 11050, 1),
+('product:update',   '编辑产品',   'product',   'update', 0, 'product', 11100, 1),
+('product:delete',   '删除产品',   'product',   'delete', 0, 'product', 11150, 1),
 
-('category:read',    '查看分类',   'category',  'read',   'product', 11500, 1),
-('category:create',  '创建分类',   'category',  'create', 'product', 11550, 1),
-('category:update',  '编辑分类',   'category',  'update', 'product', 11600, 1),
-('category:delete',  '删除分类',   'category',  'delete', 'product', 11650, 1),
+('category:read',    '查看分类',   'category',  'read',   0, 'product', 11500, 1),
+('category:create',  '创建分类',   'category',  'create', 0, 'product', 11550, 1),
+('category:update',  '编辑分类',   'category',  'update', 0, 'product', 11600, 1),
+('category:delete',  '删除分类',   'category',  'delete', 0, 'product', 11650, 1),
 
-('brand:read',       '查看品牌',   'brand',     'read',   'product', 12000, 1),
-('brand:create',     '创建品牌',   'brand',     'create', 'product', 12050, 1),
-('brand:update',     '编辑品牌',   'brand',     'update', 'product', 12100, 1),
-('brand:delete',     '删除品牌',   'brand',     'delete', 'product', 12150, 1),
+('brand:read',       '查看品牌',   'brand',     'read',   0, 'product', 12000, 1),
+('brand:create',     '创建品牌',   'brand',     'create', 0, 'product', 12050, 1),
+('brand:update',     '编辑品牌',   'brand',     'update', 0, 'product', 12100, 1),
+('brand:delete',     '删除品牌',   'brand',     'delete', 0, 'product', 12150, 1),
 
-('sku:read',         '查看 SKU',   'sku',       'read',   'product', 12500, 1),
-('sku:create',       '创建 SKU',   'sku',       'create', 'product', 12550, 1),
-('sku:update',       '编辑 SKU',   'sku',       'update', 'product', 12600, 1),
-('sku:delete',       '删除 SKU',   'sku',       'delete', 'product', 12650, 1),
+('sku:read',         '查看 SKU',   'sku',       'read',   0, 'product', 12500, 1),
+('sku:create',       '创建 SKU',   'sku',       'create', 0, 'product', 12550, 1),
+('sku:update',       '编辑 SKU',   'sku',       'update', 0, 'product', 12600, 1),
+('sku:delete',       '删除 SKU',   'sku',       'delete', 0, 'product', 12650, 1),
 
-('attribute:read',       '查看属性',   'attribute',      'read',   'product', 13000, 1),
-('attribute:create',     '创建属性',   'attribute',      'create', 'product', 13050, 1),
-('attribute:update',     '编辑属性',   'attribute',      'update', 'product', 13100, 1),
-('attribute:delete',     '删除属性',   'attribute',      'delete', 'product', 13150, 1),
-('attribute_val:read',   '查看属性值', 'attribute_val',  'read',   'product', 13250, 1),
-('attribute_val:create', '创建属性值', 'attribute_val',  'create', 'product', 13300, 1),
-('attribute_val:update', '编辑属性值', 'attribute_val',  'update', 'product', 13350, 1),
-('attribute_val:delete', '删除属性值', 'attribute_val',  'delete', 'product', 13400, 1);
+('attribute:read',       '查看属性',   'attribute',      'read',   0, 'product', 13000, 1),
+('attribute:create',     '创建属性',   'attribute',      'create', 0, 'product', 13050, 1),
+('attribute:update',     '编辑属性',   'attribute',      'update', 0, 'product', 13100, 1),
+('attribute:delete',     '删除属性',   'attribute',      'delete', 0, 'product', 13150, 1),
+('attribute_val:read',   '查看属性值', 'attribute_val',  'read',   0, 'product', 13250, 1),
+('attribute_val:create', '创建属性值', 'attribute_val',  'create', 0, 'product', 13300, 1),
+('attribute_val:update', '编辑属性值', 'attribute_val',  'update', 0, 'product', 13350, 1),
+('attribute_val:delete', '删除属性值', 'attribute_val',  'delete', 0, 'product', 13400, 1);
 
 -- inventory 模块 (20000-29999)
 
-INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
-('inventory:read',    '查看库存',        'inventory', 'read',    'inventory', 21000, 1),
-('inventory:create',  '创建库存记录',    'inventory', 'create',  'inventory', 21050, 1),
-('inventory:update',  '编辑库存',        'inventory', 'update',  'inventory', 21100, 1),
-('inventory:reserve', '库存预留/释放',   'inventory', 'reserve', 'inventory', 21150, 1);
+INSERT INTO sys_permissions (name, display_name, resource, action, parent_id, category, sort_order, status) VALUES
+('inventory:read',    '查看库存',        'inventory', 'read',    0, 'inventory', 21000, 1),
+('inventory:create',  '创建库存记录',    'inventory', 'create',  0, 'inventory', 21050, 1),
+('inventory:update',  '编辑库存',        'inventory', 'update',  0, 'inventory', 21100, 1),
+('inventory:reserve', '库存预留/释放',   'inventory', 'reserve', 0, 'inventory', 21150, 1);
 
 -- trade 模块 (30000-39999)
 
-INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
-('order:read',     '查看订单',   'order', 'read',   'trade', 31000, 1),
-('order:create',   '创建订单',   'order', 'create', 'trade', 31050, 1),
-('order:update',   '编辑订单',   'order', 'update', 'trade', 31100, 1),
-('order:cancel',   '取消订单',   'order', 'cancel', 'trade', 31150, 1),
+INSERT INTO sys_permissions (name, display_name, resource, action, parent_id, category, sort_order, status) VALUES
+('order:read',     '查看订单',   'order', 'read',   0, 'trade', 31000, 1),
+('order:create',   '创建订单',   'order', 'create', 0, 'trade', 31050, 1),
+('order:update',   '编辑订单',   'order', 'update', 0, 'trade', 31100, 1),
+('order:cancel',   '取消订单',   'order', 'cancel', 0, 'trade', 31150, 1),
 
-('cart:read',   '查看购物车', 'cart', 'read',   'trade', 31500, 1),
-('cart:add',    '添加商品',   'cart', 'add',    'trade', 31550, 1),
-('cart:update', '编辑购物车', 'cart', 'update', 'trade', 31600, 1),
-('cart:delete', '删除商品',   'cart', 'delete', 'trade', 31650, 1),
+('cart:read',   '查看购物车', 'cart', 'read',   0, 'trade', 31500, 1),
+('cart:add',    '添加商品',   'cart', 'add',    0, 'trade', 31550, 1),
+('cart:update', '编辑购物车', 'cart', 'update', 0, 'trade', 31600, 1),
+('cart:delete', '删除商品',   'cart', 'delete', 0, 'trade', 31650, 1),
 
-('payment:read',   '查看支付',   'payment', 'read',   'trade', 32000, 1),
-('payment:create', '发起支付',   'payment', 'create', 'trade', 32050, 1),
-('payment:update', '更新支付',   'payment', 'update', 'trade', 32100, 1),
+('payment:read',   '查看支付',   'payment', 'read',   0, 'trade', 32000, 1),
+('payment:create', '发起支付',   'payment', 'create', 0, 'trade', 32050, 1),
+('payment:update', '更新支付',   'payment', 'update', 0, 'trade', 32100, 1),
 
-('refund:read',   '查看退款',   'refund', 'read',   'trade', 32500, 1),
-('refund:create', '申请退款',   'refund', 'create', 'trade', 32550, 1),
-('refund:update', '处理退款',   'refund', 'update', 'trade', 32600, 1),
+('refund:read',   '查看退款',   'refund', 'read',   0, 'trade', 32500, 1),
+('refund:create', '申请退款',   'refund', 'create', 0, 'trade', 32550, 1),
+('refund:update', '处理退款',   'refund', 'update', 0, 'trade', 32600, 1),
 
-('delivery:read',   '查看物流',   'delivery', 'read',   'trade', 33000, 1),
-('delivery:create', '创建发货',   'delivery', 'create', 'trade', 33050, 1),
-('delivery:update', '编辑物流',   'delivery', 'update', 'trade', 33100, 1);
+('delivery:read',   '查看物流',   'delivery', 'read',   0, 'trade', 33000, 1),
+('delivery:create', '创建发货',   'delivery', 'create', 0, 'trade', 33050, 1),
+('delivery:update', '编辑物流',   'delivery', 'update', 0, 'trade', 33100, 1);
 
 -- marketing 模块 (40000-49999)
 
-INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
-('promotion:read',   '查看促销',   'promotion', 'read',   'marketing', 41000, 1),
-('promotion:create', '创建促销',   'promotion', 'create', 'marketing', 41050, 1),
-('promotion:update', '编辑促销',   'promotion', 'update', 'marketing', 41100, 1),
-('promotion:delete', '删除促销',   'promotion', 'delete', 'marketing', 41150, 1);
+INSERT INTO sys_permissions (name, display_name, resource, action, parent_id, category, sort_order, status) VALUES
+('promotion:read',   '查看促销',   'promotion', 'read',   0, 'marketing', 41000, 1),
+('promotion:create', '创建促销',   'promotion', 'create', 0, 'marketing', 41050, 1),
+('promotion:update', '编辑促销',   'promotion', 'update', 0, 'marketing', 41100, 1),
+('promotion:delete', '删除促销',   'promotion', 'delete', 0, 'marketing', 41150, 1);
 
 -- merchant 模块 (45000-49999)
 
-INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
-('merchant:read',            '查看商家',       'merchant',          'read',    'merchant', 45100, 1),
-('merchant:create',          '创建商家',       'merchant',          'create',  'merchant', 45150, 1),
-('merchant:update',          '编辑商家',       'merchant',          'update',  'merchant', 45200, 1),
-('merchant:delete',          '删除商家',       'merchant',          'delete',  'merchant', 45250, 1),
+INSERT INTO sys_permissions (name, display_name, resource, action, parent_id, category, sort_order, status) VALUES
+('merchant:read',            '查看商家',       'merchant',          'read',    0, 'merchant', 45100, 1),
+('merchant:create',          '创建商家',       'merchant',          'create',  0, 'merchant', 45150, 1),
+('merchant:update',          '编辑商家',       'merchant',          'update',  0, 'merchant', 45200, 1),
+('merchant:delete',          '删除商家',       'merchant',          'delete',  0, 'merchant', 45250, 1),
 
-('merchant_bank:read',       '查看银行账户',   'merchant_bank',     'read',    'merchant', 46000, 1),
-('merchant_bank:create',     '添加银行账户',   'merchant_bank',     'create',  'merchant', 46050, 1),
-('merchant_bank:update',     '编辑银行账户',   'merchant_bank',     'update',  'merchant', 46100, 1),
-('merchant_bank:delete',     '删除银行账户',   'merchant_bank',     'delete',  'merchant', 46150, 1),
+('merchant_bank:read',       '查看银行账户',   'merchant_bank',     'read',    0, 'merchant', 46000, 1),
+('merchant_bank:create',     '添加银行账户',   'merchant_bank',     'create',  0, 'merchant', 46050, 1),
+('merchant_bank:update',     '编辑银行账户',   'merchant_bank',     'update',  0, 'merchant', 46100, 1),
+('merchant_bank:delete',     '删除银行账户',   'merchant_bank',     'delete',  0, 'merchant', 46150, 1),
 
-('merchant_contact:read',    '查看联系人',     'merchant_contact',  'read',    'merchant', 47000, 1),
-('merchant_contact:create',  '添加联系人',     'merchant_contact',  'create',  'merchant', 47050, 1),
-('merchant_contact:update',  '编辑联系人',     'merchant_contact',  'update',  'merchant', 47100, 1),
-('merchant_contact:delete',  '删除联系人',     'merchant_contact',  'delete',  'merchant', 47150, 1),
+('merchant_contact:read',    '查看联系人',     'merchant_contact',  'read',    0, 'merchant', 47000, 1),
+('merchant_contact:create',  '添加联系人',     'merchant_contact',  'create',  0, 'merchant', 47050, 1),
+('merchant_contact:update',  '编辑联系人',     'merchant_contact',  'update',  0, 'merchant', 47100, 1),
+('merchant_contact:delete',  '删除联系人',     'merchant_contact',  'delete',  0, 'merchant', 47150, 1),
 
-('merchant_qual:read',       '查看资质',       'merchant_qual',     'read',    'merchant', 48000, 1),
-('merchant_qual:create',     '上传资质',       'merchant_qual',     'create',  'merchant', 48050, 1),
-('merchant_qual:update',     '编辑资质',       'merchant_qual',     'update',  'merchant', 48100, 1),
-('merchant_qual:delete',     '删除资质',       'merchant_qual',     'delete',  'merchant', 48150, 1),
-('merchant_qual:audit',      '审核资质',       'merchant_qual',     'audit',   'merchant', 48200, 1),
+('merchant_qual:read',       '查看资质',       'merchant_qual',     'read',    0, 'merchant', 48000, 1),
+('merchant_qual:create',     '上传资质',       'merchant_qual',     'create',  0, 'merchant', 48050, 1),
+('merchant_qual:update',     '编辑资质',       'merchant_qual',     'update',  0, 'merchant', 48100, 1),
+('merchant_qual:delete',     '删除资质',       'merchant_qual',     'delete',  0, 'merchant', 48150, 1),
+('merchant_qual:audit',      '审核资质',       'merchant_qual',     'audit',   0, 'merchant', 48200, 1),
 
-('merchant_withdraw:read',   '查看提现',       'merchant_withdraw', 'read',    'merchant', 49000, 1),
-('merchant_withdraw:approve','审核通过提现',   'merchant_withdraw', 'approve', 'merchant', 49050, 1),
-('merchant_withdraw:reject', '拒绝提现',       'merchant_withdraw', 'reject',  'merchant', 49100, 1),
+('merchant_withdraw:read',   '查看提现',       'merchant_withdraw', 'read',    0, 'merchant', 49000, 1),
+('merchant_withdraw:approve','审核通过提现',   'merchant_withdraw', 'approve', 0, 'merchant', 49050, 1),
+('merchant_withdraw:reject', '拒绝提现',       'merchant_withdraw', 'reject',  0, 'merchant', 49100, 1),
 
-('merchant_balance:read',    '查看余额',       'merchant_balance',  'read',    'merchant', 49500, 1);
+('merchant_balance:read',    '查看余额',       'merchant_balance',  'read',    0, 'merchant', 49500, 1);
 
 -- review 模块 (50000-59999)
 
-INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
-('review:read',     '查看评论',   'review', 'read',     'review', 51000, 1),
-('review:create',   '发表评论',   'review', 'create',   'review', 51050, 1),
-('review:moderate', '审核评论',   'review', 'moderate', 'review', 51100, 1),
-('review:reply',    '回复评论',   'review', 'reply',    'review', 51150, 1),
-('review:delete',   '删除评论',   'review', 'delete',   'review', 51200, 1);
+INSERT INTO sys_permissions (name, display_name, resource, action, parent_id, category, sort_order, status) VALUES
+('review:read',     '查看评论',   'review', 'read',     0, 'review', 51000, 1),
+('review:create',   '发表评论',   'review', 'create',   0, 'review', 51050, 1),
+('review:moderate', '审核评论',   'review', 'moderate', 0, 'review', 51100, 1),
+('review:reply',    '回复评论',   'review', 'reply',    0, 'review', 51150, 1),
+('review:delete',   '删除评论',   'review', 'delete',   0, 'review', 51200, 1);
 
 -- staff 模块 (60000-69999) — 角色 & 权限管理
 
-INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
-('role:read',     '查看角色',   'role',       'read',   'staff', 61000, 1),
-('role:create',   '创建角色',   'role',       'create', 'staff', 61050, 1),
-('role:update',   '编辑角色',   'role',       'update', 'staff', 61100, 1),
-('role:delete',   '删除角色',   'role',       'delete', 'staff', 61150, 1),
+INSERT INTO sys_permissions (name, display_name, resource, action, parent_id, category, sort_order, status) VALUES
+('staff:read',     '查看员工',   'staff',       'read',   0, 'staff', 60000, 1),
+('staff:create',   '创建员工',   'staff',       'create', 0, 'staff', 60050, 1),
+('staff:update',   '编辑员工',   'staff',       'update', 0, 'staff', 60100, 1),
+('staff:delete',   '删除员工',   'staff',       'delete', 0, 'staff', 60150, 1),
 
-('permission:read',   '查看权限',   'permission', 'read',   'staff', 61500, 1),
-('permission:create', '创建权限',   'permission', 'create', 'staff', 61550, 1),
-('permission:update', '编辑权限',   'permission', 'update', 'staff', 61600, 1),
-('permission:delete', '删除权限',   'permission', 'delete', 'staff', 61650, 1);
+('role:read',     '查看角色',   'role',       'read',   0, 'staff', 61000, 1),
+('role:create',   '创建角色',   'role',       'create', 0, 'staff', 61050, 1),
+('role:update',   '编辑角色',   'role',       'update', 0, 'staff', 61100, 1),
+('role:delete',   '删除角色',   'role',       'delete', 0, 'staff', 61150, 1),
+
+('permission:read',   '查看权限',   'permission', 'read',   0, 'staff', 61500, 1),
+('permission:create', '创建权限',   'permission', 'create', 0, 'staff', 61550, 1),
+('permission:update', '编辑权限',   'permission', 'update', 0, 'staff', 61600, 1),
+('permission:delete', '删除权限',   'permission', 'delete', 0, 'staff', 61650, 1),
+
+('department:read',     '查看部门',   'department', 'read',   0, 'staff', 62000, 1),
+('department:create',   '创建部门',   'department', 'create', 0, 'staff', 62050, 1),
+('department:update',   '编辑部门',   'department', 'update', 0, 'staff', 62100, 1),
+('department:delete',   '删除部门',   'department', 'delete', 0, 'staff', 62150, 1),
+
+('operation_log:read',  '查看操作日志', 'operation_log', 'read', 0, 'staff', 63000, 1);
 
 -- user 模块 (70000-79999)
 
-INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
-('user:read',     '查看用户',   'user',    'read',   'user', 71000, 1),
-('user:create',   '创建用户',   'user',    'create', 'user', 71050, 1),
-('user:update',   '编辑用户',   'user',    'update', 'user', 71100, 1),
-('user:delete',   '删除用户',   'user',    'delete', 'user', 71150, 1),
+INSERT INTO sys_permissions (name, display_name, resource, action, parent_id, category, sort_order, status) VALUES
+('user:read',     '查看用户',   'user',    'read',   0, 'user', 71000, 1),
+('user:create',   '创建用户',   'user',    'create', 0, 'user', 71050, 1),
+('user:update',   '编辑用户',   'user',    'update', 0, 'user', 71100, 1),
+('user:delete',   '删除用户',   'user',    'delete', 0, 'user', 71150, 1),
 
-('address:read',   '查看地址',   'address', 'read',   'user', 71500, 1),
-('address:create', '创建地址',   'address', 'create', 'user', 71550, 1),
-('address:update', '编辑地址',   'address', 'update', 'user', 71600, 1),
-('address:delete', '删除地址',   'address', 'delete', 'user', 71650, 1),
+('address:read',   '查看地址',   'address', 'read',   0, 'user', 71500, 1),
+('address:create', '创建地址',   'address', 'create', 0, 'user', 71550, 1),
+('address:update', '编辑地址',   'address', 'update', 0, 'user', 71600, 1),
+('address:delete', '删除地址',   'address', 'delete', 0, 'user', 71650, 1),
 
-('points:read', '查看积分', 'points', 'read', 'user', 72000, 1),
-('level:read',  '查看等级', 'level',  'read', 'user', 72050, 1);
+('points:read', '查看积分', 'points', 'read', 0, 'user', 72000, 1),
+('level:read',  '查看等级', 'level',  'read', 0, 'user', 72050, 1);
 
 -- base 模块 (80000-89999) — 通知
 
-INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
-('notification:read',   '查看通知',   'notification', 'read',   'base', 81000, 1),
-('notification:create', '发送通知',   'notification', 'create', 'base', 81050, 1),
-('notification:update', '标记已读',   'notification', 'update', 'base', 81100, 1),
-('notification:delete', '删除通知',   'notification', 'delete', 'base', 81150, 1);
+INSERT INTO sys_permissions (name, display_name, resource, action, parent_id, category, sort_order, status) VALUES
+('notification:read',   '查看通知',   'notification', 'read',   0, 'base', 81000, 1),
+('notification:create', '发送通知',   'notification', 'create', 0, 'base', 81050, 1),
+('notification:update', '标记已读',   'notification', 'update', 0, 'base', 81100, 1),
+('notification:delete', '删除通知',   'notification', 'delete', 0, 'base', 81150, 1);
 
 -- dashboard 模块 (90000-99999)
 
-INSERT INTO sys_permissions (name, display_name, resource, action, category, sort_order, status) VALUES
-('dashboard:read', '查看仪表盘', 'dashboard', 'read', 'dashboard', 91000, 1);
+INSERT INTO sys_permissions (name, display_name, resource, action, parent_id, category, sort_order, status) VALUES
+('dashboard:read', '查看仪表盘', 'dashboard', 'read', 0, 'dashboard', 91000, 1);
 
 
 -- ==================== 角色 ====================
@@ -235,6 +250,9 @@ SELECT (SELECT id FROM sys_roles WHERE name = 'operator'), id FROM sys_permissio
     'review:read', 'review:moderate', 'review:reply',
     'notification:read', 'notification:update', 'notification:create',
     'user:read', 'points:read', 'level:read',
+    'staff:read',
+    'department:read', 'department:create', 'department:update', 'department:delete',
+    'operation_log:read',
     'dashboard:read'
 );
 

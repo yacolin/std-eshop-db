@@ -50,6 +50,9 @@ TRUNCATE TABLE rev_review_media;
 TRUNCATE TABLE rev_reviews;
 
 -- 系统/B端员工
+TRUNCATE TABLE sys_operation_logs;
+TRUNCATE TABLE sys_staff_departments;
+TRUNCATE TABLE sys_departments;
 TRUNCATE TABLE sys_login_histories;
 TRUNCATE TABLE sys_staff_roles;
 TRUNCATE TABLE sys_staff;
@@ -92,7 +95,10 @@ ALTER TABLE sys_permissions AUTO_INCREMENT = 1;
 ALTER TABLE sys_role_permissions AUTO_INCREMENT = 1;
 ALTER TABLE sys_staff AUTO_INCREMENT = 1;
 ALTER TABLE sys_staff_roles AUTO_INCREMENT = 1;
+ALTER TABLE sys_departments AUTO_INCREMENT = 1;
+ALTER TABLE sys_staff_departments AUTO_INCREMENT = 1;
 ALTER TABLE sys_login_histories AUTO_INCREMENT = 1;
+ALTER TABLE sys_operation_logs AUTO_INCREMENT = 1;
 ALTER TABLE sp_categories AUTO_INCREMENT = 1;
 ALTER TABLE sp_brands AUTO_INCREMENT = 1;
 ALTER TABLE sp_attributes AUTO_INCREMENT = 1;

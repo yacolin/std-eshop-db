@@ -33,6 +33,7 @@ CREATE TABLE `sys_permissions` (
   `description` varchar(255) NOT NULL DEFAULT '' COMMENT '权限描述',
   `resource` varchar(50) NOT NULL COMMENT '资源（如 order/product/user）',
   `action` varchar(50) NOT NULL COMMENT '操作（如 create/read/update/delete）',
+  `parent_id` bigint NOT NULL DEFAULT 0 COMMENT '父级ID（0=根节点，支持菜单/按钮树形层级）',
   `category` varchar(50) NOT NULL DEFAULT '' COMMENT '分类（如 business/system/admin）',
   `sort_order` int NOT NULL DEFAULT '0' COMMENT '排序值',
   `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '1-启用 0-禁用',
@@ -115,3 +116,57 @@ CREATE TABLE `sys_login_histories` (
   KEY `idx_staff_id` (`staff_id`) USING BTREE,
   KEY `idx_created_at` (`created_at`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='B端员工登录历史表';
+
+
+-- ==================== 部门管理 ====================
+
+CREATE TABLE `sys_departments` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `name` varchar(50) NOT NULL COMMENT '部门名称',
+  `parent_id` bigint NOT NULL DEFAULT 0 COMMENT '上级部门ID（0=根部门）',
+  `sort_order` int NOT NULL DEFAULT '0' COMMENT '排序值',
+  `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '1-启用 0-禁用',
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+  `deleted_at` datetime(3) DEFAULT NULL COMMENT '删除时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_parent_id` (`parent_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_deleted_at` (`deleted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='部门表（支持树形组织架构）';
+
+
+CREATE TABLE `sys_staff_departments` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `staff_id` bigint NOT NULL COMMENT '员工ID（关联 sys_staff.id）',
+  `department_id` bigint NOT NULL COMMENT '部门ID（关联 sys_departments.id）',
+  `is_primary` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否主部门',
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  `deleted_at` datetime(3) DEFAULT NULL COMMENT '删除时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_staff_dept` (`staff_id`, `department_id`),
+  KEY `idx_department_id` (`department_id`),
+  KEY `idx_deleted_at` (`deleted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='员工-部门关联表';
+
+
+-- ==================== 操作审计日志 ====================
+
+CREATE TABLE `sys_operation_logs` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `staff_id` bigint NOT NULL COMMENT '操作员工ID（关联 sys_staff.id）',
+  `staff_name` varchar(50) NOT NULL DEFAULT '' COMMENT '操作员工姓名（冗余，便于查询）',
+  `operation` varchar(50) NOT NULL COMMENT '操作类型：update_price/disable_user/create_coupon/...',
+  `resource` varchar(50) NOT NULL COMMENT '操作资源：product/order/user/coupon/...',
+  `resource_id` varchar(64) NOT NULL DEFAULT '' COMMENT '资源ID',
+  `detail` json DEFAULT NULL COMMENT '操作详情JSON（记录变更前后快照）',
+  `result` tinyint(1) NOT NULL DEFAULT '1' COMMENT '1-成功 0-失败',
+  `failure_reason` varchar(255) NOT NULL DEFAULT '' COMMENT '失败原因',
+  `ip` varchar(50) NOT NULL DEFAULT '' COMMENT '操作IP',
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_staff_id` (`staff_id`),
+  KEY `idx_operation` (`operation`),
+  KEY `idx_resource` (`resource`, `resource_id`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='B端操作审计日志表（记录关键业务操作的详细快照）';
