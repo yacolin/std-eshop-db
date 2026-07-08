@@ -9,7 +9,7 @@ CREATE TABLE `mch_merchant_users` (
     `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
     `merchant_id` BIGINT NOT NULL COMMENT '商家ID',
     `staff_id` BIGINT NOT NULL COMMENT '员工ID（关联 sys_staff.id）',
-    `role_id` BIGINT NOT NULL DEFAULT 0 COMMENT '商家角色ID（关联 mch_roles.id，与平台RBAC隔离）',
+    `role_id` BIGINT NOT NULL DEFAULT 0 COMMENT '商家角色ID（关联 mch_merchant_roles.id，与平台RBAC隔离）',
     `status` TINYINT NOT NULL DEFAULT 1 COMMENT '1-正常 2-禁用',
     `invited_at` datetime(3) DEFAULT NULL COMMENT '邀请时间',
     `last_login_at` datetime(3) DEFAULT NULL COMMENT '最后登录时间',
@@ -82,10 +82,10 @@ CREATE TABLE `mch_merchant_settlement_logs` (
 
 -- ==================== 商家角色-权限关联 ====================
 
-CREATE TABLE `mch_role_permissions` (
+CREATE TABLE `mch_merchant_role_permissions` (
     `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
     `merchant_id` BIGINT NOT NULL COMMENT '商家ID',
-    `role_id` BIGINT NOT NULL COMMENT '角色ID（关联 mch_roles.id）',
+    `role_id` BIGINT NOT NULL COMMENT '角色ID（关联 mch_merchant_roles.id）',
     `permission_name` VARCHAR(100) NOT NULL COMMENT '权限标识（对应 sys_permissions.name）',
     `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `deleted_at` datetime(3) DEFAULT NULL,

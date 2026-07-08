@@ -116,7 +116,7 @@ CREATE TABLE `mch_merchant_qualifications` (
 
 -- ==================== 商家域角色 ====================
 
-CREATE TABLE `mch_roles` (
+CREATE TABLE `mch_merchant_roles` (
     `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
     `merchant_id` BIGINT NOT NULL COMMENT '商家ID（0=平台预置角色）',
     `name` VARCHAR(50) NOT NULL COMMENT '角色名称（如店长/运营/财务）',
