@@ -287,7 +287,7 @@ def seed_inventory(conn):
                     "INSERT INTO sp_inventory_logs (sku_id, merchant_id, warehouse_id, before_quantity, after_quantity, "
                     "before_reserved, after_reserved, change_amount, "
                     "change_type, reference_id, operator, note) "
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                     (sku_id, sku_merchant_id, wh_id, qty - delta, qty, 0, reserved, delta,
                      "purchase", "", "admin", "初始入库"),
                 )
@@ -693,11 +693,11 @@ def seed_order(conn):
             order_merchant_id = order_items[0][9] if order_items else random.choice(merchant_ids)
 
             cur.execute(
-                """INSERT INTO tx_orders (order_no, user_id, merchant_id, total_amount, discount_amount, shipping_fee,
+                """INSERT INTO tx_orders (order_no, user_id, total_amount, discount_amount, shipping_fee,
                    pay_amount, status, payment_status, consignee, phone,
                    province, city, district, detail_addr, source, created_at, updated_at)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                (order_no, user_id, order_merchant_id, total_amount, discount, shipping_fee,
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+                (order_no, user_id, total_amount, discount, shipping_fee,
                  pay_amount, parent_status, payment_status,
                  consignee, phone,
                  random.choice(["广东省", "浙江省", "北京市", "上海市", "四川省"]),
