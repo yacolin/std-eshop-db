@@ -70,12 +70,13 @@ CREATE TABLE `usr_addresses` (
   `detail` varchar(256) NOT NULL DEFAULT '' COMMENT '详细地址',
   `zip_code` varchar(10) NOT NULL DEFAULT '' COMMENT '邮编',
   `tag` varchar(16) NOT NULL DEFAULT '' COMMENT '地址标签：home/office/company/other',
-  `is_default` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否默认地址',
+  `is_default` tinyint(1) DEFAULT NULL COMMENT '是否默认地址（NULL=非默认, 1=默认）',
   `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
   `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
   `deleted_at` datetime(3) DEFAULT NULL COMMENT '删除时间',
   PRIMARY KEY (`id`) USING BTREE,
   KEY `idx_user_id` (`user_id`) USING BTREE,
+  UNIQUE KEY `uk_user_default` (`user_id`, `is_default`) COMMENT '确保每个用户只有一个默认地址（NULL不参与唯一约束）',
   CONSTRAINT `fk_usr_addresses_user` FOREIGN KEY (`user_id`) REFERENCES `usr_users` (`id`),
   KEY `idx_deleted_at` (`deleted_at`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户收货地址';

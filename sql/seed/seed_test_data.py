@@ -468,7 +468,7 @@ def seed_users(conn):
         cur.execute("DELETE FROM usr_addresses WHERE user_id = 1")
         cur.execute("""
             INSERT INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
-            VALUES (1, '陈科林', '13900139001', '中国', '广东省', '深圳市', '南山区', '科技园南区高新南一道2号飞亚达科技大厦12F', '518057', 'company', TRUE)
+            VALUES (1, '陈科林', '13900139001', '中国', '广东省', '深圳市', '南山区', '科技园南区高新南一道2号飞亚达科技大厦12F', '518057', 'company', 1)
         """)
         cur.execute("""
             INSERT INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default)
@@ -489,14 +489,13 @@ def seed_level(conn):
     with conn.cursor() as cur:
         for level_data in USER_LEVEL:
             cur.execute(
-                "INSERT INTO usr_levels (name, level, min_points, max_points, discount_rate, "
+                "INSERT INTO usr_levels (name, level, min_points, discount_rate, "
                 "free_shipping, points_multiplier, benefits, status, sort_order, created_at, updated_at) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     level_data['name'],
                     level_data['level'],
                     level_data['min_points'],
-                    level_data['max_points'],
                     level_data['discount_rate'],
                     level_data['free_shipping'],
                     level_data['points_multiplier'],
@@ -848,9 +847,10 @@ def seed_points_rules(conn):
         cur.execute("TRUNCATE TABLE usr_points_rules")
         for rule in POINTS_RULES:
             cur.execute(
-                "INSERT INTO usr_points_rules (name, rule_key, rule_value, description, sort_order, status) "
-                "VALUES (%s, %s, %s, %s, %s, %s)",
-                (rule["name"], rule["rule_key"], rule["rule_value"],
+                "INSERT INTO usr_points_rules (name, rule_key, value_int, value_decimal, value_string, description, sort_order, status) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                (rule["name"], rule["rule_key"],
+                 rule.get("value_int"), rule.get("value_decimal"), rule.get("value_string", ""),
                  rule["description"], rule["sort_order"], rule["status"]),
             )
     conn.commit()

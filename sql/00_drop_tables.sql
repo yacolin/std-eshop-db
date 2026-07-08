@@ -48,6 +48,8 @@ DROP TABLE IF EXISTS `sp_category_brands`;
 -- ============================================================
 -- P1: 核心业务表（依赖 P0）
 -- ============================================================
+DROP TABLE IF EXISTS `usr_points_rules`;
+DROP TABLE IF EXISTS `usr_level_rules`;
 DROP TABLE IF EXISTS `usr_points`;
 DROP TABLE IF EXISTS `usr_levels`;
 DROP TABLE IF EXISTS `mch_merchant_settlement_logs`;

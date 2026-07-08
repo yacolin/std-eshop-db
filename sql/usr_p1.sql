@@ -10,9 +10,8 @@ CREATE TABLE `usr_levels` (
     `level` int NOT NULL COMMENT '等级数值（1=青铜 2=白银 3=黄金 4=钻石）',
     `icon` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '等级图标URL',
 
-    -- 门槛
+    -- 门槛（通过 min_points 与用户累计积分动态比较确定等级）
     `min_points` bigint NOT NULL DEFAULT 0 COMMENT '该等级所需最低累计积分',
-    `max_points` bigint NOT NULL DEFAULT 0 COMMENT '该等级所需最高累计积分（0表示无上限）',
 
     -- 权益
     `discount_rate` bigint NOT NULL DEFAULT 100 COMMENT '折扣率（千分比，1000=无折扣，900=九折）',
@@ -86,7 +85,9 @@ CREATE TABLE `usr_points_rules` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL DEFAULT '' COMMENT '规则名称',
   `rule_key` varchar(50) NOT NULL DEFAULT '' COMMENT '规则键名：earn_rate-消费返积分比例 expire_days-积分过期天数 signin_points-签到奖励积分 review_points-评价奖励积分',
-  `rule_value` varchar(255) NOT NULL DEFAULT '' COMMENT '规则值',
+  `value_int` int DEFAULT NULL COMMENT '整数值（如积分数量、天数）',
+  `value_decimal` decimal(10,2) DEFAULT NULL COMMENT '小数值（如比例、倍数）',
+  `value_string` varchar(255) DEFAULT '' COMMENT '字符串值（如配置json、文本）',
   `description` text COMMENT '规则说明',
   `sort_order` int NOT NULL DEFAULT '0' COMMENT '排序',
   `status` tinyint NOT NULL DEFAULT '1' COMMENT '状态：0-禁用 1-启用',

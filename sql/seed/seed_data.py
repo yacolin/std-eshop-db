@@ -636,7 +636,6 @@ USER_LEVEL = [
         'name': '青铜会员',
         'level': 1,
         'min_points': 0,
-        'max_points': 999,
         'discount_rate': 1000,
         'free_shipping': 0,
         'points_multiplier': 1.00,
@@ -653,7 +652,6 @@ USER_LEVEL = [
         'name': '白银会员',
         'level': 2,
         'min_points': 1000,
-        'max_points': 4999,
         'discount_rate': 950,
         'free_shipping': 0,
         'points_multiplier': 1.20,
@@ -670,7 +668,6 @@ USER_LEVEL = [
         'name': '黄金会员',
         'level': 3,
         'min_points': 5000,
-        'max_points': 19999,
         'discount_rate': 900,
         'free_shipping': 1,
         'points_multiplier': 1.50,
@@ -687,7 +684,6 @@ USER_LEVEL = [
         'name': '钻石会员',
         'level': 4,
         'min_points': 20000,
-        'max_points': 0,  # 0 表示无上限
         'discount_rate': 850,
         'free_shipping': 1,
         'points_multiplier': 2.00,
@@ -704,10 +700,10 @@ USER_LEVEL = [
 
 # ── 积分规则 ──────────────────────────────────
 POINTS_RULES = [
-    {"name": "消费返积分比例",   "rule_key": "earn_rate",     "rule_value": "1",   "description": "每消费1元获得1积分",      "sort_order": 1, "status": 1},
-    {"name": "积分过期天数",     "rule_key": "expire_days",   "rule_value": "365", "description": "积分获取后365天过期",      "sort_order": 2, "status": 1},
-    {"name": "签到奖励积分",     "rule_key": "signin_points", "rule_value": "5",   "description": "每日签到奖励5积分",        "sort_order": 3, "status": 1},
-    {"name": "评价奖励积分",     "rule_key": "review_points", "rule_value": "20",  "description": "撰写评价奖励20积分",       "sort_order": 4, "status": 1},
+    {"name": "消费返积分比例",   "rule_key": "earn_rate",     "value_int": 1,    "description": "每消费1元获得1积分",      "sort_order": 1, "status": 1},
+    {"name": "积分过期天数",     "rule_key": "expire_days",   "value_int": 365,  "description": "积分获取后365天过期",      "sort_order": 2, "status": 1},
+    {"name": "签到奖励积分",     "rule_key": "signin_points", "value_int": 5,    "description": "每日签到奖励5积分",        "sort_order": 3, "status": 1},
+    {"name": "评价奖励积分",     "rule_key": "review_points", "value_int": 20,   "description": "撰写评价奖励20积分",       "sort_order": 4, "status": 1},
 ]
 
 # ── 等级升降级规则 ────────────────────────────

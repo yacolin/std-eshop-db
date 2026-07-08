@@ -338,11 +338,11 @@ SELECT (SELECT id FROM sys_roles WHERE name = 'analyst'), id FROM sys_permission
 
 -- ==================== 用户等级 ====================
 
-INSERT INTO usr_levels (name, level, min_points, max_points, discount_rate, free_shipping, points_multiplier, benefits) VALUES
-('青铜会员', 1, 0,     999,  1000, 0, 1.00, '{"birthday_gift": false}'),
-('白银会员', 2, 1000,  4999, 950,  0, 1.20, '{"birthday_gift": false}'),
-('黄金会员', 3, 5000,  19999, 900, 1, 1.50, '{"birthday_gift": true}'),
-('钻石会员', 4, 20000, 0,     850, 1, 2.00, '{"birthday_gift": true, "exclusive_coupon": true}');
+INSERT INTO usr_levels (name, level, min_points, discount_rate, free_shipping, points_multiplier, benefits) VALUES
+('青铜会员', 1, 0,     1000, 0, 1.00, '{"birthday_gift": false}'),
+('白银会员', 2, 1000,  950,  0, 1.20, '{"birthday_gift": false}'),
+('黄金会员', 3, 5000,  900, 1, 1.50, '{"birthday_gift": true}'),
+('钻石会员', 4, 20000, 850, 1, 2.00, '{"birthday_gift": true, "exclusive_coupon": true}');
 
 
 -- ==================== B端员工（sys_staff） ====================
@@ -384,5 +384,5 @@ INSERT INTO usr_infos (user_id) VALUES (1);
 -- ==================== 收货地址（公司 + 家） ====================
 
 INSERT INTO usr_addresses (user_id, consignee, phone, country, province, city, district, detail, zip_code, tag, is_default) VALUES
-(1, '陈科林', '13900139001', '中国', '广东省', '深圳市', '南山区', '科技园南区高新南一道2号飞亚达科技大厦12F', '518057', 'company', TRUE),
-(1, '陈科林', '13900139002', '中国', '广东省', '广州市', '天河区', '珠江新城华夏路16号富力凯盈广场3001', '510623', 'home', FALSE);
+(1, '陈科林', '13900139001', '中国', '广东省', '深圳市', '南山区', '科技园南区高新南一道2号飞亚达科技大厦12F', '518057', 'company', 1),
+(1, '陈科林', '13900139002', '中国', '广东省', '广州市', '天河区', '珠江新城华夏路16号富力凯盈广场3001', '510623', 'home', NULL);
