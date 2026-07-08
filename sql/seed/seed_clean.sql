@@ -74,6 +74,8 @@ TRUNCATE TABLE base_notifications;
 TRUNCATE TABLE base_notification_templates;
 
 -- 商户
+TRUNCATE TABLE mch_role_permissions;
+TRUNCATE TABLE mch_roles;
 TRUNCATE TABLE mch_settlement_details;
 TRUNCATE TABLE mch_merchant_settlement_logs;
 TRUNCATE TABLE mch_merchant_withdrawals;
@@ -89,6 +91,8 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- 重置自增
 ALTER TABLE usr_users AUTO_INCREMENT = 1;
 ALTER TABLE usr_infos AUTO_INCREMENT = 1;
+ALTER TABLE mch_roles AUTO_INCREMENT = 1;
+ALTER TABLE mch_role_permissions AUTO_INCREMENT = 1;
 ALTER TABLE usr_addresses AUTO_INCREMENT = 1;
 ALTER TABLE sys_roles AUTO_INCREMENT = 1;
 ALTER TABLE sys_permissions AUTO_INCREMENT = 1;

@@ -8,6 +8,8 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS `tx_delivery_traces`;
 DROP TABLE IF EXISTS `tx_delivery_items`;
 DROP TABLE IF EXISTS `tx_deliveries`;
+DROP TABLE IF EXISTS `mch_role_permissions`;
+DROP TABLE IF EXISTS `mch_roles`;
 DROP TABLE IF EXISTS `mch_settlement_details`;
 DROP TABLE IF EXISTS `tx_after_sale_logs`;
 DROP TABLE IF EXISTS `tx_after_sale_evidences`;

@@ -64,6 +64,7 @@ def clean(conn):
         "sp_inventory_logs", "sp_inventories", "sp_product_versions",
         "sp_product_attributes", "sp_product_descriptions", "sp_skus",
         "sp_products", "sp_attributes", "sp_category_brands", "sp_categories", "sp_brands",
+        "mch_role_permissions", "mch_roles",
         "usr_addresses", "usr_points", "usr_points_rules", "usr_levels", "usr_level_rules",
         "tx_delivery_traces", "tx_delivery_items", "tx_deliveries",
         "base_notification_reads", "base_notifications", "base_notification_templates",
@@ -417,13 +418,21 @@ def seed_merchant(conn):
                 (merchant_id, random.randint(1000000, 50000000), random.randint(0, 500000)),
             )
 
+            # 创建商家默认角色
+            cur.execute(
+                "INSERT INTO mch_roles (merchant_id, name, display_name, description, role_type, sort_order, status) "
+                "VALUES (%s, %s, %s, %s, 'builtin', 1, 1)",
+                (merchant_id, 'manager', '店长', '商家管理员，拥有商家所有权限'),
+            )
+            mch_role_id = cur.lastrowid
+
             if staff_list:
                 assigned = random.sample(staff_list, min(len(staff_list), random.randint(1, 3)))
                 for sid in assigned:
                     cur.execute(
                         "INSERT IGNORE INTO mch_merchant_users (merchant_id, staff_id, role_id, status) "
-                        "VALUES (%s, %s, 7, 1)",
-                        (merchant_id, sid),
+                        "VALUES (%s, %s, %s, 1)",
+                        (merchant_id, sid, mch_role_id),
                     )
 
         print(f"  商户: {len(MERCHANTS)}")

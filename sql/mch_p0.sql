@@ -85,12 +85,13 @@ CREATE TABLE `mch_merchant_bank_accounts` (
     `account_name` VARCHAR(100) NOT NULL COMMENT '开户名',
     `account_no` VARCHAR(50) NOT NULL COMMENT '银行账号',
     `account_type` TINYINT DEFAULT 1 COMMENT '1-对公账户 2-对私账户',
-    `is_default` TINYINT DEFAULT 0 COMMENT '是否默认结算账户 0-否 1-是',
+    `is_default` TINYINT DEFAULT NULL COMMENT '是否默认结算账户（NULL=非默认, 1=默认）',
     `status` TINYINT DEFAULT 1 COMMENT '1-正常 2-禁用',
     `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
     `deleted_at` datetime(3) DEFAULT NULL,
     INDEX `idx_merchant` (`merchant_id`),
+    UNIQUE KEY `uk_merchant_default` (`merchant_id`, `is_default`) COMMENT '确保每个商家只有一个默认结算账户（NULL不参与唯一约束）',
     INDEX `idx_deleted_at` (`deleted_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家结算银行账户表';
 
@@ -111,3 +112,24 @@ CREATE TABLE `mch_merchant_qualifications` (
     INDEX `idx_expire` (`expire_at`),
     INDEX `idx_deleted_at` (`deleted_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家资质表';
+
+
+-- ==================== 商家域角色 ====================
+
+CREATE TABLE `mch_roles` (
+    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
+    `merchant_id` BIGINT NOT NULL COMMENT '商家ID（0=平台预置角色）',
+    `name` VARCHAR(50) NOT NULL COMMENT '角色名称（如店长/运营/财务）',
+    `display_name` VARCHAR(100) NOT NULL DEFAULT '' COMMENT '角色显示名称',
+    `description` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '角色描述',
+    `role_type` VARCHAR(20) NOT NULL DEFAULT 'custom' COMMENT 'builtin-系统预置 custom-商家自定义',
+    `sort_order` INT NOT NULL DEFAULT 0 COMMENT '排序值',
+    `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1-启用 0-禁用',
+    `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+    `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
+    `deleted_at` datetime(3) DEFAULT NULL COMMENT '删除时间',
+    INDEX `idx_merchant` (`merchant_id`),
+    INDEX `idx_type` (`role_type`),
+    INDEX `idx_status` (`status`),
+    INDEX `idx_deleted_at` (`deleted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家角色定义表（与平台RBAC隔离）';
