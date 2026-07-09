@@ -66,6 +66,7 @@ def clean(conn):
         "sp_attribute_values", "sp_skus",
         "sp_products", "sp_attributes", "sp_category_brands", "sp_categories", "sp_brands",
         "mch_merchant_role_permissions", "mch_merchant_roles",
+        "sys_staff_departments", "sys_departments",
         "usr_addresses", "usr_points", "usr_points_rules", "usr_levels", "usr_level_rules",
         "tx_delivery_traces", "tx_delivery_items", "tx_deliveries",
         "base_notification_reads", "base_notifications", "base_notification_templates",
@@ -599,6 +600,67 @@ def seed_users(conn):
     print("  C端用户: colin (固定)")
     print("  地址: 公司 + 家 (2 条)")
     print("用户中心 ✅\n")
+
+
+# ── 部门中心 ──────────────────────────────────────
+
+def seed_departments(conn):
+    with conn.cursor() as cur:
+        DEPARTMENTS = [
+            (1,  "研发中心",  0, 1),
+            (2,  "运营部",    0, 2),
+            (3,  "财务部",    0, 3),
+            (4,  "客服部",    0, 4),
+            (5,  "仓储物流部", 0, 5),
+            (6,  "人事行政部", 0, 6),
+            (7,  "市场部",    0, 7),
+            (8,  "前端组",    1, 1),
+            (9,  "后端组",    1, 2),
+            (10, "测试组",    1, 3),
+            (11, "内容运营组", 2, 1),
+            (12, "商家运营组", 2, 2),
+            (13, "数据分析组", 2, 3),
+        ]
+
+        for dept_id, name, parent_id, sort_order in DEPARTMENTS:
+            cur.execute(
+                "INSERT IGNORE INTO sys_departments (id, name, parent_id, sort_order, status) "
+                "VALUES (%s, %s, %s, %s, 1)",
+                (dept_id, name, parent_id, sort_order),
+            )
+
+        # 员工 → 部门映射（username → department_id）
+        STAFF_DEPT = {
+            'admin':     [(1, 1), (2, 1)],   # 管理员同时管研发中心和运营部
+            'colin':     [(2, 1)],            # 陈科林 → 运营部
+            'op_user':   [(11, 1)],           # 运营小张 → 内容运营组
+            'editor':    [(11, 1)],           # 编辑小李 → 内容运营组
+            'wh_user':   [(5, 1)],            # 仓库小王 → 仓储物流部
+            'fin_user':  [(3, 1)],            # 财务小赵 → 财务部
+            'mch_user':  [(12, 1)],           # 商户小刘 → 商家运营组
+            'spt_user':  [(4, 1)],            # 客服小陈 → 客服部
+            'aly_user':  [(13, 1)],           # 分析师小周 → 数据分析组
+        }
+
+        assigned = 0
+        for username, depts in STAFF_DEPT.items():
+            cur.execute("SELECT id FROM sys_staff WHERE username = %s AND deleted_at IS NULL", (username,))
+            staff_row = cur.fetchone()
+            if not staff_row:
+                continue
+            staff_id = staff_row[0]
+            for dept_id, is_primary in depts:
+                cur.execute(
+                    "INSERT IGNORE INTO sys_staff_departments (staff_id, department_id, is_primary) "
+                    "VALUES (%s, %s, %s)",
+                    (staff_id, dept_id, is_primary),
+                )
+                assigned += 1
+
+    conn.commit()
+    print(f"  部门: {len(DEPARTMENTS)}, 员工-部门: {assigned} 条")
+    print("部门中心 ✅\n")
+
 
 # ── 用户中心 等级──────────────────────────────────
 
@@ -1203,7 +1265,7 @@ def main():
     parser = argparse.ArgumentParser(description="为新表生成测试数据")
     parser.add_argument("--clean", action="store_true", help="先清空再生成")
     parser.add_argument("--module", choices=["product", "inventory", "marketing", "merchant",
-                                              "users", "level", "order", "notification",
+                                              "users", "departments", "level", "order", "notification",
                                               "points", "points_rules", "level_rules", "review"],
                         help="只生成指定模块")
     args = parser.parse_args()
@@ -1218,6 +1280,7 @@ def main():
         "inventory": seed_inventory,
         "marketing": seed_marketing,
         "users": seed_users,
+        "departments": seed_departments,
         "level": seed_level,
         "merchant": seed_merchant,
         "order": seed_order,
