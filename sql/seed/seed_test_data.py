@@ -127,12 +127,21 @@ def seed_product(conn):
 
         attr_map = {}
         for cat_idx, name, input_type, values, is_sku, searchable in ATTRS:
+            filterable = 1 if values else 0
             cur.execute(
-                "INSERT INTO sp_attributes (name, category_id, input_type, `values`, is_sku_spec, searchable, status) "
+                "INSERT INTO sp_attributes (name, category_id, value_type, filterable, is_sku_spec, searchable, status) "
                 "VALUES (%s, %s, %s, %s, %s, %s, 1)",
-                (name, cat_ids[cat_idx], input_type, values, is_sku, searchable),
+                (name, cat_ids[cat_idx], input_type, filterable, is_sku, searchable),
             )
-            attr_map[(cat_idx, name)] = cur.lastrowid
+            attr_id = cur.lastrowid
+            attr_map[(cat_idx, name)] = attr_id
+            if values:
+                for sort_order, v in enumerate(json.loads(values)):
+                    cur.execute(
+                        "INSERT INTO sp_attribute_values (attribute_id, `value`, sort_order, status) "
+                        "VALUES (%s, %s, %s, 1)",
+                        (attr_id, v, sort_order),
+                    )
         print(f"  属性: {len(ATTRS)}")
 
         total_skus = 0

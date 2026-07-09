@@ -239,7 +239,7 @@ CATEGORIES = [
 ]
 
 # ── 属性 ──────────────────────────────────────
-# (cat_position, name, input_type, values, is_sku, searchable)
+# (cat_position, name, value_type, values, is_sku, searchable)
 
 ATTRS = [
     # ── 原有 Level 1 ───────────────────────
