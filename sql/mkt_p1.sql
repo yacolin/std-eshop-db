@@ -5,107 +5,118 @@ USE eshop_db;
 -- ============================================================
 
 CREATE TABLE `mkt_promotion_rules` (
-    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '规则ID',
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '规则ID',
     `promotion_id` BIGINT NOT NULL COMMENT '所属促销ID',
-    `merchant_id` BIGINT NOT NULL DEFAULT 0 COMMENT '所属商家ID（0表示平台级规则）',
-    `rule_name` VARCHAR(100) COMMENT '规则名称（便于理解）',
+    `merchant_id` BIGINT NOT NULL DEFAULT 0 COMMENT '所属商家ID',
+    `rule_name` VARCHAR(100) COMMENT '规则名称',
 
     -- 触发条件
     `condition_type` TINYINT NOT NULL COMMENT '1-无门槛 2-满金额 3-满件数 4-指定用户等级',
-    `condition_value` bigint NOT NULL DEFAULT 0 COMMENT '门槛值（分，满20000则存20000）',
+    `condition_value` BIGINT NOT NULL DEFAULT 0 COMMENT '门槛值（分）',
 
-    -- 优惠内容
-    `benefit_type` TINYINT NOT NULL COMMENT '1-减固定金额 2-打折扣 3-赠品 4-免运费 5-送积分',
-    `benefit_value` bigint NOT NULL DEFAULT 0 COMMENT '优惠值（减固定金额填分如3000；打折扣填千分比如800=8折）',
+    -- 优惠内容JSON化（支持阶梯）
+    `benefit_config` JSON NOT NULL COMMENT '优惠配置JSON。例：{"type":1,"value":3000} 或 {"type":2,"steps":[{"limit":10000,"rate":900},{"limit":20000,"rate":800}]}',
 
     -- 叠加规则
     `is_stackable` TINYINT DEFAULT 0 COMMENT '是否可与其他促销叠加 0-否 1-是',
-    `stack_priority` INT DEFAULT 0 COMMENT '叠加优先级（数字越小越优先计算）',
+    `stack_group` INT DEFAULT 0 COMMENT '叠加组ID（同组内互斥，不同组可叠加）',
 
     -- 审计字段
     `created_by` BIGINT COMMENT '创建人',
     `updated_by` BIGINT COMMENT '更新人',
-    `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
-    `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
-    `deleted_at` datetime(3) DEFAULT NULL COMMENT '软删除时间',
+    `created_at` DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+    `deleted_at` DATETIME(3) DEFAULT NULL,
 
-    INDEX `idx_promotion` (`promotion_id`),
-    INDEX `idx_merchant` (`merchant_id`),
-    INDEX `idx_stack` (`is_stackable`, `stack_priority`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='促销规则表';
+    PRIMARY KEY (`id`),
+    KEY `idx_promotion` (`promotion_id`),
+    KEY `idx_stack_group` (`stack_group`, `is_stackable`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='促销规则表（配置化）';
 
 
 CREATE TABLE `mkt_promotion_products` (
-    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     `promotion_id` BIGINT NOT NULL COMMENT '促销ID',
     `merchant_id` BIGINT NOT NULL DEFAULT 0 COMMENT '所属商家ID',
     `product_type` TINYINT NOT NULL COMMENT '1-全站 2-指定分类 3-指定SPU 4-指定SKU',
-    `product_id` BIGINT COMMENT '产品ID（product_type=3/4时使用）',
-    `category_id` BIGINT COMMENT '分类ID（product_type=2时使用）',
-    `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
-    `deleted_at` datetime(3) DEFAULT NULL,
+    `target_id` BIGINT COMMENT '目标ID（SPU_ID或SKU_ID或Category_ID）',
+    `created_at` DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
+    `deleted_at` DATETIME(3) DEFAULT NULL,
 
-    INDEX `idx_promotion` (`promotion_id`),
-    INDEX `idx_merchant` (`merchant_id`),
-    INDEX `idx_deleted_at` (`deleted_at`)
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_promotion_target` (`promotion_id`, `product_type`, `target_id`),
+    KEY `idx_target` (`target_id`, `product_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='促销适用商品表';
 
 
 CREATE TABLE `mkt_user_promotions` (
-    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     `user_promotion_no` VARCHAR(32) NOT NULL COMMENT '用户促销资产编号',
     `user_id` BIGINT NOT NULL COMMENT '用户ID',
     `promotion_id` BIGINT NOT NULL COMMENT '促销ID',
     `merchant_id` BIGINT NOT NULL DEFAULT 0 COMMENT '所属商家ID',
 
     -- 领取/获取信息
-    `acquire_time` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) COMMENT '领取时间',
-    `expire_time` datetime(3) COMMENT '过期时间（优惠券必填）',
+    `acquire_time` DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3) COMMENT '领取时间',
+    `expire_time` DATETIME(3) COMMENT '过期时间',
 
     -- 使用状态
-    `status` TINYINT DEFAULT 1 COMMENT '1-未使用 2-已使用 3-已过期 4-已作废',
-    `used_time` datetime(3) COMMENT '使用时间',
-    `order_id` BIGINT COMMENT '使用的订单ID',
+    `status` TINYINT DEFAULT 1 COMMENT '1-未使用 2-锁定中(下单未付) 3-已使用 4-已过期 5-已作废',
+    `lock_order_id` BIGINT DEFAULT NULL COMMENT '锁定的订单ID（用于回滚）',
+    `used_time` DATETIME(3) COMMENT '使用时间',
+    `order_id` BIGINT COMMENT '最终使用的订单ID',
 
     -- 秒杀专用
-    `queue_token` VARCHAR(64) COMMENT '秒杀排队令牌',
+    `queue_token` VARCHAR(64) DEFAULT '' COMMENT '秒杀排队令牌',
 
     -- 审计字段
-    `created_by` BIGINT COMMENT '创建人',
-    `updated_by` BIGINT COMMENT '更新人',
-    `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
-    `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
-    `deleted_at` datetime(3) DEFAULT NULL COMMENT '软删除时间',
+    `created_at` DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+    `deleted_at` DATETIME(3) DEFAULT NULL,
 
+    PRIMARY KEY (`id`),
     UNIQUE KEY `uk_user_promotion_no` (`user_promotion_no`),
-    CONSTRAINT `fk_mkt_user_promotions_promotion` FOREIGN KEY (`promotion_id`) REFERENCES `mkt_promotions` (`id`),
-    INDEX `idx_user` (`user_id`),
-    INDEX `idx_promotion` (`promotion_id`),
-    KEY `idx_user_promo` (`user_id`, `promotion_id`, `status`),
-    INDEX `idx_merchant` (`merchant_id`),
-    INDEX `idx_status_expire` (`status`, `expire_time`),
-    INDEX `idx_order` (`order_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户促销资产表';
+    KEY `idx_user_available` (`user_id`, `status`, `expire_time`),
+    KEY `idx_promotion` (`promotion_id`),
+    KEY `idx_lock_order` (`lock_order_id`),
+    KEY `idx_order` (`order_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户促销资产表（状态机优化）';
+
+
+CREATE TABLE `mkt_promotion_stocks` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `promotion_id` BIGINT NOT NULL COMMENT '促销ID',
+    `sku_id` BIGINT DEFAULT NULL COMMENT 'SKU ID（秒杀专用，通用活动可为空）',
+    `total_stock` INT NOT NULL DEFAULT 0 COMMENT '总库存',
+    `available_stock` INT NOT NULL DEFAULT 0 COMMENT '可用库存',
+    `locked_stock` INT NOT NULL DEFAULT 0 COMMENT '锁定库存（下单未付）',
+    `version` INT NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
+    `created_at` DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_promotion_sku` (`promotion_id`, `sku_id`),
+    CONSTRAINT `chk_stock_positive` CHECK (`available_stock` >= 0 AND `locked_stock` >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='促销库存表（支持秒杀）';
 
 
 CREATE TABLE `mkt_promotion_usage_logs` (
-    `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     `promotion_id` BIGINT NOT NULL COMMENT '促销ID',
     `user_promotion_id` BIGINT DEFAULT NULL COMMENT '用户促销资产ID',
     `user_id` BIGINT NOT NULL COMMENT '用户ID',
-    `merchant_id` BIGINT NOT NULL DEFAULT 0 COMMENT '所属商家ID',
-    `order_id` BIGINT DEFAULT NULL COMMENT '使用的订单ID',
+    `order_id` BIGINT NOT NULL COMMENT '使用的订单ID',
 
     -- 使用信息
-    `usage_type` TINYINT DEFAULT 1 COMMENT '1-下单使用 2-自动优惠',
-    `discount_amount` bigint NOT NULL DEFAULT 0 COMMENT '优惠金额（分）',
+    `discount_amount` BIGINT NOT NULL DEFAULT 0 COMMENT '优惠金额（分）',
+
+    -- 快照信息（用于财务对账）
+    `promotion_snapshot` JSON DEFAULT NULL COMMENT '优惠快照（名称、规则等）',
 
     -- 审计字段
-    `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
+    `created_at` DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
 
-    INDEX `idx_promotion` (`promotion_id`),
-    INDEX `idx_user` (`user_id`),
-    INDEX `idx_merchant` (`merchant_id`),
-    INDEX `idx_order` (`order_id`),
-    INDEX `idx_created` (`created_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='促销使用记录表';
+    PRIMARY KEY (`id`),
+    KEY `idx_order` (`order_id`),
+    KEY `idx_promotion_created` (`promotion_id`, `created_at`),
+    KEY `idx_user_created` (`user_id`, `created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='促销使用记录表（建议按 created_at 月度分区）';
