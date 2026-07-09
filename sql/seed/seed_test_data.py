@@ -761,7 +761,7 @@ def seed_order(conn):
                 sku_id, prod_id, sku_code, price, qty, subtotal, prod_name, image, spec, sku_merchant_id = item
                 cur.execute(
                     """INSERT INTO tx_order_items (order_id, sub_order_id, merchant_id, order_no, sub_order_no,
-                       sku_id, product_id, sku_code, product_name, sku_spec, image,
+                       sku_id, product_id, sku_code, product_name, sku_spec_summary, image,
                        price, quantity, subtotal, created_at, updated_at)
                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                     (order_id, sub_order_id, sku_merchant_id, order_no, sub_order_no,
