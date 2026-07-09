@@ -791,8 +791,8 @@ def seed_order(conn):
                             """INSERT INTO sp_inventory_logs (sku_id, merchant_id, change_type, before_quantity, after_quantity,
                                before_reserved, after_reserved, change_amount, reference_id, operator, note)
                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                            (sku_id, sku_merchant_id, "order", before_qty, after_qty,
-                             before_reserved, after_reserved, -qty, order_no, "system", "订单扣减"),
+                             (sku_id, sku_merchant_id, "order", before_qty, after_qty,
+                              before_reserved, after_reserved, -qty, f"{order_no}_{sku_id}", "system", "订单扣减"),
                         )
 
             if parent_status in ("paid", "completed", "refunded"):
