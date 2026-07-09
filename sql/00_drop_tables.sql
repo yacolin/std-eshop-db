@@ -50,6 +50,7 @@ DROP TABLE IF EXISTS `tx_payments`;
 DROP TABLE IF EXISTS `sp_product_descriptions`;
 DROP TABLE IF EXISTS `sp_product_attributes`;
 DROP TABLE IF EXISTS `sp_skus`;
+DROP TABLE IF EXISTS `sp_category_attributes`;
 DROP TABLE IF EXISTS `sp_category_brands`;
 
 -- ============================================================

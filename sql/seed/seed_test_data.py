@@ -67,6 +67,7 @@ def main():
         for table in ["sp_brands", "sp_categories", "sp_attributes", "sp_products",
                       "sp_skus", "sp_attribute_values", "sp_sku_specs",
                       "sp_product_descriptions", "sp_product_attributes",
+                      "sp_category_attributes",
                       "sp_inventories", "mkt_promotions", "mkt_promotion_stocks", "mkt_user_promotions",
                       "tx_orders", "tx_sub_orders", "tx_order_items", "tx_payments", "tx_refunds",
                       "tx_deliveries", "usr_addresses", "usr_levels", "usr_points", "usr_points_rules", "usr_level_rules",

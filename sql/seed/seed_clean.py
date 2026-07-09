@@ -18,7 +18,7 @@ def clean(conn):
         "tx_after_sale_evidences", "tx_after_sale_logs", "tx_after_sales",
         "sp_inventory_logs", "sp_inventories", "sp_product_versions",
         "sp_product_attributes", "sp_product_descriptions", "sp_sku_specs",
-        "sp_attribute_values", "sp_skus",
+        "sp_category_attributes", "sp_attribute_values", "sp_skus",
         "sp_products", "sp_attributes", "sp_category_brands", "sp_categories", "sp_brands",
         "mch_merchant_role_permissions", "mch_merchant_roles",
         "sys_staff_departments", "sys_departments",

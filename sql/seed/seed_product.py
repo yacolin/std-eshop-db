@@ -58,11 +58,43 @@ def seed_product(conn):
             attr_id = cur.lastrowid
             attr_map[(cat_idx, name)] = attr_id
             if values:
+                alias_map = {
+                    "黑色": json.dumps(["纯黑", "墨色"]),
+                    "白色": json.dumps(["纯白", "乳白"]),
+                    "银色": json.dumps(["银灰", "亮银"]),
+                    "金色": json.dumps(["香槟金", "亮金"]),
+                    "红色": json.dumps(["正红", "朱红"]),
+                    "蓝色": json.dumps(["深蓝", "宝蓝"]),
+                    "紫色": json.dumps(["紫罗兰", "薰衣草"]),
+                    "绿色": json.dumps(["翠绿", "草绿"]),
+                    "粉色": json.dumps(["粉红", "樱花粉"]),
+                    "灰色": json.dumps(["烟灰", "中灰"]),
+                    "卡其": json.dumps(["卡其色", "米色"]),
+                    "深空灰": json.dumps(["黑灰", "石墨灰"]),
+                    "S": json.dumps(["小号"]),
+                    "M": json.dumps(["中号"]),
+                    "L": json.dumps(["大号"]),
+                    "XL": json.dumps(["加大"]),
+                    "XXL": json.dumps(["加加大"]),
+                    "XXXL": json.dumps(["加加加大"]),
+                    "36": json.dumps(["36码"]),
+                    "37": json.dumps(["37码"]),
+                    "38": json.dumps(["38码"]),
+                    "39": json.dumps(["39码"]),
+                    "40": json.dumps(["40码"]),
+                    "41": json.dumps(["41码"]),
+                    "42": json.dumps(["42码"]),
+                    "43": json.dumps(["43码"]),
+                    "44": json.dumps(["44码"]),
+                    "45": json.dumps(["45码"]),
+                }
                 for sort_order, v in enumerate(json.loads(values)):
+                    alias_data = alias_map.get(v)
+                    search_weight = max(100 - sort_order * 10, 10)
                     cur.execute(
-                        "INSERT INTO sp_attribute_values (attribute_id, `value`, sort_order, status) "
-                        "VALUES (%s, %s, %s, 1)",
-                        (attr_id, v, sort_order),
+                        "INSERT INTO sp_attribute_values (attribute_id, `value`, alias, search_weight, sort_order, status) "
+                        "VALUES (%s, %s, %s, %s, %s, 1)",
+                        (attr_id, v, alias_data, search_weight, sort_order),
                     )
         print(f"  属性: {len(ATTRS)}")
 
@@ -146,11 +178,24 @@ def seed_product(conn):
                         val = random.choice(["黑色", "白色", "红色", "蓝色"])
                     elif attr_name in ["面料", "材质", "处理器型号", "显卡型号"]:
                         val = random.choice(["优质材料", "标准款", "高性能版"])
+                    # 尝试查找字典值ID，有则写入attribute_value_id
                     cur.execute(
-                        "INSERT IGNORE INTO sp_product_attributes (product_id, attribute_id, value, sort_order) "
-                        "VALUES (%s, %s, %s, 0)",
-                        (spu_id, attr_id, val),
+                        "SELECT id FROM sp_attribute_values WHERE attribute_id = %s AND `value` = %s",
+                        (attr_id, val),
                     )
+                    av_row = cur.fetchone()
+                    if av_row:
+                        cur.execute(
+                            "INSERT IGNORE INTO sp_product_attributes (product_id, attribute_id, attribute_value_id, value, sort_order) "
+                            "VALUES (%s, %s, %s, %s, 0)",
+                            (spu_id, attr_id, av_row[0], val),
+                        )
+                    else:
+                        cur.execute(
+                            "INSERT IGNORE INTO sp_product_attributes (product_id, attribute_id, value, sort_order) "
+                            "VALUES (%s, %s, %s, 0)",
+                            (spu_id, attr_id, val),
+                        )
 
         print(f"  SPU: {product_count}, SKU: {total_skus}")
 
@@ -185,6 +230,18 @@ def seed_product(conn):
                 )
                 cb_count += 1
         print(f"  类目-品牌: {cb_count}")
+
+        # 类目-属性弱关联（sp_category_attributes）
+        ca_count = 0
+        for (a_cat_idx, attr_name), attr_id in attr_map.items():
+            cat_id = cat_ids[a_cat_idx]
+            cur.execute(
+                "INSERT IGNORE INTO sp_category_attributes (category_id, attribute_id, sort_order) "
+                "VALUES (%s, %s, 0)",
+                (cat_id, attr_id),
+            )
+            ca_count += 1
+        print(f"  类目-属性关联: {ca_count}")
 
     conn.commit()
     print("商品中心 ✅\n")

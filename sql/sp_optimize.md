@@ -136,6 +136,8 @@ CREATE TABLE `sp_attribute_values` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `attribute_id` bigint NOT NULL COMMENT '关联属性ID',
   `value` varchar(200) NOT NULL COMMENT '属性值（如：256G、红色）',
+  `alias` json DEFAULT NULL COMMENT '别名列表，如["深空灰","黑灰"]，用于搜索纠错、模糊匹配',
+  `search_weight` int NOT NULL DEFAULT 0 COMMENT '搜索权重（值越大匹配优先级越高）',
   `numeric_value` decimal(18,4) DEFAULT NULL COMMENT '数值型值（用于区间筛选）',
   `color_hex` varchar(10) DEFAULT '' COMMENT '颜色色值（#FF0000）',
   `sort_order` int NOT NULL DEFAULT 0 COMMENT '排序权重',
@@ -143,7 +145,8 @@ CREATE TABLE `sp_attribute_values` (
   `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_attr_value` (`attribute_id`, `value`),
-  KEY `idx_attr_filter` (`attribute_id`, `status`, `numeric_value`)
+  KEY `idx_attr_filter` (`attribute_id`, `status`, `numeric_value`),
+  KEY `idx_search_weight` (`attribute_id`, `search_weight`) COMMENT '搜索权重排序'
 ) ENGINE=InnoDB COMMENT='属性值字典表';
 ```
 

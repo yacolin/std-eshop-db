@@ -7,7 +7,7 @@ USE eshop_db;
 CREATE TABLE `sp_attributes` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL COMMENT '属性名称（如：处理器、屏幕尺寸）',
-  `category_id` bigint NOT NULL COMMENT '所属类目ID（该属性只出现在这个类目下）',
+  `category_id` bigint  DEFAULT NULL COMMENT '推荐归属类目（非强约束，仅用于后台管理视图）',
   `value_type` tinyint NOT NULL DEFAULT 1 COMMENT '1-文本 2-数值 3-颜色',
   `filterable` tinyint NOT NULL DEFAULT 0 COMMENT '是否参与前台筛选',
   `unit` varchar(20) DEFAULT '' COMMENT '单位（如：英寸、GB）',
