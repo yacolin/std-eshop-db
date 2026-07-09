@@ -183,6 +183,25 @@ def seed_product(conn):
                      sku_price + random.randint(int(sku_price * 0.1), int(sku_price * 0.3)),
                      int(sku_price * 0.6)),
                 )
+                sku_id = cur.lastrowid
+                # 写入 sp_sku_specs（EAV 规格映射）
+                sort_order = 0
+                for spec_name, spec_value in spec_dict.items():
+                    spec_attr_id = attr_map.get((cat_idx, spec_name))
+                    if spec_attr_id is None:
+                        continue
+                    cur.execute(
+                        "SELECT id FROM sp_attribute_values WHERE attribute_id = %s AND `value` = %s",
+                        (spec_attr_id, spec_value),
+                    )
+                    row = cur.fetchone()
+                    if row:
+                        cur.execute(
+                            "INSERT INTO sp_sku_specs (sku_id, attribute_id, attribute_value_id, sort_order) "
+                            "VALUES (%s, %s, %s, %s)",
+                            (sku_id, spec_attr_id, row[0], sort_order),
+                        )
+                        sort_order += 1
                 total_skus += 1
 
             has_desc = 0
