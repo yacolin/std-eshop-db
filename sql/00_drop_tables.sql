@@ -26,6 +26,11 @@ DROP TABLE IF EXISTS `sp_inventories`;
 -- ============================================================
 -- P2: 关联业务表（依赖 P1）
 -- ============================================================
+DROP TABLE IF EXISTS `sp_sku_specs`;
+DROP TABLE IF EXISTS `sp_attribute_values`;
+DROP TABLE IF EXISTS `rev_review_usefulness`;
+DROP TABLE IF EXISTS `rev_review_statistics`;
+DROP TABLE IF EXISTS `mkt_promotion_stocks`;
 DROP TABLE IF EXISTS `sp_product_versions`;
 DROP TABLE IF EXISTS `rev_review_audit_logs`;
 DROP TABLE IF EXISTS `rev_review_ratings`;
