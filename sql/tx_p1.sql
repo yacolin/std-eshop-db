@@ -36,6 +36,7 @@ CREATE TABLE `tx_order_items` (
   `product_id` bigint NOT NULL DEFAULT 0 COMMENT '关联 products.id(sp_products)',
   `sku_code` varchar(100) DEFAULT '' COMMENT '商家编码（冗余快照）',
   `product_name` varchar(200) NOT NULL DEFAULT '' COMMENT '商品名（冗余快照）',
+  `sku_spec_summary` varchar(500) DEFAULT '' COMMENT '规格摘要（如：红色 / 256G）',
   `sku_spec` json DEFAULT NULL COMMENT '规格JSON快照',
   `image` varchar(512) DEFAULT '' COMMENT '商品图（冗余快照）',
 
@@ -53,14 +54,10 @@ CREATE TABLE `tx_order_items` (
   `deleted_at` datetime(3) DEFAULT NULL,
 
   PRIMARY KEY (`id`),
-  CONSTRAINT `fk_tx_order_items_order` FOREIGN KEY (`order_id`) REFERENCES `tx_orders` (`id`),
-  CONSTRAINT `fk_tx_order_items_sub_order` FOREIGN KEY (`sub_order_id`) REFERENCES `tx_sub_orders` (`id`),
-  KEY `idx_merchant` (`merchant_id`),
-  KEY `idx_order_id` (`order_id`) COMMENT '按订单查明细',
-  KEY `idx_sub_order_id` (`sub_order_id`) COMMENT '按子订单查明细',
   KEY `idx_order_no` (`order_no`),
   KEY `idx_sku_id` (`sku_id`),
-  KEY `idx_deleted_at` (`deleted_at`)
+  KEY `idx_sub_order_id` (`sub_order_id`),
+  CONSTRAINT `chk_subtotal` CHECK (`subtotal` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单明细表';
 
 
@@ -75,8 +72,6 @@ CREATE TABLE `tx_order_logs` (
   `note` varchar(500) DEFAULT '' COMMENT '备注（如：支付成功、超时取消）',
   `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   PRIMARY KEY (`id`),
-  KEY `idx_order_id` (`order_id`) COMMENT '按订单查操作日志',
-  KEY `idx_order_no` (`order_no`),
-  KEY `idx_created_at` (`created_at`) COMMENT '按时间范围查',
-  KEY `idx_to_status` (`to_status`) COMMENT '按目标状态统计'
+  KEY `idx_order_id` (`order_id`),
+  KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单操作日志表（审计与对账）';

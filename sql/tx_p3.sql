@@ -17,7 +17,7 @@ CREATE TABLE `tx_after_sales` (
     `amount` bigint NOT NULL DEFAULT 0 COMMENT '退款金额（分）',
     `refund_id` BIGINT DEFAULT NULL COMMENT '关联退款单ID',
     `refund_no` VARCHAR(32) DEFAULT '' COMMENT '关联退款单号',
-    `status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-待处理 1-审核通过 2-处理中 3-已完成 4-已拒绝 5-平台介入',
+    `status` TINYINT NOT NULL DEFAULT 0 COMMENT '0-待审核 1-审核通过(待退货) 2-退货中 3-待退款 4-已完成 5-已拒绝 6-已取消',
     `return_carrier` VARCHAR(20) DEFAULT '' COMMENT '退货物流商',
     `return_tracking_no` VARCHAR(64) DEFAULT '' COMMENT '退货运单号',
     `return_shipped_at` datetime(3) DEFAULT NULL COMMENT '买家退货发出时间',
@@ -29,13 +29,10 @@ CREATE TABLE `tx_after_sales` (
     `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
     `deleted_at` datetime(3) DEFAULT NULL,
     UNIQUE KEY `uk_after_sale_no` (`after_sale_no`),
-    CONSTRAINT `fk_tx_after_sales_refund` FOREIGN KEY (`refund_id`) REFERENCES `tx_refunds` (`id`),
-    KEY `idx_order` (`order_id`),
     KEY `idx_order_item` (`order_item_id`),
-    KEY `idx_refund` (`refund_id`),
     KEY `idx_merchant_status` (`merchant_id`, `status`),
-    KEY `idx_user` (`user_id`),
-    KEY `idx_deleted_at` (`deleted_at`)
+    KEY `idx_user_status` (`user_id`, `status`),
+    CONSTRAINT `chk_as_amount` CHECK (`amount` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='售后单表';
 
 

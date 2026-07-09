@@ -8,8 +8,6 @@ CREATE TABLE `tx_carts` (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '购物车ID',
   `user_id` bigint NOT NULL COMMENT '用户ID（已登录用户）',
   `session_id` varchar(64) DEFAULT '' COMMENT '会话ID（未登录时的临时标识）',
-  `item_count` int NOT NULL DEFAULT 0 COMMENT '商品种类数',
-  `total_amount` bigint NOT NULL DEFAULT 0 COMMENT '总金额（分，聚合，减少查SKU次数）',
   `expired_at` datetime(3) DEFAULT NULL COMMENT '过期时间（session 型购物车自动清理）',
   `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
@@ -71,7 +69,8 @@ CREATE TABLE `tx_orders` (
   KEY `idx_status` (`status`) COMMENT '按状态批量查询',
   KEY `idx_payment_status` (`payment_status`),
   KEY `idx_created_at` (`created_at`) COMMENT '按时间查询',
-  KEY `idx_deleted_at` (`deleted_at`)
+  CONSTRAINT `chk_pay_amount` CHECK (`pay_amount` >= 0),
+  CONSTRAINT `chk_total_amount` CHECK (`total_amount` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单主表';
 
 
@@ -109,11 +108,9 @@ CREATE TABLE `tx_sub_orders` (
 
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_sub_order_no` (`sub_order_no`),
-  CONSTRAINT `fk_tx_sub_orders_parent` FOREIGN KEY (`parent_order_id`) REFERENCES `tx_orders` (`id`),
-  KEY `idx_parent_order` (`parent_order_id`),
   KEY `idx_parent_order_no` (`parent_order_no`),
   KEY `idx_merchant_status` (`merchant_id`, `status`),
   KEY `idx_user_status` (`user_id`, `status`),
   KEY `idx_created_at` (`created_at`),
-  KEY `idx_deleted_at` (`deleted_at`)
+  CONSTRAINT `chk_sub_pay_amount` CHECK (`pay_amount` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='子订单表（父订单按商家拆分）';

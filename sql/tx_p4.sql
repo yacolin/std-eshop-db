@@ -50,8 +50,7 @@ CREATE TABLE `tx_deliveries` (
     KEY `idx_merchant` (`merchant_id`),
     KEY `idx_tracking` (`tracking_no`) COMMENT '按运单号查询',
     KEY `idx_status` (`status`),
-    KEY `idx_created_at` (`created_at`),
-    KEY `idx_deleted_at` (`deleted_at`)
+    KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='物流单主表（一个订单可拆多个物流单）';
 
 
@@ -83,7 +82,7 @@ CREATE TABLE `tx_delivery_traces` (
 
     `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
-    PRIMARY KEY (`id`),
+    PRIMARY KEY (`id`, `trace_time`),
     KEY `idx_delivery_id` (`delivery_id`) COMMENT '按物流单查轨迹',
     KEY `idx_tracking_no` (`tracking_no`) COMMENT '按运单号查轨迹',
     KEY `idx_trace_time` (`trace_time`) COMMENT '按时间排序轨迹'

@@ -19,7 +19,7 @@ CREATE TABLE `tx_payments` (
   `channel` varchar(32) DEFAULT '' COMMENT '支付渠道（如 wechat_native-微信 native alipay_page-支付宝页面）',
   `trade_type` varchar(32) DEFAULT '' COMMENT '交易类型：native-jsapi-app-h5-page',
   `transaction_id` varchar(128) DEFAULT NULL COMMENT '支付渠道交易号（微信/支付宝订单号，用于对账）',
-  `idempotency_key` varchar(64) DEFAULT NULL COMMENT '支付创建幂等键（防重复提交）',
+  `idempotency_key` varchar(64) NOT NULL COMMENT '支付创建幂等键（防重复提交）',
 
   `status` varchar(20) NOT NULL DEFAULT 'pending' COMMENT '支付状态：pending-待支付 processing-处理中 success-已支付 failed-支付失败 refunding-退款中 refunded-已退款',
   `failure_reason` varchar(500) DEFAULT '' COMMENT '失败原因',
@@ -38,13 +38,9 @@ CREATE TABLE `tx_payments` (
   UNIQUE KEY `uk_payment_no` (`payment_no`) COMMENT '支付单号唯一',
   UNIQUE KEY `uk_idempotency_key` (`idempotency_key`) COMMENT '幂等键唯一',
   UNIQUE KEY `uk_transaction_id` (`transaction_id`) COMMENT '渠道交易号唯一（NULL表示未生成）',
-  CONSTRAINT `fk_tx_payments_order` FOREIGN KEY (`order_id`) REFERENCES `tx_orders` (`id`),
-  KEY `idx_merchant` (`merchant_id`),
   KEY `idx_order_no` (`order_no`) COMMENT '按订单查支付记录',
-  KEY `idx_order_id` (`order_id`),
-  KEY `idx_status` (`status`),
-  KEY `idx_expire_at` (`expire_at`),
-  KEY `idx_deleted_at` (`deleted_at`)
+  KEY `idx_status_expire` (`status`, `expire_at`),
+  CONSTRAINT `chk_pay_amount_positive` CHECK (`amount` > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='支付单表';
 
 
@@ -83,6 +79,7 @@ CREATE TABLE `tx_refunds` (
   `channel_refund_id` varchar(128) DEFAULT NULL COMMENT '渠道退款交易号',
   `failure_reason` varchar(500) DEFAULT '' COMMENT '失败原因',
   `channel_response` json DEFAULT NULL COMMENT '渠道退款响应/回调摘要',
+  `idempotency_key` varchar(64) NOT NULL COMMENT '退款幂等键',
 
   `applied_at` datetime(3) DEFAULT NULL COMMENT '申请时间',
   `success_at` datetime(3) DEFAULT NULL COMMENT '退款成功时间',
@@ -95,12 +92,8 @@ CREATE TABLE `tx_refunds` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_refund_no` (`refund_no`) COMMENT '退款单号唯一',
   UNIQUE KEY `uk_channel_refund_id` (`channel_refund_id`) COMMENT '渠道退款号唯一（NULL表示未生成）',
-  CONSTRAINT `fk_tx_refunds_payment` FOREIGN KEY (`payment_id`) REFERENCES `tx_payments` (`id`),
-  KEY `idx_merchant` (`merchant_id`),
-  KEY `idx_payment_id` (`payment_id`),
+  UNIQUE KEY `uk_idempotency_key` (`idempotency_key`),
   KEY `idx_payment_no` (`payment_no`),
   KEY `idx_order_no` (`order_no`),
-  KEY `idx_order_id` (`order_id`),
-  KEY `idx_status` (`status`),
-  KEY `idx_deleted_at` (`deleted_at`)
+  CONSTRAINT `chk_refund_amount` CHECK (`amount` > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='退款单表';
