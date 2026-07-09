@@ -3,14 +3,14 @@
 种子：商品中心 — 品牌 / 类目 / 属性 / SPU / SKU / 描述 / 扩展属性 / 类目-品牌
 """
 from seed_common import *
+import seed_data
 
 
 def seed_product(conn):
-    global _GENERATED_PRODUCTS
-    if _GENERATED_PRODUCTS is None:
-        _GENERATED_PRODUCTS = generate_products()
-        print(f"  自动生成 SPU: {len(_GENERATED_PRODUCTS)} 个")
-    products = _GENERATED_PRODUCTS
+    if seed_data._GENERATED_PRODUCTS is None:
+        seed_data._GENERATED_PRODUCTS = seed_data.generate_products()
+        print(f"  自动生成 SPU: {len(seed_data._GENERATED_PRODUCTS)} 个")
+    products = seed_data._GENERATED_PRODUCTS
 
     with conn.cursor() as cur:
         # 获取已 seeded 的商家 ID
