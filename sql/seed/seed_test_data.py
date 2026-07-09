@@ -792,7 +792,7 @@ def seed_order(conn):
                                before_reserved, after_reserved, change_amount, reference_id, operator, note)
                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                              (sku_id, sku_merchant_id, "order", before_qty, after_qty,
-                              before_reserved, after_reserved, -qty, f"{order_no}_{sku_id}", "system", "订单扣减"),
+                              before_reserved, after_reserved, -qty, f"{order_no}_{sku_id}_{random.randint(100,999)}", "system", "订单扣减"),
                         )
 
             if parent_status in ("paid", "completed", "refunded"):
