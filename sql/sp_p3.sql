@@ -15,7 +15,6 @@ CREATE TABLE `sp_inventories` (
   -- 库存数量
   `quantity` bigint NOT NULL DEFAULT 0 COMMENT '物理库存总量（含预占）',
   `reserved` bigint NOT NULL DEFAULT 0 COMMENT '预占库存（下单未支付）',
-  `available` bigint GENERATED ALWAYS AS (quantity - reserved) VIRTUAL COMMENT '可售库存（虚拟列，无需持久化）',
   `in_transit` bigint NOT NULL DEFAULT 0 COMMENT '在途库存（采购中/调拨中）',
 
   -- 安全库存
@@ -36,17 +35,12 @@ CREATE TABLE `sp_inventories` (
 
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_sku_warehouse` (`sku_id`, `warehouse_id`) COMMENT '同一SKU在同一仓库只有一条库存记录',
-  CONSTRAINT `fk_sp_inventories_sku` FOREIGN KEY (`sku_id`) REFERENCES `sp_skus` (`id`),
-  CONSTRAINT `fk_sp_inventories_warehouse` FOREIGN KEY (`warehouse_id`) REFERENCES `sp_warehouses` (`id`),
   CONSTRAINT `chk_inventory_quantity_nonnegative` CHECK (`quantity` >= 0),
   CONSTRAINT `chk_inventory_reserved_nonnegative` CHECK (`reserved` >= 0),
   CONSTRAINT `chk_inventory_reserved_lte_quantity` CHECK (`reserved` <= `quantity`),
-  KEY `idx_merchant` (`merchant_id`),
   KEY `idx_sku_status` (`sku_id`, `status`) COMMENT '查询SKU库存状态',
   KEY `idx_warehouse_status` (`warehouse_id`, `status`) COMMENT '按仓库查库存',
-  KEY `idx_warehouse_id` (`warehouse_id`) COMMENT '按仓库查询',
-  KEY `idx_deleted_at` (`deleted_at`),
-  KEY `idx_sku_for_update` (`sku_id`, `warehouse_id`, `status`) COMMENT 'FOR UPDATE 锁定查询'
+  KEY `idx_warehouse_id` (`warehouse_id`) COMMENT '按仓库查询'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='库存表（支持多仓库）';
 
 
@@ -55,7 +49,7 @@ CREATE TABLE `sp_inventory_logs` (
   `sku_id` bigint NOT NULL COMMENT '关联 skus.id',
   `merchant_id` bigint NOT NULL DEFAULT 0 COMMENT '所属商家ID',
   `warehouse_id` bigint NOT NULL DEFAULT 0 COMMENT '仓库ID',
-  `change_type` varchar(30) NOT NULL COMMENT '变更类型：order_lock-下单预占 order_unlock-取消释放 order_dedut-支付扣减 inbound-入库 outbound-出库 return-退货入库 adjust-盘盈亏修正',
+  `change_type` varchar(30) NOT NULL COMMENT '变更类型：order_lock-下单预占 order_unlock-取消释放 order_deduct-支付扣减 inbound-入库 outbound-出库 return-退货入库 adjust-盘盈亏修正',
   `before_quantity` bigint NOT NULL DEFAULT 0 COMMENT '变更前物理库存',
   `after_quantity` bigint NOT NULL DEFAULT 0 COMMENT '变更后物理库存',
   `before_reserved` bigint NOT NULL DEFAULT 0 COMMENT '变更前预占库存',
@@ -66,6 +60,7 @@ CREATE TABLE `sp_inventory_logs` (
   `note` varchar(500) DEFAULT '' COMMENT '备注',
   `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ref_type` (`reference_id`, `change_type`) COMMENT '幂等约束：同单据同类型操作不重复',
   KEY `idx_merchant` (`merchant_id`),
   KEY `idx_sku_id` (`sku_id`, `warehouse_id`) COMMENT '按SKU查库存变更历史',
   KEY `idx_change_type` (`change_type`) COMMENT '按变更类型统计',

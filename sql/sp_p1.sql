@@ -8,8 +8,8 @@ CREATE TABLE `sp_attributes` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL COMMENT '属性名称（如：处理器、屏幕尺寸）',
   `category_id` bigint NOT NULL COMMENT '所属类目ID（该属性只出现在这个类目下）',
-  `input_type` tinyint NOT NULL DEFAULT 1 COMMENT '1-文本输入 2-单选 3-多选 4-数字',
-  `values` json DEFAULT NULL COMMENT '可选值列表（如["A15","A16"]，仅单选/多选时使用）',
+  `value_type` tinyint NOT NULL DEFAULT 1 COMMENT '1-文本 2-数值 3-颜色',
+  `filterable` tinyint NOT NULL DEFAULT 0 COMMENT '是否参与前台筛选',
   `unit` varchar(20) DEFAULT '' COMMENT '单位（如：英寸、GB）',
   `required` tinyint NOT NULL DEFAULT 0 COMMENT '1-必填（该属性在该类目下创建商品时必须填写）',
   `searchable` tinyint NOT NULL DEFAULT 0 COMMENT '1-作为前台筛选条件（列表页筛选项来源）',
@@ -22,8 +22,7 @@ CREATE TABLE `sp_attributes` (
   PRIMARY KEY (`id`),
   KEY `idx_category` (`category_id`),
   KEY `idx_is_sku_spec` (`is_sku_spec`),
-  KEY `idx_searchable` (`category_id`, `searchable`, `status`) COMMENT '前台筛选条件查询',
-  KEY `idx_deleted_at` (`deleted_at`)
+  KEY `idx_searchable` (`category_id`, `searchable`, `status`) COMMENT '前台筛选条件查询'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='属性字典表';
 
 
@@ -43,10 +42,7 @@ CREATE TABLE `sp_products` (
   `images` json DEFAULT NULL COMMENT '附图JSON数组（最多10张）',
   `video_url` varchar(512) DEFAULT '' COMMENT '主图视频URL',
 
-  -- 价格 & 库存聚合（触发器维护，只读）
-  `min_price` bigint NOT NULL DEFAULT 0 COMMENT 'SKU最低价（分）',
-  `max_price` bigint NOT NULL DEFAULT 0 COMMENT 'SKU最高价（分）',
-  `total_stock` int NOT NULL DEFAULT 0 COMMENT '可售库存总和（SUM(quantity - reserved)）',
+  -- 价格 & 库存（实时查询 SKU / Inventory）
 
   -- 运营数据（定时任务聚合）
   `sales_count` int NOT NULL DEFAULT 0 COMMENT '总销量（从订单明细聚合，每日更新）',
@@ -73,12 +69,8 @@ CREATE TABLE `sp_products` (
   `deleted_at` datetime(3) DEFAULT NULL COMMENT '软删除时间（NULL表示未删除）',
 
   PRIMARY KEY (`id`),
-  KEY `idx_merchant` (`merchant_id`),
-  KEY `idx_category_status_sort` (`category_id`, `status`, `sort_order` DESC, `id` DESC) COMMENT '前台列表页主查询',
+  KEY `idx_category_status_sort` (`category_id`, `status`, `sort_order` DESC, `id` DESC) COMMENT '前台列表页主入口',
   KEY `idx_brand_status` (`brand_id`, `status`) COMMENT '品牌筛选',
   KEY `idx_status_sales` (`status`, `sales_count` DESC) COMMENT '销量排序',
-  KEY `idx_status_rating` (`status`, `rating_average` DESC) COMMENT '评分排序',
-  KEY `idx_created_at` (`created_at`) COMMENT '后台按创建时间筛选',
-  KEY `idx_deleted_at` (`deleted_at`) COMMENT '软删除查询',
-  FULLTEXT KEY `ft_search` (`name`, `subtitle`) COMMENT '商品名称+副标题全文检索'
+  KEY `idx_status_rating` (`status`, `rating_average` DESC) COMMENT '评分排序'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品SPU主表（前台展示聚合层）';
