@@ -22,7 +22,7 @@ CREATE TABLE `mkt_promotions` (
     `used_quantity` INT DEFAULT 0 COMMENT '已使用/已售数量（异步统计，非实时）',
 
     -- 规则引用
-    `rule_id` BIGINT NOT NULL COMMENT '关联规则表ID',
+    `rule_id` BIGINT NOT NULL DEFAULT 0 COMMENT '关联规则表ID',
 
     -- 状态
     `status` TINYINT DEFAULT 1 COMMENT '1-草稿 2-待生效 3-生效中 4-已暂停 5-已结束 6-已作废',
