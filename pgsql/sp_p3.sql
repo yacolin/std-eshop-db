@@ -14,7 +14,7 @@ CREATE TABLE sp_inventories (
     in_transit bigint NOT NULL DEFAULT 0,
     threshold bigint NOT NULL DEFAULT 10,
     max_threshold bigint NOT NULL DEFAULT 999999,
-    status varchar(20) NOT NULL DEFAULT 'instock',
+    status inventory_status NOT NULL DEFAULT 'instock',
     last_counted_at timestamp DEFAULT NULL,
     last_counted_by varchar(50) DEFAULT '',
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -24,11 +24,13 @@ CREATE TABLE sp_inventories (
     UNIQUE (sku_id, warehouse_id)
 );
 
-CREATE INDEX idx_sp_inventories_merchant ON sp_inventories (merchant_id);
-CREATE INDEX idx_sp_inventories_sku_status ON sp_inventories (sku_id, status);
-CREATE INDEX idx_sp_inventories_warehouse_status ON sp_inventories (warehouse_id, status);
-CREATE INDEX idx_sp_inventories_available ON sp_inventories (available);
-CREATE INDEX idx_sp_inventories_deleted_at ON sp_inventories (deleted_at);
+CREATE INDEX idx_sp_inventories_active ON sp_inventories (sku_id, warehouse_id, status)
+    WHERE deleted_at IS NULL;
+CREATE INDEX idx_sp_inventories_merchant ON sp_inventories (merchant_id)
+    WHERE deleted_at IS NULL;
+CREATE INDEX idx_sp_inventories_available ON sp_inventories (available)
+    WHERE deleted_at IS NULL;
+-- 并发扣库存专用索引
 CREATE INDEX idx_sp_inventories_sku_for_update ON sp_inventories (sku_id, warehouse_id, status);
 
 CREATE TRIGGER trg_sp_inventories_updated_at
@@ -74,7 +76,9 @@ CREATE INDEX idx_sp_inventory_logs_merchant ON sp_inventory_logs (merchant_id);
 CREATE INDEX idx_sp_inventory_logs_sku_id ON sp_inventory_logs (sku_id, warehouse_id);
 CREATE INDEX idx_sp_inventory_logs_change_type ON sp_inventory_logs (change_type);
 CREATE INDEX idx_sp_inventory_logs_reference_id ON sp_inventory_logs (reference_id);
-CREATE INDEX idx_sp_inventory_logs_created_at ON sp_inventory_logs (created_at);
+-- BRIN 索引：日志流水行为时间序
+CREATE INDEX idx_sp_inventory_logs_time_brin ON sp_inventory_logs USING BRIN (created_at)
+    WITH (pages_per_range = 32);
 
 COMMENT ON TABLE sp_inventory_logs IS '库存变更流水表（对账与审计）';
 COMMENT ON COLUMN sp_inventory_logs.id IS '日志ID';

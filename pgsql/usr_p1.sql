@@ -23,7 +23,8 @@ CREATE TABLE usr_levels (
 );
 
 CREATE INDEX idx_usr_levels_status ON usr_levels (status);
-CREATE INDEX idx_usr_levels_deleted_at ON usr_levels (deleted_at);
+CREATE INDEX idx_usr_levels_active ON usr_levels (level, status)
+    WHERE deleted_at IS NULL;
 
 CREATE TRIGGER trg_usr_levels_updated_at
     BEFORE UPDATE ON usr_levels

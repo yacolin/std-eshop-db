@@ -21,9 +21,12 @@ CREATE TABLE sys_roles (
     UNIQUE (name)
 );
 
+-- 部分索引：只索引未删除记录
+CREATE INDEX idx_sys_roles_active ON sys_roles (status, id)
+    WHERE deleted_at IS NULL;
 CREATE INDEX idx_sys_roles_type ON sys_roles (role_type);
 CREATE INDEX idx_sys_roles_status ON sys_roles (status);
-CREATE INDEX idx_sys_roles_deleted_at ON sys_roles (deleted_at);
+-- (原 idx_sys_roles_deleted_at 已替换为部分索引)
 
 CREATE TRIGGER trg_sys_roles_updated_at
     BEFORE UPDATE ON sys_roles
@@ -54,7 +57,8 @@ CREATE TABLE sys_permissions (
 CREATE INDEX idx_sys_permissions_resource ON sys_permissions (resource);
 CREATE INDEX idx_sys_permissions_action ON sys_permissions (action);
 CREATE INDEX idx_sys_permissions_status ON sys_permissions (status);
-CREATE INDEX idx_sys_permissions_deleted_at ON sys_permissions (deleted_at);
+CREATE INDEX idx_sys_permissions_active ON sys_permissions (name)
+    WHERE deleted_at IS NULL;
 
 CREATE TRIGGER trg_sys_permissions_updated_at
     BEFORE UPDATE ON sys_permissions
@@ -78,7 +82,8 @@ CREATE TABLE sys_role_permissions (
 
 CREATE INDEX idx_sys_role_permissions_permission_id ON sys_role_permissions (permission_id);
 CREATE INDEX idx_sys_role_permissions_scope ON sys_role_permissions (scope_type, scope_id);
-CREATE INDEX idx_sys_role_permissions_deleted_at ON sys_role_permissions (deleted_at);
+CREATE INDEX idx_sys_role_permissions_active ON sys_role_permissions (role_id, permission_id)
+    WHERE deleted_at IS NULL;
 
 COMMENT ON TABLE sys_role_permissions IS '角色-权限关联表';
 
@@ -105,7 +110,8 @@ CREATE TABLE sys_staff (
 );
 
 CREATE INDEX idx_sys_staff_status ON sys_staff (status);
-CREATE INDEX idx_sys_staff_deleted_at ON sys_staff (deleted_at);
+CREATE INDEX idx_sys_staff_active ON sys_staff (status, id)
+    WHERE deleted_at IS NULL;
 
 CREATE TRIGGER trg_sys_staff_updated_at
     BEFORE UPDATE ON sys_staff
@@ -131,7 +137,8 @@ CREATE TABLE sys_staff_roles (
 );
 
 CREATE INDEX idx_sys_staff_roles_role_id ON sys_staff_roles (role_id);
-CREATE INDEX idx_sys_staff_roles_deleted_at ON sys_staff_roles (deleted_at);
+CREATE INDEX idx_sys_staff_roles_active ON sys_staff_roles (staff_id, role_id)
+    WHERE deleted_at IS NULL;
 
 COMMENT ON TABLE sys_staff_roles IS '员工-角色关联表（平台级角色）';
 
@@ -150,7 +157,8 @@ CREATE TABLE sys_login_histories (
 );
 
 CREATE INDEX idx_sys_login_histories_staff_id ON sys_login_histories (staff_id);
-CREATE INDEX idx_sys_login_histories_created_at ON sys_login_histories (created_at);
+CREATE INDEX idx_sys_login_histories_time_brin ON sys_login_histories USING BRIN (created_at)
+    WITH (pages_per_range = 32);
 
 COMMENT ON TABLE sys_login_histories IS 'B端员工登录历史表';
 
@@ -171,7 +179,8 @@ CREATE TABLE sys_departments (
 
 CREATE INDEX idx_sys_departments_parent_id ON sys_departments (parent_id);
 CREATE INDEX idx_sys_departments_status ON sys_departments (status);
-CREATE INDEX idx_sys_departments_deleted_at ON sys_departments (deleted_at);
+CREATE INDEX idx_sys_departments_active ON sys_departments (parent_id, status)
+    WHERE deleted_at IS NULL;
 
 CREATE TRIGGER trg_sys_departments_updated_at
     BEFORE UPDATE ON sys_departments
@@ -194,7 +203,8 @@ CREATE TABLE sys_staff_departments (
 );
 
 CREATE INDEX idx_sys_staff_departments_department ON sys_staff_departments (department_id);
-CREATE INDEX idx_sys_staff_departments_deleted_at ON sys_staff_departments (deleted_at);
+CREATE INDEX idx_sys_staff_departments_active ON sys_staff_departments (staff_id, department_id)
+    WHERE deleted_at IS NULL;
 
 COMMENT ON TABLE sys_staff_departments IS '员工-部门关联表';
 COMMENT ON COLUMN sys_staff_departments.is_primary IS '是否主部门';
@@ -220,7 +230,9 @@ CREATE TABLE sys_operation_logs (
 CREATE INDEX idx_sys_operation_logs_staff_id ON sys_operation_logs (staff_id);
 CREATE INDEX idx_sys_operation_logs_operation ON sys_operation_logs (operation);
 CREATE INDEX idx_sys_operation_logs_resource ON sys_operation_logs (resource, resource_id);
-CREATE INDEX idx_sys_operation_logs_created_at ON sys_operation_logs (created_at);
+-- BRIN 索引：日志流水行为时间序，BRIN 比 B-tree 更省空间
+CREATE INDEX idx_sys_operation_logs_time_brin ON sys_operation_logs USING BRIN (created_at)
+    WITH (pages_per_range = 32);
 
 COMMENT ON TABLE sys_operation_logs IS 'B端操作审计日志表';
 COMMENT ON COLUMN sys_operation_logs.operation IS '操作类型：update_price/disable_user/create_coupon/...';

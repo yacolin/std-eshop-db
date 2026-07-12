@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 .DS_Store
 sql/SCHEMA_REVIEW.md
+pgsql/PG_REFACTORING_PROPOSAL.md

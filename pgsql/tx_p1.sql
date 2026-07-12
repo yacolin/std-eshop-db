@@ -107,7 +107,9 @@ CREATE TABLE tx_order_logs (
 );
 
 CREATE INDEX idx_tx_order_logs_order_id ON tx_order_logs (order_id);
-CREATE INDEX idx_tx_order_logs_created_at ON tx_order_logs (created_at);
+-- BRIN 索引：日志流水行为时间序
+CREATE INDEX idx_tx_order_logs_time_brin ON tx_order_logs USING BRIN (created_at)
+    WITH (pages_per_range = 32);
 
 COMMENT ON TABLE tx_order_logs IS '订单操作日志表（审计与对账）';
 COMMENT ON COLUMN tx_order_logs.order_id IS '关联 tx_orders.id';

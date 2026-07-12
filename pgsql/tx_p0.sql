@@ -36,9 +36,9 @@ CREATE TABLE tx_orders (
     discount_amount bigint NOT NULL DEFAULT 0,
     shipping_fee bigint NOT NULL DEFAULT 0,
     pay_amount bigint NOT NULL DEFAULT 0,
-    status varchar(20) NOT NULL DEFAULT 'pending',
-    payment_status varchar(20) NOT NULL DEFAULT 'unpaid',
-    payment_method varchar(32) DEFAULT '',
+    status order_status NOT NULL DEFAULT 'pending',
+    payment_status payment_status NOT NULL DEFAULT 'unpaid',
+    payment_method payment_method DEFAULT NULL,
     consignee varchar(64) NOT NULL DEFAULT '',
     phone varchar(20) NOT NULL DEFAULT '',
     province varchar(32) DEFAULT '',
@@ -62,10 +62,15 @@ CREATE TABLE tx_orders (
     PRIMARY KEY (id),
     UNIQUE (order_no),
     CONSTRAINT chk_pay_amount CHECK (pay_amount >= 0),
-    CONSTRAINT chk_total_amount CHECK (total_amount >= 0)
+    CONSTRAINT chk_total_amount CHECK (total_amount >= 0),
+    CONSTRAINT chk_order_time_order CHECK (paid_at IS NULL OR paid_at >= created_at),
+    CONSTRAINT chk_order_time_ship CHECK (shipped_at IS NULL OR shipped_at >= paid_at)
 );
 
-CREATE INDEX idx_tx_orders_user_id_status ON tx_orders (user_id, status);
+-- 覆盖索引：订单列表查询
+CREATE INDEX idx_tx_orders_user_list ON tx_orders (user_id, status, created_at DESC)
+    INCLUDE (order_no, pay_amount)
+    WHERE deleted_at IS NULL;
 CREATE INDEX idx_tx_orders_status ON tx_orders (status);
 CREATE INDEX idx_tx_orders_payment_status ON tx_orders (payment_status);
 CREATE INDEX idx_tx_orders_created_at ON tx_orders (created_at);
@@ -105,7 +110,7 @@ CREATE TABLE tx_sub_orders (
     discount_amount bigint NOT NULL DEFAULT 0,
     shipping_fee bigint NOT NULL DEFAULT 0,
     pay_amount bigint NOT NULL DEFAULT 0,
-    status varchar(20) NOT NULL DEFAULT 'pending',
+    status order_status NOT NULL DEFAULT 'pending',
     refund_status varchar(20) NOT NULL DEFAULT 'none',
     seller_remark varchar(500) DEFAULT '',
     paid_at timestamp(3) DEFAULT NULL,

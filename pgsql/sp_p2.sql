@@ -71,10 +71,12 @@ CREATE TABLE sp_skus (
     UNIQUE (barcode)
 );
 
-CREATE INDEX idx_sp_skus_merchant ON sp_skus (merchant_id);
-CREATE INDEX idx_sp_skus_product_id ON sp_skus (product_id);
-CREATE INDEX idx_sp_skus_product_status ON sp_skus (product_id, status);
-CREATE INDEX idx_sp_skus_deleted_at ON sp_skus (deleted_at);
+-- 覆盖索引：SKU列表展示价格和规格
+CREATE INDEX idx_sp_skus_product ON sp_skus (product_id, status)
+    INCLUDE (sku_code, price, market_price, spec, image)
+    WHERE deleted_at IS NULL;
+CREATE INDEX idx_sp_skus_merchant ON sp_skus (merchant_id)
+    WHERE deleted_at IS NULL;
 
 CREATE TRIGGER trg_sp_skus_updated_at
     BEFORE UPDATE ON sp_skus
@@ -117,9 +119,9 @@ CREATE TABLE sp_product_attributes (
     UNIQUE (product_id, attribute_id, attribute_value_id)
 );
 
-CREATE INDEX idx_sp_product_attributes_attribute ON sp_product_attributes (attribute_id);
+CREATE INDEX idx_sp_product_attributes_attribute ON sp_product_attributes (attribute_id)
+    WHERE deleted_at IS NULL;
 CREATE INDEX idx_sp_product_attributes_attribute_value ON sp_product_attributes (attribute_value_id);
-CREATE INDEX idx_sp_product_attributes_deleted_at ON sp_product_attributes (deleted_at);
 
 CREATE TRIGGER trg_sp_product_attributes_updated_at
     BEFORE UPDATE ON sp_product_attributes

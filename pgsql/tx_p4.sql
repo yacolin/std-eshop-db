@@ -20,7 +20,7 @@ CREATE TABLE tx_deliveries (
     district varchar(32) DEFAULT '',
     detail_addr varchar(256) DEFAULT '',
     shipping_fee bigint NOT NULL DEFAULT 0,
-    status varchar(20) NOT NULL DEFAULT 'pending',
+    status deliver_status NOT NULL DEFAULT 'pending',
     shipped_at timestamp(3) DEFAULT NULL,
     delivered_at timestamp(3) DEFAULT NULL,
     created_by bigint NOT NULL DEFAULT 0,

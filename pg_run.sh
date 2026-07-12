@@ -10,8 +10,8 @@
 PSQL="psql -U postgres -d eshop_db"
 
 echo "=== 清理: 删除所有旧表 ===" >&2
-echo "=== 初始化: 创建触发器函数 ===" >&2
-echo "=== P0: 独立基础表 ===" >&2
+echo "=== 初始化: 创建触发器函数 + 扩展 ===" >&2
+echo "=== 类型定义: ENUM + DOMAIN ===" >&2
 echo "=== P1: 核心业务表 ===" >&2
 echo "=== P2: 关联业务表 ===" >&2
 echo "=== P3: 库存相关表 ===" >&2
@@ -21,6 +21,8 @@ echo "=== P5: 版本/审计表 ===" >&2
 {
   cat pgsql/00_drop_tables.sql
   cat pgsql/00_init.sql
+  cat pgsql/01_enums.sql
+  cat pgsql/01_domains.sql
   cat pgsql/base_p0.sql
   cat pgsql/usr_p0.sql
   cat pgsql/sys_p0.sql

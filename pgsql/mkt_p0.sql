@@ -8,7 +8,7 @@ CREATE TABLE mkt_promotions (
     promotion_no varchar(32) NOT NULL,
     merchant_id bigint NOT NULL DEFAULT 0,
     promo_name varchar(100) NOT NULL,
-    promo_type smallint NOT NULL,
+    promo_type promotion_type NOT NULL,
     promo_code varchar(50) DEFAULT '',
     start_time timestamp(3) NOT NULL,
     end_time timestamp(3) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE mkt_promotions (
     per_user_limit int DEFAULT 1,
     used_quantity int DEFAULT 0,
     rule_id bigint NOT NULL DEFAULT 0,
-    status smallint DEFAULT 1,
+    status promotion_status DEFAULT 'draft',
     priority int DEFAULT 0,
     created_by bigint,
     updated_by bigint,
@@ -25,10 +25,14 @@ CREATE TABLE mkt_promotions (
     deleted_at timestamp(3) DEFAULT NULL,
     PRIMARY KEY (id),
     UNIQUE (promotion_no),
-    UNIQUE (merchant_id, promo_code)
+    UNIQUE (merchant_id, promo_code),
+    CONSTRAINT chk_promo_time CHECK (start_time < end_time)
 );
 
-CREATE INDEX idx_mkt_promotions_merchant_status_time ON mkt_promotions (merchant_id, status, start_time, end_time);
+-- 覆盖索引：活动列表查询
+CREATE INDEX idx_mkt_promotions_list ON mkt_promotions (merchant_id, status, start_time, end_time)
+    INCLUDE (promo_name, promo_type, used_quantity)
+    WHERE deleted_at IS NULL;
 CREATE INDEX idx_mkt_promotions_type_status ON mkt_promotions (promo_type, status);
 CREATE INDEX idx_mkt_promotions_rule_id ON mkt_promotions (rule_id);
 

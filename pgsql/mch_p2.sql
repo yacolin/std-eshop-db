@@ -20,8 +20,8 @@ CREATE TABLE mch_settlement_details (
 );
 
 CREATE INDEX idx_mch_settlement_details_merchant_order ON mch_settlement_details (merchant_id, order_id);
-CREATE INDEX idx_mch_settlement_details_settlement_log ON mch_settlement_details (settlement_log_id);
-CREATE INDEX idx_mch_settlement_details_deleted_at ON mch_settlement_details (deleted_at);
+CREATE INDEX idx_mch_settlement_details_settlement_log ON mch_settlement_details (settlement_log_id)
+    WHERE deleted_at IS NULL;
 
 CREATE TRIGGER trg_mch_settlement_details_updated_at
     BEFORE UPDATE ON mch_settlement_details

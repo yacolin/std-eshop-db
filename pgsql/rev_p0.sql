@@ -12,15 +12,15 @@ CREATE TABLE rev_reviews (
     spu_id bigint NOT NULL,
     sku_id bigint DEFAULT NULL,
     merchant_id bigint NOT NULL DEFAULT 0,
-    overall_rating smallint NOT NULL,
-    quality_rating smallint DEFAULT NULL,
-    logistics_rating smallint DEFAULT NULL,
-    service_rating smallint DEFAULT NULL,
+    overall_rating rating_score NOT NULL,
+    quality_rating rating_score DEFAULT NULL,
+    logistics_rating rating_score DEFAULT NULL,
+    service_rating rating_score DEFAULT NULL,
     content text DEFAULT NULL,
     content_length smallint DEFAULT 0,
     is_anonymous smallint DEFAULT 0,
     has_media smallint DEFAULT 0,
-    status smallint DEFAULT 0,
+    status review_status DEFAULT 'pending',
     risk_level smallint DEFAULT 0,
     reject_reason varchar(200) DEFAULT NULL,
     audited_by bigint DEFAULT NULL,
@@ -62,7 +62,7 @@ COMMENT ON COLUMN rev_reviews.content IS '评价文字内容';
 COMMENT ON COLUMN rev_reviews.content_length IS '内容长度（冗余，用于筛选优质评价）';
 COMMENT ON COLUMN rev_reviews.is_anonymous IS '是否匿名 0-否 1-是';
 COMMENT ON COLUMN rev_reviews.has_media IS '是否包含媒体 0-否 1-是';
-COMMENT ON COLUMN rev_reviews.status IS '0-待审核 1-审核通过 2-审核拒绝 3-用户删除 4-平台屏蔽';
+COMMENT ON COLUMN rev_reviews.status IS 'pending-待审核 approved-审核通过 rejected-审核拒绝 user_deleted-用户删除 platform_hidden-平台屏蔽';
 COMMENT ON COLUMN rev_reviews.risk_level IS '风险等级 0-正常 1-低风险 2-高风险';
 COMMENT ON COLUMN rev_reviews.reject_reason IS '拒绝原因';
 COMMENT ON COLUMN rev_reviews.audited_by IS '审核人ID';

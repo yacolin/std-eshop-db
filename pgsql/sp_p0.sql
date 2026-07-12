@@ -55,6 +55,8 @@ CREATE TABLE sp_brands (
 
 CREATE INDEX idx_sp_brands_first_letter ON sp_brands (first_letter);
 CREATE INDEX idx_sp_brands_status ON sp_brands (status);
+-- Trigram 索引：品牌名模糊搜索与纠错（需 pg_trgm 扩展）
+CREATE INDEX idx_sp_brands_name_trgm ON sp_brands USING GIN (name gin_trgm_ops);
 
 CREATE TRIGGER trg_sp_brands_updated_at
     BEFORE UPDATE ON sp_brands

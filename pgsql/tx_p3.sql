@@ -10,7 +10,7 @@ CREATE TABLE tx_after_sales (
     order_item_id bigint NOT NULL,
     merchant_id bigint NOT NULL,
     user_id bigint NOT NULL,
-    after_sale_type smallint NOT NULL,
+    after_sale_type after_sale_type NOT NULL,
     apply_quantity int NOT NULL DEFAULT 1,
     reason varchar(500) DEFAULT '',
     amount bigint NOT NULL DEFAULT 0,

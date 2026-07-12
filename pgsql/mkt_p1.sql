@@ -8,7 +8,7 @@ CREATE TABLE mkt_promotion_rules (
     promotion_id bigint NOT NULL,
     merchant_id bigint NOT NULL DEFAULT 0,
     rule_name varchar(100),
-    condition_type smallint NOT NULL,
+    condition_type condition_type NOT NULL,
     condition_value bigint NOT NULL DEFAULT 0,
     benefit_config jsonb NOT NULL,
     is_stackable smallint DEFAULT 0,
@@ -71,7 +71,7 @@ CREATE TABLE mkt_user_promotions (
     merchant_id bigint NOT NULL DEFAULT 0,
     acquire_time timestamp(3) DEFAULT CURRENT_TIMESTAMP,
     expire_time timestamp(3),
-    status smallint DEFAULT 1,
+    status user_promo_status DEFAULT 'unused',
     lock_order_id bigint DEFAULT NULL,
     used_time timestamp(3),
     order_id bigint,
@@ -151,6 +151,9 @@ CREATE TABLE mkt_promotion_usage_logs (
 CREATE INDEX idx_mkt_promotion_usage_logs_order ON mkt_promotion_usage_logs (order_id);
 CREATE INDEX idx_mkt_promotion_usage_logs_promotion_created ON mkt_promotion_usage_logs (promotion_id, created_at);
 CREATE INDEX idx_mkt_promotion_usage_logs_user_created ON mkt_promotion_usage_logs (user_id, created_at);
+-- BRIN 索引：促销使用记录量大，按时间查询
+CREATE INDEX idx_mkt_promotion_usage_logs_time_brin ON mkt_promotion_usage_logs USING BRIN (created_at)
+    WITH (pages_per_range = 32);
 
 COMMENT ON TABLE mkt_promotion_usage_logs IS '促销使用记录表（建议按 created_at 月度分区）';
 COMMENT ON COLUMN mkt_promotion_usage_logs.promotion_id IS '促销ID';
