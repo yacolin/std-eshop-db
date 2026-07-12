@@ -5,6 +5,32 @@
 from seed_common import *
 import seed_data
 from collections import OrderedDict, defaultdict
+import re
+
+
+def _map_value_type(name, input_type):
+    if input_type == 4:
+        return 2  # 数值
+    if input_type == 2:
+        if "颜色" in name or "色号" in name:
+            return 3  # 颜色
+    return 1  # 文本
+
+
+def _parse_numeric_value(v):
+    m = re.search(r'(\d+(?:\.\d+)?)', v)
+    return m.group(1) if m else None
+
+
+_COLOR_HEX_MAP = {
+    "黑色": "#000000", "白色": "#FFFFFF", "银色": "#C0C0C0",
+    "金色": "#FFD700", "红色": "#FF0000", "蓝色": "#0000FF",
+    "紫色": "#800080", "绿色": "#008000", "粉色": "#FFC0CB",
+    "灰色": "#808080", "卡其": "#C3B091", "荧光黄": "#FFFF00",
+    "深空灰": "#43464B", "木纹": "#8B5A2B", "暖黄": "#FFD700",
+    "肤色": "#FFE0BD", "玫瑰金": "#E8B4B8", "多色": "#000000",
+    "条纹": "#000000", "彩色": "#FF00FF", "RGB彩光": "#FF00FF",
+}
 
 
 def seed_product(conn):
@@ -100,28 +126,36 @@ def seed_product(conn):
 
         attr_map = {}       # (name, value_type) -> attr_id
         spec_attr_map = {}  # (cat_idx, spec_name) -> attr_id（给 generate_spec 用）
+        attr_values_map = {}  # attr_id -> [(av_id, value), ...]
 
-        for key, group in attr_groups.items():
+        for sort_order, (key, group) in enumerate(attr_groups.items()):
             name, input_type = key
+            real_value_type = _map_value_type(name, input_type)
             merged_values = json.dumps(sorted(group["values_set"])) if group["values_set"] else None
             filterable = 1 if merged_values else 0
             cur.execute(
-                "INSERT INTO sp_attributes (name, category_id, value_type, filterable, is_sku_spec, searchable, status) "
-                "VALUES (%s, %s, %s, %s, %s, %s, 1)",
-                (name, cat_ids[group["first_cat_idx"]], input_type, filterable, group["is_sku"], group["searchable"]),
+                "INSERT INTO sp_attributes (name, category_id, value_type, filterable, is_sku_spec, searchable, sort_order, status) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, 1)",
+                (name, cat_ids[group["first_cat_idx"]], real_value_type, filterable,
+                 group["is_sku"], group["searchable"], sort_order),
             )
             attr_id = cur.lastrowid
             attr_map[key] = attr_id
 
             if merged_values:
-                for sort_order, v in enumerate(json.loads(merged_values)):
+                for vo, v in enumerate(json.loads(merged_values)):
                     alias_data = alias_map.get(v)
-                    search_weight = max(100 - sort_order * 10, 10)
+                    search_weight = max(100 - vo * 10, 10)
+                    numeric_value = _parse_numeric_value(v) if real_value_type == 2 else None
+                    color_hex = _COLOR_HEX_MAP.get(v, "") if real_value_type == 3 else ""
                     cur.execute(
-                        "INSERT INTO sp_attribute_values (attribute_id, `value`, alias, search_weight, sort_order, status) "
-                        "VALUES (%s, %s, %s, %s, %s, 1)",
-                        (attr_id, v, alias_data, search_weight, sort_order),
+                        "INSERT INTO sp_attribute_values "
+                        "(attribute_id, `value`, alias, search_weight, numeric_value, color_hex, sort_order, status) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s, 1)",
+                        (attr_id, v, alias_data, search_weight, numeric_value, color_hex, vo),
                     )
+                    av_id = cur.lastrowid
+                    attr_values_map.setdefault(attr_id, []).append((av_id, v))
 
         # 建立 per-category 的 spec_name → attr_id 映射（兼容同名不同 value_type 场景）
         for cat_idx, name, input_type, _, _, _ in ATTRS:
@@ -229,27 +263,21 @@ def seed_product(conn):
                 attr_name, input_type = key
                 if key not in cat_attr_keys.get(cat_idx, set()):
                     continue
-                val = random.choice(["标准", "优质", "普通", "高级", "入门"])
-                if attr_name in ["颜色", "色号"]:
-                    val = random.choice(["黑色", "白色", "红色", "蓝色"])
-                elif attr_name in ["面料", "材质", "处理器型号", "显卡型号"]:
-                    val = random.choice(["优质材料", "标准款", "高性能版"])
-                cur.execute(
-                    "SELECT id FROM sp_attribute_values WHERE attribute_id = %s AND `value` = %s",
-                    (attr_id, val),
-                )
-                av_row = cur.fetchone()
-                if av_row:
+                valid_entries = attr_values_map.get(attr_id, [])
+                if valid_entries:
+                    av_id, val = random.choice(valid_entries)
                     cur.execute(
-                        "INSERT IGNORE INTO sp_product_attributes (product_id, attribute_id, attribute_value_id, value, sort_order) "
+                        "INSERT IGNORE INTO sp_product_attributes "
+                        "(product_id, attribute_id, attribute_value_id, value, sort_order) "
                         "VALUES (%s, %s, %s, %s, 0)",
-                        (spu_id, attr_id, av_row[0], val),
+                        (spu_id, attr_id, av_id, val),
                     )
                 else:
                     cur.execute(
-                        "INSERT IGNORE INTO sp_product_attributes (product_id, attribute_id, value, sort_order) "
+                        "INSERT IGNORE INTO sp_product_attributes "
+                        "(product_id, attribute_id, value, sort_order) "
                         "VALUES (%s, %s, %s, 0)",
-                        (spu_id, attr_id, val),
+                        (spu_id, attr_id, attr_name),
                     )
 
         print(f"  SPU: {product_count}, SKU: {total_skus}")

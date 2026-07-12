@@ -84,13 +84,13 @@ CREATE TABLE `sp_product_attributes` (
   `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   `deleted_at` datetime(3) DEFAULT NULL COMMENT '软删除',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_product_attribute` (`product_id`, `attribute_id`),
+  UNIQUE KEY `uk_product_attribute` (`product_id`, `attribute_id`, `attribute_value_id`),
   KEY `idx_attribute` (`attribute_id`),
   KEY `idx_attribute_value` (`attribute_value_id`) COMMENT '字典值筛选'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='SPU扩展属性值表';
 
 -- 写入规则：
---   attribute_value_id IS NOT NULL → 有字典值，优先引用字典
+--   attribute_value_id IS NOT NULL → 有字典值，一行一个字典值
 --   attribute_value_id IS NULL     → 无字典值，value 存自由文本
 --   value 字段始终冗余存储展示文本，避免频繁 JOIN
 
