@@ -62,8 +62,8 @@ CREATE TABLE `sp_products` (
   `seo_description` varchar(500) DEFAULT '' COMMENT 'SEO描述（页面meta description）',
 
   -- 审计字段
-  `created_by` varchar(50) DEFAULT '' COMMENT '创建人（运营工号）',
-  `updated_by` varchar(50) DEFAULT '' COMMENT '最后更新人',
+  `created_by` bigint NOT NULL DEFAULT 0 COMMENT '创建人ID',
+  `updated_by` bigint NOT NULL DEFAULT 0 COMMENT '最后更新人ID',
   `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
   `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) COMMENT '更新时间',
   `deleted_at` datetime(3) DEFAULT NULL COMMENT '软删除时间（NULL表示未删除）',

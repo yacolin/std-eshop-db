@@ -60,17 +60,18 @@ UNIQUE KEY `uk_merchant_sku_code` (`merchant_id`, `sku_code`) COMMENT '同一商
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='SKU规格表（具体可售单元）';
 
 
-CREATE TABLE sp_category_attributes (
-  id BIGINT PRIMARY KEY AUTO_INCREMENT,
-  category_id BIGINT NOT NULL COMMENT '类目ID',
-  attribute_id BIGINT NOT NULL COMMENT '属性ID',
-  required TINYINT DEFAULT 0 COMMENT '该类目下是否必填（仅提示，非强校验）',
-  is_default_filter TINYINT DEFAULT 0 COMMENT '是否作为前台默认筛选项',
-  sort_order INT DEFAULT 0,
-  created_at DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
-  UNIQUE KEY uk_cat_attr (category_id, attribute_id),
-  KEY idx_category (category_id)
-) COMMENT='类目-属性弱关联表（推荐模板）';
+CREATE TABLE `sp_category_attributes` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `category_id` bigint NOT NULL COMMENT '类目ID',
+  `attribute_id` bigint NOT NULL COMMENT '属性ID',
+  `required` tinyint DEFAULT 0 COMMENT '该类目下是否必填（仅提示，非强校验）',
+  `is_default_filter` tinyint DEFAULT 0 COMMENT '是否作为前台默认筛选项',
+  `sort_order` int DEFAULT 0 COMMENT '排序',
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_cat_attr` (`category_id`, `attribute_id`),
+  KEY `idx_category` (`category_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='类目-属性关联表（推荐模板）';
 
 
 CREATE TABLE `sp_product_attributes` (

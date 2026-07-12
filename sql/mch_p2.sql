@@ -20,4 +20,4 @@ CREATE TABLE `mch_settlement_details` (
     KEY `idx_merchant_order` (`merchant_id`, `order_id`),
     KEY `idx_settlement_log` (`settlement_log_id`),
     KEY `idx_deleted_at` (`deleted_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家结算明细表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家结算明细表';

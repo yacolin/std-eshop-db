@@ -21,4 +21,4 @@ CREATE TABLE `sp_warehouses` (
     UNIQUE KEY `uk_warehouse_code` (`warehouse_code`),
     KEY `idx_merchant` (`merchant_id`),
     KEY `idx_status` (`status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='仓库表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='仓库表';

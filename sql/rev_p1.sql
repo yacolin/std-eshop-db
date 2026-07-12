@@ -17,7 +17,7 @@ CREATE TABLE `rev_review_media` (
     `created_at` DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
     PRIMARY KEY (`id`),
     KEY `idx_review_sort` (`review_id`, `sort_order`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评价媒体表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='评价媒体表';
 
 
 CREATE TABLE `rev_review_replies` (
@@ -35,7 +35,7 @@ CREATE TABLE `rev_review_replies` (
     PRIMARY KEY (`id`),
     KEY `idx_review_root` (`review_id`, `root_reply_id`, `created_at`),
     KEY `idx_parent` (`parent_id`, `created_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评价回复表（支持二级回复）';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='评价回复表（支持二级回复）';
 
 
 CREATE TABLE `rev_review_audit_logs` (
@@ -52,7 +52,7 @@ CREATE TABLE `rev_review_audit_logs` (
     PRIMARY KEY (`id`),
     KEY `idx_review_created` (`review_id`, `created_at`),
     KEY `idx_operator_created` (`operator_id`, `created_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评价审核日志表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='评价审核日志表';
 
 
 CREATE TABLE `rev_review_statistics` (
@@ -77,7 +77,7 @@ CREATE TABLE `rev_review_statistics` (
 
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_target` (`target_type`, `target_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评价统计表（T+1或实时增量更新）';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='评价统计表（T+1或实时增量更新）';
 
 
 CREATE TABLE `rev_review_usefulness` (
@@ -88,4 +88,4 @@ CREATE TABLE `rev_review_usefulness` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_review_user` (`review_id`, `user_id`),
     KEY `idx_review` (`review_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评价有用记录表（用于防刷和计数）';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='评价有用记录表（用于防刷和计数）';

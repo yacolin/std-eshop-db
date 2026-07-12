@@ -33,7 +33,7 @@ CREATE TABLE `tx_after_sales` (
     KEY `idx_merchant_status` (`merchant_id`, `status`),
     KEY `idx_user_status` (`user_id`, `status`),
     CONSTRAINT `chk_as_amount` CHECK (`amount` >= 0)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='售后单表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='售后单表';
 
 
 CREATE TABLE `tx_after_sale_evidences` (
@@ -44,7 +44,7 @@ CREATE TABLE `tx_after_sale_evidences` (
     `sort_order` INT NOT NULL DEFAULT 0 COMMENT '排序',
     `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
     KEY `idx_after_sale` (`after_sale_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='售后凭证表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='售后凭证表';
 
 
 CREATE TABLE `tx_after_sale_logs` (
@@ -57,4 +57,4 @@ CREATE TABLE `tx_after_sale_logs` (
     `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
     KEY `idx_after_sale` (`after_sale_id`),
     KEY `idx_created_at` (`created_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='售后流程日志表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='售后流程日志表';

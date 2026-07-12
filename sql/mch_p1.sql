@@ -20,7 +20,7 @@ CREATE TABLE `mch_merchant_users` (
     KEY `idx_merchant_status` (`merchant_id`, `status`),
     KEY `idx_staff_id` (`staff_id`),
     KEY `idx_deleted_at` (`deleted_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家-员工关联表（B端员工通过此表绑定商户）';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家-员工关联表（B端员工通过此表绑定商户）';
 
 
 CREATE TABLE `mch_merchant_balances` (
@@ -35,7 +35,7 @@ CREATE TABLE `mch_merchant_balances` (
     `deleted_at` datetime(3) DEFAULT NULL,
     UNIQUE KEY `uk_merchant_currency` (`merchant_id`, `currency`),
     KEY `idx_deleted_at` (`deleted_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家资金余额表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家资金余额表';
 
 
 CREATE TABLE `mch_merchant_withdrawals` (
@@ -55,7 +55,7 @@ CREATE TABLE `mch_merchant_withdrawals` (
     UNIQUE KEY `uk_withdraw_no` (`withdraw_no`),
     KEY `idx_merchant_status` (`merchant_id`, `status`),
     KEY `idx_deleted_at` (`deleted_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家提现申请表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家提现申请表';
 
 
 CREATE TABLE `mch_merchant_settlement_logs` (
@@ -77,7 +77,7 @@ CREATE TABLE `mch_merchant_settlement_logs` (
     INDEX `idx_merchant` (`merchant_id`),
     INDEX `idx_status` (`status`),
     INDEX `idx_deleted_at` (`deleted_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家结算流水表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家结算流水表';
 
 
 -- ==================== 商家角色-权限关联 ====================

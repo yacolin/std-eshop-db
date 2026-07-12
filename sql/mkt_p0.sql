@@ -39,8 +39,8 @@ CREATE TABLE `mkt_promotions` (
 
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_promotion_no` (`promotion_no`),
-    KEY `uk_promo_code` (`promo_code`),
+    UNIQUE KEY `uk_promo_code_merchant` (`merchant_id`, `promo_code`),
     KEY `idx_merchant_status_time` (`merchant_id`, `status`, `start_time`, `end_time`),
     KEY `idx_type_status` (`promo_type`, `status`),
     KEY `idx_rule_id` (`rule_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='统一促销活动表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='统一促销活动表';

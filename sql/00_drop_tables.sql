@@ -14,7 +14,6 @@ DROP TABLE IF EXISTS `mch_settlement_details`;
 DROP TABLE IF EXISTS `tx_after_sale_logs`;
 DROP TABLE IF EXISTS `tx_after_sale_evidences`;
 DROP TABLE IF EXISTS `tx_after_sales`;
-DROP TABLE IF EXISTS `sp_warehouse_skus`;
 DROP TABLE IF EXISTS `sp_warehouses`;
 
 -- ============================================================
@@ -33,7 +32,6 @@ DROP TABLE IF EXISTS `rev_review_statistics`;
 DROP TABLE IF EXISTS `mkt_promotion_stocks`;
 DROP TABLE IF EXISTS `sp_product_versions`;
 DROP TABLE IF EXISTS `rev_review_audit_logs`;
-DROP TABLE IF EXISTS `rev_review_ratings`;
 DROP TABLE IF EXISTS `rev_review_replies`;
 DROP TABLE IF EXISTS `rev_review_media`;
 DROP TABLE IF EXISTS `mkt_promotion_usage_logs`;
@@ -82,10 +80,6 @@ DROP TABLE IF EXISTS `sys_departments`;
 DROP TABLE IF EXISTS `sys_login_histories`;
 DROP TABLE IF EXISTS `sys_staff_roles`;
 DROP TABLE IF EXISTS `sys_staff`;
-DROP TABLE IF EXISTS `usr_user_roles`;
-DROP TABLE IF EXISTS `usr_role_permissions`;
-DROP TABLE IF EXISTS `usr_permissions`;
-DROP TABLE IF EXISTS `usr_roles`;
 DROP TABLE IF EXISTS `usr_login_histories`;
 DROP TABLE IF EXISTS `usr_addresses`;
 DROP TABLE IF EXISTS `usr_infos`;

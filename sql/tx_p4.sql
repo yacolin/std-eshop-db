@@ -38,7 +38,7 @@ CREATE TABLE `tx_deliveries` (
     `delivered_at` datetime(3) DEFAULT NULL COMMENT '签收时间',
 
     -- 审计
-    `created_by` varchar(50) DEFAULT '' COMMENT '操作人',
+    `created_by` bigint NOT NULL DEFAULT 0 COMMENT '操作人ID',
     `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
     `deleted_at` datetime(3) DEFAULT NULL,

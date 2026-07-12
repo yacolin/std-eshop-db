@@ -53,7 +53,6 @@ CREATE TABLE `usr_infos` (
   `deleted_at` datetime(3) DEFAULT NULL COMMENT '删除时间',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `uk_user_id` (`user_id`) USING BTREE,
-  CONSTRAINT `fk_usr_infos_user` FOREIGN KEY (`user_id`) REFERENCES `usr_users` (`id`),
   KEY `idx_deleted_at` (`deleted_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户扩展信息表';
 
@@ -77,7 +76,6 @@ CREATE TABLE `usr_addresses` (
   PRIMARY KEY (`id`) USING BTREE,
   KEY `idx_user_id` (`user_id`) USING BTREE,
   UNIQUE KEY `uk_user_default` (`user_id`, `is_default`) COMMENT '确保每个用户只有一个默认地址（NULL不参与唯一约束）',
-  CONSTRAINT `fk_usr_addresses_user` FOREIGN KEY (`user_id`) REFERENCES `usr_users` (`id`),
   KEY `idx_deleted_at` (`deleted_at`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户收货地址';
 

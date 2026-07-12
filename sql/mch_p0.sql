@@ -59,7 +59,7 @@ CREATE TABLE `mch_merchants` (
     INDEX `idx_code` (`merchant_code`),
     INDEX `idx_status_level` (`status`, `merchant_level`),
     INDEX `idx_settled` (`settled_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家主表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家主表';
 
 
 CREATE TABLE `mch_merchant_contacts` (
@@ -74,7 +74,7 @@ CREATE TABLE `mch_merchant_contacts` (
     `deleted_at` datetime(3) DEFAULT NULL,
     INDEX `idx_merchant` (`merchant_id`),
     INDEX `idx_deleted_at` (`deleted_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家联系人表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家联系人表';
 
 
 CREATE TABLE `mch_merchant_bank_accounts` (
@@ -93,7 +93,7 @@ CREATE TABLE `mch_merchant_bank_accounts` (
     INDEX `idx_merchant` (`merchant_id`),
     UNIQUE KEY `uk_merchant_default` (`merchant_id`, `is_default`) COMMENT '确保每个商家只有一个默认结算账户（NULL不参与唯一约束）',
     INDEX `idx_deleted_at` (`deleted_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家结算银行账户表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家结算银行账户表';
 
 
 CREATE TABLE `mch_merchant_qualifications` (
@@ -111,7 +111,7 @@ CREATE TABLE `mch_merchant_qualifications` (
     INDEX `idx_merchant` (`merchant_id`),
     INDEX `idx_expire` (`expire_at`),
     INDEX `idx_deleted_at` (`deleted_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商家资质表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家资质表';
 
 
 -- ==================== 商家域角色 ====================

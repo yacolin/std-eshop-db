@@ -52,4 +52,4 @@ CREATE TABLE `rev_reviews` (
     KEY `idx_user_created` (`user_id`, `created_at`),
     KEY `idx_rating_status` (`overall_rating`, `status`),
     KEY `idx_audited` (`audited_at`, `status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评价主表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='评价主表';

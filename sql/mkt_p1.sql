@@ -31,7 +31,7 @@ CREATE TABLE `mkt_promotion_rules` (
     PRIMARY KEY (`id`),
     KEY `idx_promotion` (`promotion_id`),
     KEY `idx_stack_group` (`stack_group`, `is_stackable`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='促销规则表（配置化）';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='促销规则表（配置化）';
 
 
 CREATE TABLE `mkt_promotion_products` (
@@ -46,7 +46,7 @@ CREATE TABLE `mkt_promotion_products` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_promotion_target` (`promotion_id`, `product_type`, `target_id`),
     KEY `idx_target` (`target_id`, `product_type`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='促销适用商品表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='促销适用商品表';
 
 
 CREATE TABLE `mkt_user_promotions` (
@@ -80,7 +80,7 @@ CREATE TABLE `mkt_user_promotions` (
     KEY `idx_promotion` (`promotion_id`),
     KEY `idx_lock_order` (`lock_order_id`),
     KEY `idx_order` (`order_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户促销资产表（状态机优化）';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户促销资产表（状态机优化）';
 
 
 CREATE TABLE `mkt_promotion_stocks` (
@@ -96,7 +96,7 @@ CREATE TABLE `mkt_promotion_stocks` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_promotion_sku` (`promotion_id`, `sku_id`),
     CONSTRAINT `chk_stock_positive` CHECK (`available_stock` >= 0 AND `locked_stock` >= 0)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='促销库存表（支持秒杀）';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='促销库存表（支持秒杀）';
 
 
 CREATE TABLE `mkt_promotion_usage_logs` (
@@ -119,4 +119,4 @@ CREATE TABLE `mkt_promotion_usage_logs` (
     KEY `idx_order` (`order_id`),
     KEY `idx_promotion_created` (`promotion_id`, `created_at`),
     KEY `idx_user_created` (`user_id`, `created_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='促销使用记录表（建议按 created_at 月度分区）';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='促销使用记录表（建议按 created_at 月度分区）';
