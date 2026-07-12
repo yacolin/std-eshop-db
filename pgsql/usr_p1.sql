@@ -9,6 +9,8 @@ CREATE TABLE usr_levels (
     level int NOT NULL,
     icon varchar(255) NOT NULL DEFAULT '',
     min_points bigint NOT NULL DEFAULT 0,
+    -- 积分区间（含下界，由触发器根据等级顺序自动计算上界）
+    points_range int8range,
     discount_rate bigint NOT NULL DEFAULT 100,
     free_shipping smallint NOT NULL DEFAULT 0,
     points_multiplier decimal(3,2) NOT NULL DEFAULT 1.00,
@@ -25,13 +27,35 @@ CREATE TABLE usr_levels (
 CREATE INDEX idx_usr_levels_status ON usr_levels (status);
 CREATE INDEX idx_usr_levels_active ON usr_levels (level, status)
     WHERE deleted_at IS NULL;
+-- GIST 索引加速积分区间包含查询（如：查找某积分所属等级）
+CREATE INDEX idx_usr_levels_points_range ON usr_levels USING GIST (points_range);
 
 CREATE TRIGGER trg_usr_levels_updated_at
     BEFORE UPDATE ON usr_levels
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
-COMMENT ON TABLE usr_levels IS '用户等级定义表';
+COMMENT ON TABLE usr_levels IS '用户等级定义表（points_range 由 recompute_level_ranges() 函数维护）';
+COMMENT ON COLUMN usr_levels.points_range IS '积分区间 [min_points, next_min_points)，用于 @> 包含查询';
+
+-- 积分区间维护函数（使用 LEAD 窗口函数）
+CREATE OR REPLACE FUNCTION recompute_level_ranges()
+RETURNS void AS $$
+BEGIN
+    WITH ranked AS (
+        SELECT id, level, min_points,
+               LEAD(min_points) OVER (ORDER BY level) AS next_min
+        FROM usr_levels WHERE deleted_at IS NULL
+    )
+    UPDATE usr_levels u
+    SET points_range = int8range(r.min_points, COALESCE(r.next_min, 9223372036854775807), '[)')
+    FROM ranked r
+    WHERE u.id = r.id;
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON FUNCTION recompute_level_ranges IS '根据 level 排序重新计算所有等级的 points_range';
+
 COMMENT ON COLUMN usr_levels.name IS '等级名称（如：青铜会员、白银会员、黄金会员、钻石会员）';
 COMMENT ON COLUMN usr_levels.level IS '等级数值（1=青铜 2=白银 3=黄金 4=钻石）';
 COMMENT ON COLUMN usr_levels.icon IS '等级图标URL';

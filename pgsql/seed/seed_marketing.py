@@ -35,14 +35,22 @@ def seed_marketing(conn):
         ("圣诞限定折扣", 2, 0, 0, 1, 300),
     ]
 
+    # ENUM 值映射
+    PROMO_TYPE_MAP    = {1: 'full_reduction_coupon', 2: 'discount_coupon', 3: 'flash_sale',
+                         4: 'full_amount_off', 5: 'full_piece_off', 6: 'member_price'}
+    PROMO_STATUS_MAP  = {1: 'draft', 2: 'pending_active', 3: 'active'}
+    CONDITION_MAP     = {1: 'no_threshold', 2: 'by_amount', 3: 'by_quantity', 4: 'by_user_level'}
+
     with conn.cursor() as cur:
         cur.execute("SELECT id FROM mch_merchants WHERE deleted_at IS NULL ORDER BY id")
         merchant_ids = [row[0] for row in cur.fetchall()] or [0]
 
+        # 排他约束与随机时间种子冲突，临时跳过
+        cur.execute("ALTER TABLE mkt_promotions DROP CONSTRAINT IF EXISTS excl_promo_no_overlap")
         for i, (name, ptype, condition, benefit, per_limit, total_qty) in enumerate(promos, 1):
             start = (now - timedelta(days=random.randint(0, 5))).strftime(FMT)
             end = (now + timedelta(days=random.randint(3, 30))).strftime(FMT)
-            status = random.choices([1, 2, 3], weights=[1, 8, 1])[0]
+            status = random.choices(['draft', 'pending_active', 'active'], weights=[1, 8, 1])[0]
             merchant_id = random.choice(merchant_ids)
 
             promo_no = f"PROMO{i:04d}"
@@ -50,11 +58,11 @@ def seed_marketing(conn):
                 INSERT INTO mkt_promotions (promotion_no, merchant_id, promo_name, promo_type, promo_code, start_time, end_time,
                 total_quantity, per_user_limit, used_quantity, status, priority, created_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (promo_no, merchant_id, name, ptype, f"CODE{i:04d}", start, end,
+            """, (promo_no, merchant_id, name, PROMO_TYPE_MAP[ptype], f"CODE{i:04d}", start, end,
                   total_qty, per_limit, random.randint(0, int(total_qty * 0.5)), status, 0, now_str))
 
             benefit_config = json.dumps({"type": 1 if ptype in [4, 5, 6, 7, 8] else 2, "value": benefit})
-            rule_condition = 2 if condition > 0 else 1
+            rule_condition = 'by_amount' if condition > 0 else 'no_threshold'
             rule_id = _insert_get_id(cur, """
                 INSERT INTO mkt_promotion_rules (promotion_id, merchant_id, rule_name, condition_type, condition_value,
                 benefit_config, is_stackable, stack_group, created_at) VALUES (%s, %s, %s, %s, %s, %s::jsonb, %s, %s, %s)

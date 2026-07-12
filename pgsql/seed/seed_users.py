@@ -51,7 +51,7 @@ def seed_users(conn):
         colin_uid = _insert_get_id(cur, """
             INSERT INTO usr_users (id, username, password_hash, nickname, email, phone, status, register_source)
             VALUES (1, 'colin', '$2a$10$HFzEUNEVKJQCZ4aPYVb/YONrhix2jwj8iiJWM5TUZdXM4wPdkEllC',
-                    'Colin', 'colin@eshop.dev', '13800000002', 1, 'web')
+                    'Colin', 'colin@eshop.dev', '13800000002', 'active', 'web')
             ON CONFLICT DO NOTHING
         """, None)
         if colin_uid:

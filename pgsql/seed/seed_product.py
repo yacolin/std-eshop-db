@@ -9,11 +9,9 @@ import re
 
 
 def _map_input_type(name, input_type):
-    if input_type == 4:
-        return 4
-    if input_type == 2:
-        return 2
-    return 1
+    # 1=text, 2=radio, 3=checkbox, 4=number
+    _MAP = {1: 'text', 2: 'radio', 3: 'checkbox', 4: 'number'}
+    return _MAP.get(input_type, 'text')
 
 
 def _parse_numeric_value(v):
@@ -95,34 +93,34 @@ def seed_product(conn):
             cat_attr_keys[cat_idx].add(key)
 
         alias_map = {
-            "黑色": json.dumps(["纯黑", "墨色"]),
-            "白色": json.dumps(["纯白", "乳白"]),
-            "银色": json.dumps(["银灰", "亮银"]),
-            "金色": json.dumps(["香槟金", "亮金"]),
-            "红色": json.dumps(["正红", "朱红"]),
-            "蓝色": json.dumps(["深蓝", "宝蓝"]),
-            "紫色": json.dumps(["紫罗兰", "薰衣草"]),
-            "绿色": json.dumps(["翠绿", "草绿"]),
-            "粉色": json.dumps(["粉红", "樱花粉"]),
-            "灰色": json.dumps(["烟灰", "中灰"]),
-            "卡其": json.dumps(["卡其色", "米色"]),
-            "深空灰": json.dumps(["黑灰", "石墨灰"]),
-            "S": json.dumps(["小号"]),
-            "M": json.dumps(["中号"]),
-            "L": json.dumps(["大号"]),
-            "XL": json.dumps(["加大"]),
-            "XXL": json.dumps(["加加大"]),
-            "XXXL": json.dumps(["加加加大"]),
-            "36": json.dumps(["36码"]),
-            "37": json.dumps(["37码"]),
-            "38": json.dumps(["38码"]),
-            "39": json.dumps(["39码"]),
-            "40": json.dumps(["40码"]),
-            "41": json.dumps(["41码"]),
-            "42": json.dumps(["42码"]),
-            "43": json.dumps(["43码"]),
-            "44": json.dumps(["44码"]),
-            "45": json.dumps(["45码"]),
+            "黑色": ["纯黑", "墨色"],
+            "白色": ["纯白", "乳白"],
+            "银色": ["银灰", "亮银"],
+            "金色": ["香槟金", "亮金"],
+            "红色": ["正红", "朱红"],
+            "蓝色": ["深蓝", "宝蓝"],
+            "紫色": ["紫罗兰", "薰衣草"],
+            "绿色": ["翠绿", "草绿"],
+            "粉色": ["粉红", "樱花粉"],
+            "灰色": ["烟灰", "中灰"],
+            "卡其": ["卡其色", "米色"],
+            "深空灰": ["黑灰", "石墨灰"],
+            "S": ["小号"],
+            "M": ["中号"],
+            "L": ["大号"],
+            "XL": ["加大"],
+            "XXL": ["加加大"],
+            "XXXL": ["加加加大"],
+            "36": ["36码"],
+            "37": ["37码"],
+            "38": ["38码"],
+            "39": ["39码"],
+            "40": ["40码"],
+            "41": ["41码"],
+            "42": ["42码"],
+            "43": ["43码"],
+            "44": ["44码"],
+            "45": ["45码"],
         }
 
         attr_map = {}
@@ -131,16 +129,17 @@ def seed_product(conn):
 
         for sort_order, (key, group) in enumerate(attr_groups.items()):
             name, input_type = key
-            merged_values = json.dumps(sorted(group["values_set"])) if group["values_set"] else None
+            merged_values_list = sorted(group["values_set"]) if group["values_set"] else None
+            merged_values_json = json.dumps(merged_values_list) if merged_values_list else None
             attr_id = _insert_get_id(cur, """
                 INSERT INTO sp_attributes (name, category_id, input_type, values, is_sku_spec, searchable, sort_order, status)
-                VALUES (%s, %s, %s, %s::jsonb, %s, %s, %s, 1)
-            """, (name, cat_ids[group["first_cat_idx"]], input_type, merged_values,
+                VALUES (%s, %s, %s, %s, %s, %s, %s, 1)
+            """, (name, cat_ids[group["first_cat_idx"]], _map_input_type(name, input_type), merged_values_list,
                   group["is_sku"], group["searchable"], sort_order))
             attr_map[key] = attr_id
 
-            if merged_values:
-                for vo, v in enumerate(json.loads(merged_values)):
+            if merged_values_json:
+                for vo, v in enumerate(json.loads(merged_values_json)):
                     alias_data = alias_map.get(v)
                     search_weight = max(100 - vo * 10, 10)
                     numeric_value = _parse_numeric_value(v) if input_type == 4 else None
@@ -148,7 +147,7 @@ def seed_product(conn):
                     av_id = _insert_get_id(cur, """
                         INSERT INTO sp_attribute_values
                         (attribute_id, "value", alias, search_weight, numeric_value, color_hex, sort_order, status)
-                        VALUES (%s, %s, %s::jsonb, %s, %s, %s, %s, 1)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, 1)
                     """, (attr_id, v, alias_data, search_weight, numeric_value, color_hex, vo))
                     attr_values_map.setdefault(attr_id, []).append((av_id, v))
 
@@ -184,7 +183,7 @@ def seed_product(conn):
             merchant_id = random.choice(merchant_ids)
             spu_id = _insert_get_id(cur, """
                 INSERT INTO sp_products (merchant_id, name, subtitle, category_id, brand_id, unit, main_image, status)
-                VALUES (%s, %s, %s, %s, %s, %s, '', 2)
+                VALUES (%s, %s, %s, %s, %s, %s, '', 'listed')
             """, (merchant_id, name, subtitle, cat_ids[cat_idx], brand_id, unit))
             product_count += 1
 

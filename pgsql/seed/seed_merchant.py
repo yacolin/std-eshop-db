@@ -17,14 +17,19 @@ def seed_merchant(conn):
         cur.execute("SELECT id FROM sys_staff WHERE deleted_at IS NULL")
         staff_list = [u[0] for u in cur.fetchall()]
 
+        # ENUM 值映射
+        MCH_TYPE_MAP = {1: 'individual', 2: 'enterprise', 3: 'brand_direct'}
+        MCH_LEVEL_MAP = {1: 'normal', 2: 'silver', 3: 'gold', 4: 'diamond'}
+        SETTLE_CYCLE_MAP = {1: 't1', 2: 't7', 3: 'monthly'}
+
         for mch_name, mch_type, mch_level, contact, phone in MERCHANTS:
             code = f"MCH{random.randint(10000, 99999)}"
             merchant_id = _insert_get_id(cur, """
                 INSERT INTO mch_merchants (merchant_name, merchant_code, merchant_type, merchant_level,
                 contact_person, contact_phone, status, audit_status, commission_rate, settlement_cycle,
                 settled_at, created_at, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, 1, 1, %s, 1, %s, %s, %s)
-            """, (mch_name, code, mch_type, mch_level, contact, phone,
+                VALUES (%s, %s, %s, %s, %s, %s, 'active', 'approved', %s, 't1', %s, %s, %s)
+            """, (mch_name, code, MCH_TYPE_MAP[mch_type], MCH_LEVEL_MAP[mch_level], contact, phone,
                   random.randint(10, 80),
                   now.strftime(FMT), now.strftime(FMT), now.strftime(FMT)))
 
@@ -45,7 +50,7 @@ def seed_merchant(conn):
                  random.choice(["中国工商银行", "中国建设银行", "中国银行", "招商银行"]),
                  random.choice(["上海分行", "北京分行", "深圳分行", "广州分行"]),
                  mch_name, f"{random.randint(100000000000, 999999999999)}",
-                 random.choice([1, 2])),
+                 random.choice(["corporate", "personal"])),
             )
 
             for qual in ["business_license", "brand_authorization"]:

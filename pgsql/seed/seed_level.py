@@ -30,6 +30,9 @@ def seed_level(conn):
                     now_str,
                 )
             )
+    # Using a new cursor for func call after with block closes
+    with conn.cursor() as cur:
+        cur.execute("SELECT recompute_level_ranges()")
     conn.commit()
     print(f"  用户等级: {len(USER_LEVEL)} 条")
     print("用户等级 ✅\n")

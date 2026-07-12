@@ -21,7 +21,7 @@ def seed_review(conn):
             FROM tx_order_items oi
             JOIN tx_orders o ON o.id = oi.order_id
             WHERE o.status IN ('paid','completed') AND o.deleted_at IS NULL
-              AND oi.id NOT IN (SELECT order_item_id FROM rev_reviews WHERE status != 3)
+              AND oi.id NOT IN (SELECT order_item_id FROM rev_reviews WHERE status != 'user_deleted')
             ORDER BY o.created_at DESC
         """)
         items = cur.fetchall()
@@ -84,9 +84,12 @@ def seed_review(conn):
             content = random.choice(review_contents[bucket])
             is_anonymous = random.choice([0, 0, 0, 1])
 
-            status = random.choices([0, 1, 2], weights=[1, 8, 1])[0]
+            status = random.choices(['pending', 'approved', 'rejected'], weights=[1, 8, 1])[0]
+            # 审计日志表仍使用 smallint 存储状态值
+            STATUS_INT = {'pending': 0, 'approved': 1, 'rejected': 2}
+            _status_int = STATUS_INT[status]
             reject_reason = None
-            if status == 2:
+            if status == 'rejected':
                 reject_reason = random.choice([
                     "含不当言论", "图片与商品无关", "恶意评价",
                 ])
@@ -95,7 +98,7 @@ def seed_review(conn):
 
             review_no = f"RV{review_time.strftime('%Y%m%d%H%M%S')}{random.randint(1000,9999)}"
             content_length = len(content) if content else 0
-            has_media = 1 if (status == 1 and random.random() < 0.3) else 0
+            has_media = 1 if (status == 'approved' and random.random() < 0.3) else 0
             risk_level = 0
             review_id = _insert_get_id(cur, """
                 INSERT INTO rev_reviews
@@ -118,18 +121,18 @@ def seed_review(conn):
             cur.execute(
                 "INSERT INTO rev_review_audit_logs (review_id, action, operator_id, operator_name, before_status, after_status, remark, created_at) "
                 "VALUES (%s, 'submit', %s, 'user', NULL, %s, '用户提交评价', %s)",
-                (review_id, user_id, status, review_time.strftime(FMT)),
+                (review_id, user_id, _status_int, review_time.strftime(FMT)),
             )
             total_audit_logs += 1
 
-            if status == 1:
+            if status == 'approved':
                 cur.execute(
                     "INSERT INTO rev_review_audit_logs (review_id, action, operator_id, operator_name, before_status, after_status, remark, created_at) "
                     "VALUES (%s, 'approve', 1, 'admin', 0, 1, '审核通过', %s)",
                     (review_id, review_time.strftime(FMT)),
                 )
                 total_audit_logs += 1
-            elif status == 2:
+            elif status == 'rejected':
                 cur.execute(
                     "INSERT INTO rev_review_audit_logs (review_id, action, operator_id, operator_name, before_status, after_status, remark, created_at) "
                     "VALUES (%s, 'reject', 1, 'admin', 0, 2, %s, %s)",
@@ -137,7 +140,7 @@ def seed_review(conn):
                 )
                 total_audit_logs += 1
 
-            if status == 1 and random.random() < 0.3:
+            if status == 'approved' and random.random() < 0.3:
                 for m in range(random.randint(1, 3)):
                     cur.execute(
                         "INSERT INTO rev_review_media (review_id, media_type, media_url, file_size, width, height, sort_order, created_at) "
@@ -148,7 +151,7 @@ def seed_review(conn):
                     )
                     total_media += 1
 
-            if status == 1 and random.random() < 0.2:
+            if status == 'approved' and random.random() < 0.2:
                 reply_content = random.choice([
                     "感谢您的评价，我们会继续努力！",
                     "谢谢您的支持，欢迎再次光临！",
@@ -182,12 +185,12 @@ def seed_review(conn):
             SET rating_average = (
                 SELECT ROUND(COALESCE(AVG(r.overall_rating), 0), 2)
                 FROM rev_reviews r
-                WHERE r.spu_id = p.id AND r.status = 1
+                WHERE r.spu_id = p.id AND r.status = 'approved'
             ),
             rating_count = (
                 SELECT COUNT(*)
                 FROM rev_reviews r
-                WHERE r.spu_id = p.id AND r.status = 1
+                WHERE r.spu_id = p.id AND r.status = 'approved'
             )
             WHERE p.deleted_at IS NULL
         """)
@@ -211,14 +214,14 @@ def seed_review(conn):
                 COUNT(*) FILTER (WHERE r.has_media = 1),
                 COUNT(*) FILTER (WHERE r.content IS NOT NULL AND r.content != '')
             FROM rev_reviews r
-            WHERE r.status = 1
+            WHERE r.status = 'approved'
             GROUP BY r.spu_id
             ON CONFLICT (target_type, target_id) DO NOTHING
         """)
         stats_count = cur.rowcount
 
         # rev_review_usefulness：为部分评价生成"有用"标记
-        cur.execute("SELECT id, user_id, spu_id FROM rev_reviews WHERE status = 1 ORDER BY RANDOM() LIMIT 200")
+        cur.execute("SELECT id, user_id, spu_id FROM rev_reviews WHERE status = 'approved' ORDER BY RANDOM() LIMIT 200")
         usefulness_count = 0
         for rv_id, rv_user, rv_spu in cur.fetchall():
             cur.execute(

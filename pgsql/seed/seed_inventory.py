@@ -22,7 +22,7 @@ def seed_inventory(conn):
             merchant_id = random.choice(merchant_ids)
             wh_id = _insert_get_id(cur, """
                 INSERT INTO sp_warehouses (merchant_id, warehouse_name, warehouse_type, status)
-                VALUES (%s, %s, 1, 1)
+                VALUES (%s, %s, 'platform', 1)
             """, (merchant_id, "默认仓库"))
         else:
             wh_id = wh[0]

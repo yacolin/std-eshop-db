@@ -40,7 +40,7 @@ def seed_order(conn):
                 nickname = f"{random.choice(['小明','小红','张三','李四','王五','赵六','测试','游客'])}{i}"
                 uid = _insert_get_id(cur, """
                     INSERT INTO usr_users (username, password_hash, nickname, phone, email, status, register_source)
-                    VALUES (%s, %s, %s, %s, %s, 1, 'pc')
+                    VALUES (%s, %s, %s, %s, %s, 'active', 'web')
                     ON CONFLICT DO NOTHING
                 """, (username, f"hash_{i}", nickname, f"1{i:09d}", f"user{i}@test.com"))
                 if uid:
@@ -52,14 +52,14 @@ def seed_order(conn):
 
         cur.execute("SELECT id, promo_type FROM mkt_promotions")
         for promo_id, promo_type in cur.fetchall():
-            if promo_type == 3:
+            if promo_type == 'flash_sale':
                 continue
             recipients = random.sample(users, min(len(users), max(1, int(len(users) * random.uniform(0.3, 0.8)))))
             for u in recipients:
                 expire = now + timedelta(days=random.randint(7, 60))
                 cur.execute(
                     "INSERT INTO mkt_user_promotions (user_promotion_no, user_id, promotion_id, expire_time, status) "
-                    "VALUES (%s, %s, %s, %s, 1) ON CONFLICT DO NOTHING",
+                    "VALUES (%s, %s, %s, %s, 'unused') ON CONFLICT DO NOTHING",
                     (f"UPROMO{u[0]}-{promo_id}", u[0], promo_id, expire.strftime(FMT)),
                 )
 
@@ -179,7 +179,7 @@ def seed_order(conn):
                         cur.execute(
                             "UPDATE sp_inventories SET quantity = %s, reserved = %s, status = %s WHERE sku_id = %s",
                             (after_qty, after_reserved,
-                             3 if after_qty <= 0 else 2 if after_qty < 10 else 1, sku_id),
+                             'outofstock' if after_qty <= 0 else 'lowstock' if after_qty < 10 else 'instock', sku_id),
                         )
                         cur.execute(
                             """INSERT INTO sp_inventory_logs (sku_id, merchant_id, change_type, before_quantity, after_quantity,
@@ -200,7 +200,7 @@ def seed_order(conn):
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (payment_no, order_no, order_id, order_merchant_id, pay_amount, payment_method,
                       payment_method, "native", idempotency_key,
-                      "success" if parent_status != "refunded" else "refunded",
+                      "paid" if parent_status != "refunded" else "refunded",
                       paid_at.strftime(FMT), order_date.strftime(FMT), paid_at.strftime(FMT)))
                 total_payments += 1
 
