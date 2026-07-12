@@ -81,6 +81,8 @@ def main():
 
     conn.close()
     print("\n完成!")
+    print("行级安全（种子数据后启用）:")
+    print("  psql -U postgres -d eshop_db -f pgsql/05_rls.sql")
 
 
 if __name__ == "__main__":

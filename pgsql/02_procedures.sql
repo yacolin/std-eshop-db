@@ -42,9 +42,9 @@ CREATE OR REPLACE PROCEDURE place_order(
     p_user_id bigint,
     p_items jsonb,           -- [{"sku_id":1,"qty":2}, ...]
     p_address_id bigint,
-    p_coupon_id bigint DEFAULT NULL,
     OUT p_order_no varchar,
-    OUT p_order_id bigint
+    OUT p_order_id bigint,
+    p_coupon_id bigint DEFAULT NULL
 )
 LANGUAGE plpgsql
 AS $$

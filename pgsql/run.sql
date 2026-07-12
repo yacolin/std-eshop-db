@@ -58,10 +58,9 @@
 \i pgsql/04_materialized_views.sql
 
 -- ========== 行级安全 ==========
--- RLS 需在所有表创建完成后启用（且种子数据之后）
--- \i pgsql/05_rls.sql
+-- RLS 需在种子数据之后启用（见 seed/run.sql）
+-- 建表阶段不执行
 
--- ========== 高级特性（可选）==========
--- 以下为高级 PostgreSQL 特性，可根据实际需求启用
--- \i pgsql/02_notify.sql
--- \i pgsql/02_procedures.sql
+-- ========== 高级特性 ==========
+\i pgsql/02_procedures.sql
+\i pgsql/02_notify.sql

@@ -20,9 +20,19 @@
 -- 这些角色用于 GRANT 权限和 RLS 策略匹配
 -- 实际连接仍可使用单一应用用户，通过 SET 传递上下文
 
-CREATE ROLE shop_admin_role;
-CREATE ROLE shop_merchant_role;
-CREATE ROLE shop_user_role;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'shop_admin_role') THEN
+        CREATE ROLE shop_admin_role;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'shop_merchant_role') THEN
+        CREATE ROLE shop_merchant_role;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'shop_user_role') THEN
+        CREATE ROLE shop_user_role;
+    END IF;
+END;
+$$;
 
 -- ==================== 表权限基础授权 ====================
 -- 给所有角色基础读写权限（RLS 负责过滤行级数据）

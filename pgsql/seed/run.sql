@@ -17,3 +17,6 @@
 
 -- 第 3 步：业务测试数据（Python，用 seed_data.py 生成随机数据）
 -- python pgsql/seed/seed_test_data.py
+
+-- 第 4 步：行级安全策略（需在数据就位后启用）
+\i pgsql/05_rls.sql

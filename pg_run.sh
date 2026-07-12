@@ -48,9 +48,11 @@ echo "=== P5: 版本/审计表 ===" >&2
   cat pgsql/sp_p5.sql
   cat pgsql/03_partitions.sql
   cat pgsql/04_materialized_views.sql
+  cat pgsql/02_procedures.sql
+  cat pgsql/02_notify.sql
 } | $PSQL -q 2>&1 | grep -v "^CREATE\|^COMMENT\|^DROP\|^NOTICE"
 
 echo "=== 建表完成 ===" >&2
 echo "" >&2
-echo "测试数据（重置序列 + 生成种子）:" >&2
+echo "后续手动执行步骤:" >&2
 echo "  python3 pgsql/seed/seed_test_data.py --clean" >&2
