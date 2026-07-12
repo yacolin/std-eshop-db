@@ -153,12 +153,10 @@ CREATE TABLE sys_login_histories (
     login_status smallint NOT NULL DEFAULT 1,
     failure_reason varchar(100) NOT NULL DEFAULT '',
     created_at timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
-);
+    PRIMARY KEY (id, created_at)
+) PARTITION BY RANGE (created_at);
 
 CREATE INDEX idx_sys_login_histories_staff_id ON sys_login_histories (staff_id);
-CREATE INDEX idx_sys_login_histories_time_brin ON sys_login_histories USING BRIN (created_at)
-    WITH (pages_per_range = 32);
 
 COMMENT ON TABLE sys_login_histories IS 'B端员工登录历史表';
 
@@ -224,15 +222,12 @@ CREATE TABLE sys_operation_logs (
     failure_reason varchar(255) NOT NULL DEFAULT '',
     ip varchar(50) NOT NULL DEFAULT '',
     created_at timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
-);
+    PRIMARY KEY (id, created_at)
+) PARTITION BY RANGE (created_at);
 
 CREATE INDEX idx_sys_operation_logs_staff_id ON sys_operation_logs (staff_id);
 CREATE INDEX idx_sys_operation_logs_operation ON sys_operation_logs (operation);
 CREATE INDEX idx_sys_operation_logs_resource ON sys_operation_logs (resource, resource_id);
--- BRIN 索引：日志流水行为时间序，BRIN 比 B-tree 更省空间
-CREATE INDEX idx_sys_operation_logs_time_brin ON sys_operation_logs USING BRIN (created_at)
-    WITH (pages_per_range = 32);
 
 COMMENT ON TABLE sys_operation_logs IS 'B端操作审计日志表';
 COMMENT ON COLUMN sys_operation_logs.operation IS '操作类型：update_price/disable_user/create_coupon/...';

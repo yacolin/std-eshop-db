@@ -12,6 +12,7 @@ PSQL="psql -U postgres -d eshop_db"
 echo "=== 清理: 删除所有旧表 ===" >&2
 echo "=== 初始化: 创建触发器函数 + 扩展 ===" >&2
 echo "=== 类型定义: ENUM + DOMAIN ===" >&2
+echo "=== P0: 独立基础表 ===" >&2
 echo "=== P1: 核心业务表 ===" >&2
 echo "=== P2: 关联业务表 ===" >&2
 echo "=== P3: 库存相关表 ===" >&2
@@ -45,6 +46,8 @@ echo "=== P5: 版本/审计表 ===" >&2
   cat pgsql/tx_p3.sql
   cat pgsql/tx_p4.sql
   cat pgsql/sp_p5.sql
+  cat pgsql/03_partitions.sql
+  cat pgsql/04_materialized_views.sql
 } | $PSQL -q 2>&1 | grep -v "^CREATE\|^COMMENT\|^DROP\|^NOTICE"
 
 echo "=== 建表完成 ===" >&2

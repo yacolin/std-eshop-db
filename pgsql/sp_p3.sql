@@ -69,8 +69,8 @@ CREATE TABLE sp_inventory_logs (
     operator varchar(50) DEFAULT '',
     note varchar(500) DEFAULT '',
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
-);
+    PRIMARY KEY (id, created_at)
+) PARTITION BY RANGE (created_at);
 
 CREATE INDEX idx_sp_inventory_logs_merchant ON sp_inventory_logs (merchant_id);
 CREATE INDEX idx_sp_inventory_logs_sku_id ON sp_inventory_logs (sku_id, warehouse_id);

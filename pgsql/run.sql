@@ -51,6 +51,12 @@
 -- ========== P5: 版本/审计表 ==========
 \i pgsql/sp_p5.sql
 
+-- ========== 创建分区子表 ==========
+\i pgsql/03_partitions.sql
+
+-- ========== 物化视图 ==========
+\i pgsql/04_materialized_views.sql
+
 -- ========== 高级特性（可选）==========
 -- 以下为高级 PostgreSQL 特性，可根据实际需求启用
 -- \i pgsql/02_notify.sql

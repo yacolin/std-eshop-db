@@ -137,7 +137,7 @@ COMMENT ON COLUMN mch_merchant_bank_accounts.bank_name IS '开户行';
 COMMENT ON COLUMN mch_merchant_bank_accounts.bank_branch IS '开户支行';
 COMMENT ON COLUMN mch_merchant_bank_accounts.account_name IS '开户名';
 COMMENT ON COLUMN mch_merchant_bank_accounts.account_no IS '银行账号';
-COMMENT ON COLUMN mch_merchant_bank_accounts.account_type IS '1-对公账户 2-对私账户';
+COMMENT ON COLUMN mch_merchant_bank_accounts.account_type IS 'corporate-对公账户 personal-对私账户';
 COMMENT ON COLUMN mch_merchant_bank_accounts.is_default IS '是否默认结算账户（NULL=非默认, 1=默认）';
 COMMENT ON COLUMN mch_merchant_bank_accounts.status IS '1-正常 2-禁用';
 

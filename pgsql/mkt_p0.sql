@@ -12,6 +12,10 @@ CREATE TABLE mkt_promotions (
     promo_code varchar(50) DEFAULT '',
     start_time timestamp(3) NOT NULL,
     end_time timestamp(3) NOT NULL,
+    -- 时间范围生成列（用于 GIST 排他约束）
+    active_period tsrange GENERATED ALWAYS AS (
+        tsrange(start_time, end_time, '[)')
+    ) STORED,
     total_quantity int DEFAULT 0,
     per_user_limit int DEFAULT 1,
     used_quantity int DEFAULT 0,
@@ -26,7 +30,14 @@ CREATE TABLE mkt_promotions (
     PRIMARY KEY (id),
     UNIQUE (promotion_no),
     UNIQUE (merchant_id, promo_code),
-    CONSTRAINT chk_promo_time CHECK (start_time < end_time)
+    CONSTRAINT chk_promo_time CHECK (start_time < end_time),
+    -- 排他约束：同一商家不能有重叠的生效促销时间范围
+    CONSTRAINT excl_promo_no_overlap
+        EXCLUDE USING GIST (
+            merchant_id WITH =,
+            active_period WITH &&
+        )
+        WHERE (deleted_at IS NULL AND status IN ('active', 'pending_active'))
 );
 
 -- 覆盖索引：活动列表查询
@@ -41,19 +52,20 @@ CREATE TRIGGER trg_mkt_promotions_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
-COMMENT ON TABLE mkt_promotions IS '统一促销活动表';
+COMMENT ON TABLE mkt_promotions IS '统一促销活动表（含 GIST 排他约束防同一商家活动时间重叠）';
 COMMENT ON COLUMN mkt_promotions.promotion_no IS '促销业务编号';
 COMMENT ON COLUMN mkt_promotions.merchant_id IS '所属商家ID（0表示平台级活动）';
 COMMENT ON COLUMN mkt_promotions.promo_name IS '活动名称';
-COMMENT ON COLUMN mkt_promotions.promo_type IS '1-满减券 2-折扣券 3-秒杀 4-满额减 5-满件折 6-会员价';
+COMMENT ON COLUMN mkt_promotions.promo_type IS 'full_reduction_coupon-满减券 discount_coupon-折扣券 flash_sale-秒杀 full_amount_off-满额减 full_piece_off-满件折 member_price-会员价';
 COMMENT ON COLUMN mkt_promotions.promo_code IS '优惠码（优惠券专用）';
 COMMENT ON COLUMN mkt_promotions.start_time IS '开始时间';
 COMMENT ON COLUMN mkt_promotions.end_time IS '结束时间';
+COMMENT ON COLUMN mkt_promotions.active_period IS '时间范围生成列（用于GIST排他约束，自动计算）';
 COMMENT ON COLUMN mkt_promotions.total_quantity IS '发行总量（0表示不限）';
 COMMENT ON COLUMN mkt_promotions.per_user_limit IS '每人限领/限购数量';
 COMMENT ON COLUMN mkt_promotions.used_quantity IS '已使用/已售数量（异步统计，非实时）';
 COMMENT ON COLUMN mkt_promotions.rule_id IS '关联规则表ID';
-COMMENT ON COLUMN mkt_promotions.status IS '1-草稿 2-待生效 3-生效中 4-已暂停 5-已结束 6-已作废';
+COMMENT ON COLUMN mkt_promotions.status IS 'draft-草稿 pending_active-待生效 active-生效中 paused-已暂停 ended-已结束 cancelled-已作废';
 COMMENT ON COLUMN mkt_promotions.priority IS '优先级（数字越大越优先，同类型互斥）';
 COMMENT ON COLUMN mkt_promotions.created_by IS '创建人';
 COMMENT ON COLUMN mkt_promotions.updated_by IS '更新人';

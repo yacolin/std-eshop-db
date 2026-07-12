@@ -31,7 +31,7 @@ COMMENT ON TABLE sp_warehouses IS '仓库表';
 COMMENT ON COLUMN sp_warehouses.id IS '仓库ID';
 COMMENT ON COLUMN sp_warehouses.merchant_id IS '所属商家ID（0表示平台仓）';
 COMMENT ON COLUMN sp_warehouses.warehouse_name IS '仓库名称';
-COMMENT ON COLUMN sp_warehouses.warehouse_type IS '1-平台仓 2-商家仓 3-第三方仓';
+COMMENT ON COLUMN sp_warehouses.warehouse_type IS 'platform-平台仓 merchant-商家仓 third_party-第三方仓';
 COMMENT ON COLUMN sp_warehouses.status IS '1-启用 2-禁用';
 COMMENT ON COLUMN sp_warehouses.province IS '省';
 COMMENT ON COLUMN sp_warehouses.city IS '市';

@@ -74,16 +74,13 @@ CREATE TABLE tx_payment_logs (
     response_body text,
     status varchar(20) DEFAULT '',
     created_at timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
-);
+    PRIMARY KEY (id, created_at)
+) PARTITION BY RANGE (created_at);
 
 CREATE INDEX idx_tx_payment_logs_payment_id ON tx_payment_logs (payment_id);
 CREATE INDEX idx_tx_payment_logs_payment_no ON tx_payment_logs (payment_no);
 CREATE INDEX idx_tx_payment_logs_transaction_id ON tx_payment_logs (transaction_id);
 CREATE INDEX idx_tx_payment_logs_action ON tx_payment_logs (action);
--- BRIN 索引：日志流水行为时间序
-CREATE INDEX idx_tx_payment_logs_time_brin ON tx_payment_logs USING BRIN (created_at)
-    WITH (pages_per_range = 32);
 
 COMMENT ON TABLE tx_payment_logs IS '支付渠道通信日志（对账与排障）';
 COMMENT ON COLUMN tx_payment_logs.payment_id IS '关联 tx_payments.id';

@@ -47,7 +47,7 @@ COMMENT ON COLUMN tx_after_sales.order_id IS '订单ID';
 COMMENT ON COLUMN tx_after_sales.order_item_id IS '订单明细ID';
 COMMENT ON COLUMN tx_after_sales.merchant_id IS '商家ID';
 COMMENT ON COLUMN tx_after_sales.user_id IS '用户ID';
-COMMENT ON COLUMN tx_after_sales.after_sale_type IS '1-退款 2-退货 3-换货';
+COMMENT ON COLUMN tx_after_sales.after_sale_type IS 'refund-退款 return-退货 exchange-换货';
 COMMENT ON COLUMN tx_after_sales.apply_quantity IS '申请售后数量';
 COMMENT ON COLUMN tx_after_sales.reason IS '申请原因';
 COMMENT ON COLUMN tx_after_sales.amount IS '退款金额（分）';

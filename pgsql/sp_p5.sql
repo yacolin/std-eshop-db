@@ -8,7 +8,7 @@ CREATE TABLE sp_product_versions (
     product_id bigint NOT NULL,
     version int NOT NULL,
     diff jsonb NOT NULL,
-    changed_fields jsonb DEFAULT NULL,
+    changed_fields text[] DEFAULT NULL,
     operator varchar(50) DEFAULT '',
     operator_id bigint DEFAULT 0,
     reason varchar(500) DEFAULT '',
@@ -23,7 +23,7 @@ COMMENT ON TABLE sp_product_versions IS '商品SPU编辑历史版本表（每次
 COMMENT ON COLUMN sp_product_versions.product_id IS '关联 sp_products.id';
 COMMENT ON COLUMN sp_product_versions.version IS '版本号（从1递增）';
 COMMENT ON COLUMN sp_product_versions.diff IS '变更JSON（{"before": {...}, "after": {...}}）';
-COMMENT ON COLUMN sp_product_versions.changed_fields IS '变更字段列表（如：["name", "price", "status"]）';
+COMMENT ON COLUMN sp_product_versions.changed_fields IS '变更字段名数组（如：{name, price, status}）';
 COMMENT ON COLUMN sp_product_versions.operator IS '操作人';
 COMMENT ON COLUMN sp_product_versions.operator_id IS '操作人ID';
 COMMENT ON COLUMN sp_product_versions.reason IS '变更原因';

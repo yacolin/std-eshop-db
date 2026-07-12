@@ -147,12 +147,10 @@ CREATE TABLE usr_login_histories (
     login_status smallint NOT NULL DEFAULT 1,
     failure_reason varchar(100) NOT NULL DEFAULT '',
     created_at timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
-);
+    PRIMARY KEY (id, created_at)
+) PARTITION BY RANGE (created_at);
 
 CREATE INDEX idx_usr_login_histories_user_id ON usr_login_histories (user_id);
-CREATE INDEX idx_usr_login_histories_time_brin ON usr_login_histories USING BRIN (created_at)
-    WITH (pages_per_range = 32);
 
 COMMENT ON TABLE usr_login_histories IS 'C端消费者登录历史表';
 COMMENT ON COLUMN usr_login_histories.login_ip IS '登录IP';

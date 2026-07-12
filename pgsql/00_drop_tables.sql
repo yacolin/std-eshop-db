@@ -3,6 +3,12 @@
 -- Drops all tables in reverse dependency order (P5 -> P0)
 -- ============================================================
 
+-- 物化视图（必须先于基础表删除）
+DROP MATERIALIZED VIEW IF EXISTS mv_merchant_stats CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS mv_daily_merchant_sales CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS mv_daily_sales CASCADE;
+DROP MATERIALIZED VIEW IF EXISTS mv_product_ratings CASCADE;
+
 -- P5: 版本/审计表
 DROP TABLE IF EXISTS sp_product_versions;
 
