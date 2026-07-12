@@ -13,6 +13,17 @@ def _insert_get_id(cur, sql, params):
 
 def seed_users(conn):
     with conn.cursor() as cur:
+        # 自举 RBAC 角色（确保 Python 脚本可独立运行，无需先跑 seed_rbac.sql）
+        for role_name, display, desc, sort_order in [
+            ('admin',    '管理员',   '系统管理员，拥有所有权限',                       1),
+            ('user',     '普通用户', '普通注册用户，拥有基本购物操作权限',             6),
+        ]:
+            cur.execute("""
+                INSERT INTO sys_roles (name, display_name, description, role_type, sort_order, status)
+                VALUES (%s, %s, %s, 'builtin', %s, 1)
+                ON CONFLICT (name) DO NOTHING
+            """, (role_name, display, desc, sort_order))
+
         # admin — B 端员工
         admin_id = _insert_get_id(cur, """
             INSERT INTO sys_staff (id, username, password_hash, real_name, email, phone, status)
@@ -22,7 +33,8 @@ def seed_users(conn):
         """, None)
         if admin_id:
             cur.execute("INSERT INTO sys_staff_roles (staff_id, role_id) "
-                        "VALUES (1, (SELECT id FROM sys_roles WHERE name = 'admin'))")
+                        "VALUES (1, (SELECT id FROM sys_roles WHERE name = 'admin')) "
+                        "ON CONFLICT DO NOTHING")
 
         # colin — B 端员工 + C 端消费者
         colin_staff_id = _insert_get_id(cur, """

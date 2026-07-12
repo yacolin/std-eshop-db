@@ -31,7 +31,7 @@ def clean(conn):
     with conn.cursor() as cur:
         cur.execute("SET session_replication_role = replica")
         for t in tables:
-            cur.execute(f"TRUNCATE TABLE {t}")
+            cur.execute(f"TRUNCATE TABLE {t} RESTART IDENTITY CASCADE")
         cur.execute("SET session_replication_role = default")
     conn.commit()
     print("已清空所有新表\n")
