@@ -62,8 +62,8 @@ CREATE TABLE sp_products (
     status smallint NOT NULL DEFAULT 0,
     sort_order int NOT NULL DEFAULT 0,
     has_description smallint NOT NULL DEFAULT 0,
-    created_by varchar(50) DEFAULT '',
-    updated_by varchar(50) DEFAULT '',
+    created_by bigint NOT NULL DEFAULT 0,
+    updated_by bigint NOT NULL DEFAULT 0,
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at timestamp(3) DEFAULT NULL,
@@ -104,5 +104,5 @@ COMMENT ON COLUMN sp_products.rating_count IS '评价总数';
 COMMENT ON COLUMN sp_products.status IS '0-草稿 1-待审 2-已上架 3-已下架 4-违规封禁';
 COMMENT ON COLUMN sp_products.sort_order IS '排序权重（越大越靠前，运营手动调整）';
 COMMENT ON COLUMN sp_products.has_description IS '1-有图文详情（存于sp_product_descriptions表）';
-COMMENT ON COLUMN sp_products.created_by IS '创建人（运营工号）';
-COMMENT ON COLUMN sp_products.updated_by IS '最后更新人';
+COMMENT ON COLUMN sp_products.created_by IS '创建人ID';
+COMMENT ON COLUMN sp_products.updated_by IS '最后更新人ID';
