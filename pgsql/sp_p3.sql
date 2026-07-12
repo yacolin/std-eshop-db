@@ -15,6 +15,8 @@ CREATE TABLE sp_inventories (
     threshold bigint NOT NULL DEFAULT 10,
     max_threshold bigint NOT NULL DEFAULT 999999,
     status inventory_status NOT NULL DEFAULT 'instock',
+    -- 乐观锁版本号（并发扣库存校验）
+    version int NOT NULL DEFAULT 0,
     last_counted_at timestamp DEFAULT NULL,
     last_counted_by varchar(50) DEFAULT '',
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

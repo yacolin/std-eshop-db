@@ -20,6 +20,8 @@ CREATE TABLE mkt_promotions (
     per_user_limit int DEFAULT 1,
     used_quantity int DEFAULT 0,
     rule_id bigint NOT NULL DEFAULT 0,
+    -- 乐观锁版本号（高并发核销校验）
+    version int NOT NULL DEFAULT 0,
     status promotion_status DEFAULT 'draft',
     priority int DEFAULT 0,
     created_by bigint,
