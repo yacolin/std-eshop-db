@@ -118,9 +118,11 @@ CREATE TABLE mkt_promotion_stocks (
     created_at timestamp(3) DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp(3) DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    UNIQUE (promotion_id, sku_id),
     CONSTRAINT chk_stock_positive CHECK (available_stock >= 0 AND locked_stock >= 0)
 );
+
+-- 通用活动（sku_id NULL）每个活动仅允许一条：NULL 映射为 0 参与唯一约束
+CREATE UNIQUE INDEX uk_promotion_sku ON mkt_promotion_stocks (promotion_id, COALESCE(sku_id, 0));
 
 CREATE TRIGGER trg_mkt_promotion_stocks_updated_at
     BEFORE UPDATE ON mkt_promotion_stocks

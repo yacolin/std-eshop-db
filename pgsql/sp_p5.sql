@@ -16,7 +16,7 @@ CREATE TABLE sp_product_versions (
     PRIMARY KEY (id)
 );
 
-CREATE INDEX idx_sp_product_versions_product ON sp_product_versions (product_id, version DESC);
+CREATE UNIQUE INDEX uk_sp_product_versions_product_version ON sp_product_versions (product_id, version DESC);
 CREATE INDEX idx_sp_product_versions_created_at ON sp_product_versions (created_at);
 
 COMMENT ON TABLE sp_product_versions IS '商品SPU编辑历史版本表（每次编辑记录diff，保留最近10个版本）';

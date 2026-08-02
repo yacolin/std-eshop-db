@@ -40,7 +40,6 @@ CREATE TABLE mch_merchants (
 );
 
 CREATE INDEX idx_mch_merchants_name ON mch_merchants (merchant_name);
-CREATE INDEX idx_mch_merchants_code ON mch_merchants (merchant_code);
 CREATE INDEX idx_mch_merchants_status_level ON mch_merchants (status, merchant_level);
 CREATE INDEX idx_mch_merchants_settled ON mch_merchants (settled_at);
 
@@ -188,7 +187,8 @@ CREATE TABLE mch_merchant_roles (
     created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at timestamp(3) DEFAULT NULL,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    CONSTRAINT uk_merchant_role_name UNIQUE (merchant_id, name)
 );
 
 CREATE INDEX idx_mch_merchant_roles_merchant ON mch_merchant_roles (merchant_id);

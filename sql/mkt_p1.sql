@@ -87,6 +87,7 @@ CREATE TABLE `mkt_promotion_stocks` (
     `id` BIGINT NOT NULL AUTO_INCREMENT,
     `promotion_id` BIGINT NOT NULL COMMENT '促销ID',
     `sku_id` BIGINT DEFAULT NULL COMMENT 'SKU ID（秒杀专用，通用活动可为空）',
+    `sku_id_uq` BIGINT GENERATED ALWAYS AS (IFNULL(`sku_id`, 0)) STORED COMMENT '唯一键辅助列（NULL映射为0，保证每个活动最多一条通用配置）',
     `total_stock` INT NOT NULL DEFAULT 0 COMMENT '总库存',
     `available_stock` INT NOT NULL DEFAULT 0 COMMENT '可用库存',
     `locked_stock` INT NOT NULL DEFAULT 0 COMMENT '锁定库存（下单未付）',
@@ -94,7 +95,7 @@ CREATE TABLE `mkt_promotion_stocks` (
     `created_at` DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_promotion_sku` (`promotion_id`, `sku_id`),
+    UNIQUE KEY `uk_promotion_sku` (`promotion_id`, `sku_id_uq`),
     CONSTRAINT `chk_stock_positive` CHECK (`available_stock` >= 0 AND `locked_stock` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='促销库存表（支持秒杀）';
 

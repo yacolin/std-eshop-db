@@ -27,7 +27,7 @@ CREATE TRIGGER trg_base_notification_templates_updated_at
 
 COMMENT ON TABLE base_notification_templates IS '通知模板表';
 COMMENT ON COLUMN base_notification_templates.template_code IS '模板代码（如 ORDER_PAID_SUCCESS）';
-COMMENT ON COLUMN base_notification_templates.channel IS 'in_app-站内 push-Push sms-短信 email-邮件';
+COMMENT ON COLUMN base_notification_templates.channel IS 'in_app-站内 push-Push sms-短信 email-邮件 wechat_template-微信模板消息';
 COMMENT ON COLUMN base_notification_templates.title_template IS '标题模板（支持变量 {{.OrderID}}）';
 COMMENT ON COLUMN base_notification_templates.content_template IS '内容模板';
 COMMENT ON COLUMN base_notification_templates.category IS '默认分类';

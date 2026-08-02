@@ -24,6 +24,6 @@ CREATE TABLE `sp_product_versions` (
     `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     PRIMARY KEY (`id`),
-    KEY `idx_product_id` (`product_id`, `version` DESC) COMMENT '按商品查版本列表',
+    UNIQUE KEY `uk_product_version` (`product_id`, `version` DESC) COMMENT '同一商品版本号唯一（兼作按商品查版本列表索引）',
     KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品SPU编辑历史版本表（每次编辑记录diff，保留最近10个版本）';

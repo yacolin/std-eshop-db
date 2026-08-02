@@ -11,6 +11,7 @@ CREATE TABLE `mkt_promotions` (
     `promo_name` VARCHAR(100) NOT NULL COMMENT '活动名称',
     `promo_type` TINYINT NOT NULL COMMENT '1-满减券 2-折扣券 3-秒杀 4-满额减 5-满件折 6-会员价',
     `promo_code` VARCHAR(50) DEFAULT '' COMMENT '优惠码（优惠券专用）',
+    `promo_code_uq` VARCHAR(50) GENERATED ALWAYS AS (NULLIF(`promo_code`, '')) STORED COMMENT '优惠码唯一键辅助列（空串视为NULL，非券类活动不占唯一键）',
 
     -- 时间范围
     `start_time` DATETIME(3) NOT NULL COMMENT '开始时间',
@@ -39,7 +40,7 @@ CREATE TABLE `mkt_promotions` (
 
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_promotion_no` (`promotion_no`),
-    UNIQUE KEY `uk_promo_code_merchant` (`merchant_id`, `promo_code`),
+    UNIQUE KEY `uk_promo_code_merchant` (`merchant_id`, `promo_code_uq`),
     KEY `idx_merchant_status_time` (`merchant_id`, `status`, `start_time`, `end_time`),
     KEY `idx_type_status` (`promo_type`, `status`),
     KEY `idx_rule_id` (`rule_id`)

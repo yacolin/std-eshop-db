@@ -14,7 +14,7 @@ CREATE TABLE `usr_levels` (
     `min_points` bigint NOT NULL DEFAULT 0 COMMENT '该等级所需最低累计积分',
 
     -- 权益
-    `discount_rate` bigint NOT NULL DEFAULT 100 COMMENT '折扣率（千分比，1000=无折扣，900=九折）',
+    `discount_rate` bigint NOT NULL DEFAULT 1000 COMMENT '折扣率（千分比，1000=无折扣，900=九折）',
     `free_shipping` tinyint NOT NULL DEFAULT 0 COMMENT '1-免运费',
     `points_multiplier` decimal(3,2) NOT NULL DEFAULT 1.00 COMMENT '消费积分倍数（如 1.5 倍积分）',
 

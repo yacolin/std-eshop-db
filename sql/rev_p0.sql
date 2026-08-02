@@ -47,6 +47,12 @@ CREATE TABLE `rev_reviews` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_review_no` (`review_no`),
     UNIQUE KEY `uk_order_item` (`order_item_id`),
+    CONSTRAINT `chk_rating_range` CHECK (
+        `overall_rating` BETWEEN 1 AND 5
+        AND (`quality_rating` IS NULL OR `quality_rating` BETWEEN 1 AND 5)
+        AND (`logistics_rating` IS NULL OR `logistics_rating` BETWEEN 1 AND 5)
+        AND (`service_rating` IS NULL OR `service_rating` BETWEEN 1 AND 5)
+    ),
     KEY `idx_spu_status_created` (`spu_id`, `status`, `created_at`),
     KEY `idx_merchant_status` (`merchant_id`, `status`),
     KEY `idx_user_created` (`user_id`, `created_at`),

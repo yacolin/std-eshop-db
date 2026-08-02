@@ -11,7 +11,7 @@ CREATE TABLE usr_levels (
     min_points bigint NOT NULL DEFAULT 0,
     -- 积分区间（含下界，由触发器根据等级顺序自动计算上界）
     points_range int8range,
-    discount_rate bigint NOT NULL DEFAULT 100,
+    discount_rate bigint NOT NULL DEFAULT 1000,
     free_shipping smallint NOT NULL DEFAULT 0,
     points_multiplier decimal(3,2) NOT NULL DEFAULT 1.00,
     benefits jsonb DEFAULT NULL,

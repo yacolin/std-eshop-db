@@ -56,7 +56,6 @@ CREATE TABLE `mch_merchants` (
     `deleted_at` datetime(3) DEFAULT NULL,
 
     INDEX `idx_name` (`merchant_name`),
-    INDEX `idx_code` (`merchant_code`),
     INDEX `idx_status_level` (`status`, `merchant_level`),
     INDEX `idx_settled` (`settled_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家主表';
@@ -131,5 +130,6 @@ CREATE TABLE `mch_merchant_roles` (
     INDEX `idx_merchant` (`merchant_id`),
     INDEX `idx_type` (`role_type`),
     INDEX `idx_status` (`status`),
-    INDEX `idx_deleted_at` (`deleted_at`)
+    INDEX `idx_deleted_at` (`deleted_at`),
+    UNIQUE KEY `uk_merchant_name` (`merchant_id`, `name`) COMMENT '同一商家内角色名唯一'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家角色定义表（与平台RBAC隔离）';

@@ -10,6 +10,7 @@ CREATE TABLE mkt_promotions (
     promo_name varchar(100) NOT NULL,
     promo_type promotion_type NOT NULL,
     promo_code varchar(50) DEFAULT '',
+    promo_code_uq varchar(50) GENERATED ALWAYS AS (NULLIF(promo_code, '')) STORED,
     start_time timestamp(3) NOT NULL,
     end_time timestamp(3) NOT NULL,
     -- 时间范围生成列（用于 GIST 排他约束）
@@ -31,7 +32,7 @@ CREATE TABLE mkt_promotions (
     deleted_at timestamp(3) DEFAULT NULL,
     PRIMARY KEY (id),
     UNIQUE (promotion_no),
-    UNIQUE (merchant_id, promo_code),
+    CONSTRAINT uk_promo_code_merchant UNIQUE (merchant_id, promo_code_uq),
     CONSTRAINT chk_promo_time CHECK (start_time < end_time),
     -- 排他约束：同一商家不能有重叠的生效促销时间范围
     CONSTRAINT excl_promo_no_overlap
@@ -60,6 +61,7 @@ COMMENT ON COLUMN mkt_promotions.merchant_id IS '所属商家ID（0表示平台�
 COMMENT ON COLUMN mkt_promotions.promo_name IS '活动名称';
 COMMENT ON COLUMN mkt_promotions.promo_type IS 'full_reduction_coupon-满减券 discount_coupon-折扣券 flash_sale-秒杀 full_amount_off-满额减 full_piece_off-满件折 member_price-会员价';
 COMMENT ON COLUMN mkt_promotions.promo_code IS '优惠码（优惠券专用）';
+COMMENT ON COLUMN mkt_promotions.promo_code_uq IS '优惠码唯一键辅助列（空串视为NULL，非券类活动不占唯一键）';
 COMMENT ON COLUMN mkt_promotions.start_time IS '开始时间';
 COMMENT ON COLUMN mkt_promotions.end_time IS '结束时间';
 COMMENT ON COLUMN mkt_promotions.active_period IS '时间范围生成列（用于GIST排他约束，自动计算）';

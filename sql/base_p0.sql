@@ -7,7 +7,7 @@ USE eshop_db;
 CREATE TABLE `base_notification_templates` (
     `id` BIGINT PRIMARY KEY AUTO_INCREMENT,
     `template_code` VARCHAR(50) UNIQUE NOT NULL COMMENT '模板代码（如 ORDER_PAID_SUCCESS）',
-    `channel` TINYINT NOT NULL COMMENT '渠道 1-站内 2-Push 3-短信 4-邮件',
+    `channel` TINYINT NOT NULL COMMENT '渠道 1-站内 2-Push 3-短信 4-邮件 5-微信模板消息',
     `title_template` VARCHAR(200) NOT NULL COMMENT '标题模板（支持变量 {{.OrderID}}）',
     `content_template` TEXT NOT NULL COMMENT '内容模板',
     `category` TINYINT COMMENT '默认分类',
