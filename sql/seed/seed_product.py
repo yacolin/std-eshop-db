@@ -4,6 +4,7 @@
 """
 from seed_common import *
 import seed_data
+from seed_data import AUTO_SPEC_DEFS
 from collections import OrderedDict, defaultdict
 import re
 
@@ -20,6 +21,89 @@ def _map_value_type(name, input_type):
 def _parse_numeric_value(v):
     m = re.search(r'(\d+(?:\.\d+)?)', v)
     return m.group(1) if m else None
+
+
+def _mysql_value_type(dim, input_type):
+    """pgsql seed 的 input_type 语义 → MySQL sp_attributes.value_type（1-文本 2-数值 3-颜色）"""
+    if input_type == 4:
+        return 2  # 数值
+    if input_type == 2 and dim in ("颜色", "色号"):
+        return 3  # 颜色
+    return 1  # 文本
+
+
+def _ensure_attr_value(cur, attr_id, value, sort_order=0):
+    """属性值存在则返回 id，否则插入（防御：generate_spec 输出不在值集时自愈）"""
+    cur.execute(
+        "SELECT id FROM sp_attribute_values WHERE attribute_id = %s AND `value` = %s",
+        (attr_id, value),
+    )
+    row = cur.fetchone()
+    if row:
+        return row[0]
+
+    cur.execute("SELECT value_type FROM sp_attributes WHERE id = %s", (attr_id,))
+    vt_row = cur.fetchone()
+    value_type = vt_row[0] if vt_row else 1
+    numeric_value = _parse_numeric_value(value) if value_type == 2 else None
+    color_hex = _COLOR_HEX_MAP.get(value, "") if value_type == 3 else ""
+    cur.execute(
+        "INSERT INTO sp_attribute_values "
+        "(attribute_id, `value`, search_weight, numeric_value, color_hex, sort_order, status) "
+        "VALUES (%s, %s, %s, %s, %s, %s, 1)",
+        (attr_id, value, 100, numeric_value, color_hex, sort_order),
+    )
+    return cur.lastrowid
+
+
+def _ensure_spec_attr(cur, cat_idx, dim):
+    """为类目补齐规格属性（防御：ATTRS 未覆盖 generate_spec 输出时自愈）。
+
+    解析优先级与 ATTRS 同名同类型合并机制一致：
+    类目关联属性 → 全局同名同类型 is_sku_spec=1 属性 → 新建（挂该类目下）。
+    返回 attribute_id；dim 无默认定义时返回 None。
+    """
+    if dim not in AUTO_SPEC_DEFS:
+        return None
+    input_type = AUTO_SPEC_DEFS[dim][0]
+    cat_id = cat_ids[cat_idx]
+
+    cur.execute(
+        "SELECT a.id FROM sp_category_attributes ca "
+        "JOIN sp_attributes a ON a.id = ca.attribute_id "
+        "WHERE ca.category_id = %s AND a.name = %s AND a.is_sku_spec = 1 "
+        "ORDER BY ca.sort_order LIMIT 1",
+        (cat_id, dim),
+    )
+    row = cur.fetchone()
+    if row:
+        return row[0]
+
+    value_type = _mysql_value_type(dim, input_type)
+    cur.execute(
+        "SELECT id FROM sp_attributes "
+        "WHERE name = %s AND value_type = %s AND is_sku_spec = 1 "
+        "ORDER BY id LIMIT 1",
+        (dim, value_type),
+    )
+    row = cur.fetchone()
+    if row:
+        return row[0]
+
+    cur.execute(
+        "INSERT INTO sp_attributes (name, category_id, value_type, filterable, is_sku_spec, searchable, sort_order, status) "
+        "VALUES (%s, %s, %s, 1, 1, 1, 0, 1)",
+        (dim, cat_id, value_type),
+    )
+    attr_id = cur.lastrowid
+    for vo, v in enumerate(json.loads(AUTO_SPEC_DEFS[dim][1])):
+        _ensure_attr_value(cur, attr_id, v, vo)
+    cur.execute(
+        "INSERT IGNORE INTO sp_category_attributes (category_id, attribute_id, sort_order) "
+        "VALUES (%s, %s, 0)",
+        (cat_id, attr_id),
+    )
+    return attr_id
 
 
 _COLOR_HEX_MAP = {
@@ -201,12 +285,15 @@ def seed_product(conn):
             sku_count = random.randint(2, 6)
             generated_specs = set()
             for j in range(sku_count):
-                spec_json, spec_dict = generate_spec(cat_idx)
+                spec_json, _ = generate_spec(cat_idx)
                 if spec_json in generated_specs:
+                    # 从原始 JSON 解析替换（保持中文 key：generate_spec 返回的
+                    # spec_dict 是英文 key，用它重建 JSON 会丢失维度名导致 EAV 写入失败）
                     color = random.choice(COLORS[:8])
-                    if "颜色" in spec_dict:
-                        spec_dict["颜色"] = color
-                    spec_json = '{"' + '","'.join([f'{k}":"{v}' for k, v in spec_dict.items()]) + '"}'
+                    spec_d = json.loads(spec_json)
+                    if "颜色" in spec_d:
+                        spec_d["颜色"] = color
+                    spec_json = json.dumps(spec_d, ensure_ascii=False)
                     if spec_json in generated_specs:
                         continue
                 generated_specs.add(spec_json)
@@ -230,19 +317,28 @@ def seed_product(conn):
                 for spec_name, spec_value in spec_dict.items():
                     spec_attr_id = spec_attr_map.get((cat_idx, spec_name))
                     if spec_attr_id is None:
-                        continue
+                        # 防御：ATTRS 未覆盖该 (类目, 规格) 时自动补齐属性，避免
+                        # spec_summary 有文本但 sp_sku_specs 无 EAV 行
+                        spec_attr_id = _ensure_spec_attr(cur, cat_idx, spec_name)
+                        if spec_attr_id:
+                            spec_attr_map[(cat_idx, spec_name)] = spec_attr_id
+                        else:
+                            continue
                     cur.execute(
                         "SELECT id FROM sp_attribute_values WHERE attribute_id = %s AND `value` = %s",
                         (spec_attr_id, spec_value),
                     )
                     row = cur.fetchone()
                     if row:
-                        cur.execute(
-                            "INSERT INTO sp_sku_specs (sku_id, attribute_id, attribute_value_id, sort_order) "
-                            "VALUES (%s, %s, %s, %s)",
-                            (sku_id, spec_attr_id, row[0], sort_order),
-                        )
-                        sort_order += 1
+                        av_id = row[0]
+                    else:
+                        av_id = _ensure_attr_value(cur, spec_attr_id, spec_value, sort_order)
+                    cur.execute(
+                        "INSERT INTO sp_sku_specs (sku_id, attribute_id, attribute_value_id, sort_order) "
+                        "VALUES (%s, %s, %s, %s)",
+                        (sku_id, spec_attr_id, av_id, sort_order),
+                    )
+                    sort_order += 1
                 total_skus += 1
 
             has_desc = 0
