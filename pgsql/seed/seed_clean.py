@@ -2,7 +2,7 @@
 """
 清空测试数据（TRUNCATE 业务表）。
 """
-from seed_common import *
+from .seed_common import *
 
 
 def clean(conn):

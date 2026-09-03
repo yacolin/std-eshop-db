@@ -2,7 +2,7 @@
 """
 种子：部门中心 — 部门 / 员工-部门关联
 """
-from seed_common import *
+from .seed_common import *
 
 
 def seed_departments(conn):

@@ -2,7 +2,7 @@
 """
 种子：用户中心 等级
 """
-from seed_common import *
+from .seed_common import *
 
 
 def seed_level(conn):

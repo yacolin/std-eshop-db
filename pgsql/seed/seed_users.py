@@ -2,7 +2,7 @@
 """
 种子：用户中心 — B端员工 / C端用户 / 地址
 """
-from seed_common import *
+from .seed_common import *
 
 
 def _insert_get_id(cur, sql, params):

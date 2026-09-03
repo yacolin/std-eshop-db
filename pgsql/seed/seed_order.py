@@ -2,7 +2,7 @@
 """
 种子：订单中心 — 订单 / 子订单 / 订单项 / 支付 / 退款 / 用户促销
 """
-from seed_common import *
+from .seed_common import *
 
 
 def _insert_get_id(cur, sql, params):

@@ -2,7 +2,7 @@
 """
 种子：评价中心 — 评价 / 媒体 / 回复 / 审核日志
 """
-from seed_common import *
+from .seed_common import *
 
 
 def seed_review(conn):

@@ -2,7 +2,7 @@
 """
 种子：通知模板
 """
-from seed_common import *
+from .seed_common import *
 
 
 def seed_notification(conn):

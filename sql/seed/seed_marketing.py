@@ -2,7 +2,7 @@
 """
 种子：营销中心 — 促销 / 规则 / 产品关联
 """
-from seed_common import *
+from .seed_common import *
 
 
 def seed_marketing(conn):

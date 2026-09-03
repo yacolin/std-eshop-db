@@ -55,4 +55,4 @@ echo "=== P5: 版本/审计表 ===" >&2
 echo "=== 建表完成 ===" >&2
 echo "" >&2
 echo "后续手动执行步骤:" >&2
-echo "  python3 pgsql/seed/seed_test_data.py --clean" >&2
+echo "  python3 -m pgsql.seed.seed_test_data --clean  (仓库根目录)" >&2

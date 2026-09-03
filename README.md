@@ -13,7 +13,7 @@
 bash run.sh
 
 # 批量生成测试数据（商品、库存、订单等）
-python sql/seed/seed_test_data.py
+python -m sql.seed.seed_test_data
 ```
 
 ## 表域划分
@@ -81,7 +81,8 @@ dashboard(1) → 仪表盘查看
 ## 测试数据
 
 ```bash
-python sql/seed/seed_test_data.py
+# 在仓库根目录执行（seed 使用包内相对导入，须以模块方式启动）
+python -m sql.seed.seed_test_data
 ```
 
 生成模拟数据：商品、SKU、库存记录、订单、评论等（用于前端开发调试）。

@@ -29,4 +29,4 @@ echo "=== 种子: 清理旧数据 + 初始化 RBAC ===" >&2
 
 TOTAL=$(grep -rh "CREATE TABLE" sql/*.sql | wc -l | tr -d ' ')
 echo "=== 完成: 共创建 ${TOTAL} 张表 ===" >&2
-echo "测试数据请执行: python sql/seed/seed_test_data.py" >&2
+echo "测试数据请执行: python -m sql.seed.seed_test_data (仓库根目录)" >&2

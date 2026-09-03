@@ -2,8 +2,8 @@
 """
 种子：商品中心 — 品牌 / 类目 / 属性 / SPU / SKU / 描述 / 扩展属性 / 类目-品牌
 """
-from seed_common import *
-import seed_data
+from .seed_common import *
+from . import seed_data
 from collections import OrderedDict, defaultdict
 import re
 

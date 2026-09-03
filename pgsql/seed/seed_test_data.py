@@ -1,27 +1,26 @@
 #!/usr/bin/env python3
 """
-测试种子数据入口 — 导入各域模块并统一编排。
+测试种子数据入口（PostgreSQL 版）— 导入各域模块并统一编排。
 
-用法：
-    python sql/seed/seed_test_data.py                   # 生成全部
-    python sql/seed/seed_test_data.py --clean            # 先清空再生成
-    python sql/seed/seed_test_data.py --module product   # 只生成商品域
+用法（在仓库根目录执行）：
+    python -m pgsql.seed.seed_test_data --clean         # 先清空再生成（推荐）
+    python -m pgsql.seed.seed_test_data --module order  # 只生成指定域
 """
 import argparse
 
-from seed_common import connect
-from seed_clean import clean
-from seed_product import seed_product
-from seed_inventory import seed_inventory
-from seed_marketing import seed_marketing
-from seed_notification import seed_notification
-from seed_merchant import seed_merchant
-from seed_users import seed_users
-from seed_departments import seed_departments
-from seed_level import seed_level
-from seed_order import seed_order
-from seed_points import seed_points, seed_points_rules, seed_level_rules
-from seed_review import seed_review
+from .seed_common import connect
+from .seed_clean import clean
+from .seed_product import seed_product
+from .seed_inventory import seed_inventory
+from .seed_marketing import seed_marketing
+from .seed_notification import seed_notification
+from .seed_merchant import seed_merchant
+from .seed_users import seed_users
+from .seed_departments import seed_departments
+from .seed_level import seed_level
+from .seed_order import seed_order
+from .seed_points import seed_points, seed_points_rules, seed_level_rules
+from .seed_review import seed_review
 
 
 def main():

@@ -2,7 +2,7 @@
 """
 种子：积分中心 — 积分流水 / 积分规则 / 等级升降级规则
 """
-from seed_common import *
+from .seed_common import *
 
 
 def seed_points(conn):

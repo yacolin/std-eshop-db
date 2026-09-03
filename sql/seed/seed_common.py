@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 
 import pymysql
 
-from seed_data import (BRANDS, CATEGORIES, ATTRS, CATEGORY_PROD_CFG,
+from .seed_data import (BRANDS, CATEGORIES, ATTRS, CATEGORY_PROD_CFG,
                        PRODUCTS_PER_CATEGORY, MERCHANTS, NOTIFICATION_TEMPLATES,
                        COLORS, STORAGES, RAMS, LIPSTICK_SHADES, CLOTHES_SIZES, SHOE_SIZES,
                        PARENT_ORDER_STATUSES, PARENT_ORDER_STATUS_WEIGHTS, SUB_ORDER_STATUS_MAP,

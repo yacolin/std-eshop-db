@@ -2,7 +2,7 @@
 """
 种子：库存中心 — 仓库 / 库存 / 库存流水
 """
-from seed_common import *
+from .seed_common import *
 
 
 def _insert_get_id(cur, sql, params):

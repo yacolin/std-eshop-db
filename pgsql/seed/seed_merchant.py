@@ -2,7 +2,7 @@
 """
 种子：商户中心 — 商家 / 联系人 / 银行账户 / 资质 / 余额 / 角色 / 权限 / 员工绑定
 """
-from seed_common import *
+from .seed_common import *
 
 
 def _insert_get_id(cur, sql, params):
