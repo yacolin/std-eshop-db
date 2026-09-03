@@ -147,7 +147,8 @@ CREATE TABLE mkt_promotion_usage_logs (
     discount_amount bigint NOT NULL DEFAULT 0,
     promotion_snapshot jsonb DEFAULT NULL,
     created_at timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    CONSTRAINT chk_promo_usage_discount_amount CHECK (discount_amount >= 0)
 );
 
 CREATE INDEX idx_mkt_promotion_usage_logs_order ON mkt_promotion_usage_logs (order_id);

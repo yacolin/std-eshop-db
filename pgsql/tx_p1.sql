@@ -16,7 +16,9 @@ CREATE TABLE tx_cart_items (
     created_at timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    UNIQUE (cart_id, sku_id)
+    UNIQUE (cart_id, sku_id),
+    CONSTRAINT chk_cart_price CHECK (price >= 0),
+    CONSTRAINT chk_cart_quantity CHECK (quantity > 0)
 );
 
 CREATE INDEX idx_tx_cart_items_cart_id ON tx_cart_items (cart_id);
@@ -61,6 +63,9 @@ CREATE TABLE tx_order_items (
     updated_at timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at timestamp(3) DEFAULT NULL,
     PRIMARY KEY (id),
+    CONSTRAINT chk_item_price CHECK (price >= 0),
+    CONSTRAINT chk_item_quantity CHECK (quantity > 0),
+    CONSTRAINT chk_item_refund_amount CHECK (refund_amount >= 0),
     CONSTRAINT chk_subtotal CHECK (subtotal >= 0)
 );
 

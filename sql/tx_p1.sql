@@ -19,7 +19,9 @@ CREATE TABLE `tx_cart_items` (
   PRIMARY KEY (`id`),
   KEY `idx_cart_id` (`cart_id`) COMMENT '按购物车查项',
   KEY `idx_sku_id` (`sku_id`) COMMENT '按SKU查询（加购去重）',
-  UNIQUE KEY `uk_cart_sku` (`cart_id`, `sku_id`) COMMENT '同一购物车不重复加同一SKU'
+  UNIQUE KEY `uk_cart_sku` (`cart_id`, `sku_id`) COMMENT '同一购物车不重复加同一SKU',
+  CONSTRAINT `chk_cart_price` CHECK (`price` >= 0),
+  CONSTRAINT `chk_cart_quantity` CHECK (`quantity` > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='购物车商品项';
 
 
@@ -57,6 +59,9 @@ CREATE TABLE `tx_order_items` (
   KEY `idx_order_no` (`order_no`),
   KEY `idx_sku_id` (`sku_id`),
   KEY `idx_sub_order_id` (`sub_order_id`),
+  CONSTRAINT `chk_item_price` CHECK (`price` >= 0),
+  CONSTRAINT `chk_item_quantity` CHECK (`quantity` > 0),
+  CONSTRAINT `chk_item_refund_amount` CHECK (`refund_amount` >= 0),
   CONSTRAINT `chk_subtotal` CHECK (`subtotal` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单明细表';
 

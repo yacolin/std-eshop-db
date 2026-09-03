@@ -31,7 +31,8 @@ CREATE TABLE `usr_levels` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_level` (`level`),
     KEY `idx_status` (`status`),
-    KEY `idx_deleted_at` (`deleted_at`)
+    KEY `idx_deleted_at` (`deleted_at`),
+    CONSTRAINT `chk_level_discount_rate` CHECK (`discount_rate` BETWEEN 0 AND 1000)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户等级定义表';
 
 

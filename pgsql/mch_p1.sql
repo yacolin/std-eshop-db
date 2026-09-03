@@ -47,7 +47,9 @@ CREATE TABLE mch_merchant_balances (
     updated_at timestamp(3) DEFAULT CURRENT_TIMESTAMP,
     deleted_at timestamp(3) DEFAULT NULL,
     PRIMARY KEY (id),
-    UNIQUE (merchant_id, currency)
+    UNIQUE (merchant_id, currency),
+    CONSTRAINT chk_balance_available CHECK (available_balance >= 0),
+    CONSTRAINT chk_balance_freeze CHECK (freeze_balance >= 0)
 );
 
 CREATE INDEX idx_mch_merchant_balances_active ON mch_merchant_balances (merchant_id)
@@ -80,7 +82,8 @@ CREATE TABLE mch_merchant_withdrawals (
     updated_at timestamp(3) DEFAULT CURRENT_TIMESTAMP,
     deleted_at timestamp(3) DEFAULT NULL,
     PRIMARY KEY (id),
-    UNIQUE (withdraw_no)
+    UNIQUE (withdraw_no),
+    CONSTRAINT chk_withdraw_amount CHECK (amount > 0)
 );
 
 CREATE INDEX idx_mch_merchant_withdrawals_merchant_status ON mch_merchant_withdrawals (merchant_id, status)
@@ -118,7 +121,10 @@ CREATE TABLE mch_merchant_settlement_logs (
     updated_at timestamp(3) DEFAULT CURRENT_TIMESTAMP,
     deleted_at timestamp(3) DEFAULT NULL,
     PRIMARY KEY (id),
-    UNIQUE (settlement_no)
+    UNIQUE (settlement_no),
+    CONSTRAINT chk_settlement_total_amount CHECK (total_amount >= 0),
+    CONSTRAINT chk_settlement_commission_amount CHECK (commission_amount >= 0),
+    CONSTRAINT chk_settlement_settlement_amount CHECK (settlement_amount >= 0)
 );
 
 CREATE INDEX idx_mch_merchant_settlement_logs_merchant ON mch_merchant_settlement_logs (merchant_id);

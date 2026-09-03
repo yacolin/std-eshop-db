@@ -119,5 +119,6 @@ CREATE TABLE `mkt_promotion_usage_logs` (
     PRIMARY KEY (`id`),
     KEY `idx_order` (`order_id`),
     KEY `idx_promotion_created` (`promotion_id`, `created_at`),
-    KEY `idx_user_created` (`user_id`, `created_at`)
+    KEY `idx_user_created` (`user_id`, `created_at`),
+    CONSTRAINT `chk_promo_usage_discount_amount` CHECK (`discount_amount` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='促销使用记录表（建议按 created_at 月度分区）';

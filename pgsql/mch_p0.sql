@@ -36,7 +36,9 @@ CREATE TABLE mch_merchants (
     updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at timestamp(3) DEFAULT NULL,
     PRIMARY KEY (id),
-    UNIQUE (merchant_code)
+    UNIQUE (merchant_code),
+    CONSTRAINT chk_merchant_total_sales CHECK (total_sales >= 0),
+    CONSTRAINT chk_merchant_commission_rate CHECK (commission_rate BETWEEN 0 AND 1000)
 );
 
 CREATE INDEX idx_mch_merchants_name ON mch_merchants (merchant_name);

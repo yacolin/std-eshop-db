@@ -31,7 +31,7 @@ CREATE TABLE `tx_orders` (
 
   -- 状态
   `status` varchar(20) NOT NULL DEFAULT 'pending' COMMENT '父订单状态：pending-待支付 paid-已支付 partial_shipped-部分发货 completed-已完成 cancelled-已取消 closed-已关闭 refunding-退款中 refunded-已退款',
-  `payment_status` varchar(20) NOT NULL DEFAULT 'unpaid' COMMENT '支付状态：unpaid-未支付 paying-支付中 paid-已支付 refunding-退款中 refunded-已退款',
+  `payment_status` varchar(20) NOT NULL DEFAULT 'unpaid' COMMENT '支付状态：unpaid-未支付 paying-支付中 paid-已支付 refunding-退款中 refunded-已退款（支付失败订单仍停留 unpaid，failed 见 tx_payments.status）',
   `payment_method` varchar(32) DEFAULT '' COMMENT '支付方式：wechat-微信 alipay-支付宝 wallet-余额',
 
   -- 收货地址（下单时快照，地址变更不影响已下单）
@@ -70,7 +70,9 @@ CREATE TABLE `tx_orders` (
   KEY `idx_payment_status` (`payment_status`),
   KEY `idx_created_at` (`created_at`) COMMENT '按时间查询',
   CONSTRAINT `chk_pay_amount` CHECK (`pay_amount` >= 0),
-  CONSTRAINT `chk_total_amount` CHECK (`total_amount` >= 0)
+  CONSTRAINT `chk_total_amount` CHECK (`total_amount` >= 0),
+  CONSTRAINT `chk_order_discount_amount` CHECK (`discount_amount` >= 0),
+  CONSTRAINT `chk_order_shipping_fee` CHECK (`shipping_fee` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单主表';
 
 
@@ -112,5 +114,8 @@ CREATE TABLE `tx_sub_orders` (
   KEY `idx_merchant_status` (`merchant_id`, `status`),
   KEY `idx_user_status` (`user_id`, `status`),
   KEY `idx_created_at` (`created_at`),
-  CONSTRAINT `chk_sub_pay_amount` CHECK (`pay_amount` >= 0)
+  CONSTRAINT `chk_sub_pay_amount` CHECK (`pay_amount` >= 0),
+  CONSTRAINT `chk_sub_total_amount` CHECK (`total_amount` >= 0),
+  CONSTRAINT `chk_sub_discount_amount` CHECK (`discount_amount` >= 0),
+  CONSTRAINT `chk_sub_shipping_fee` CHECK (`shipping_fee` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='子订单表（父订单按商家拆分）';

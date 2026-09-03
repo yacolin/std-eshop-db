@@ -34,7 +34,9 @@ CREATE TABLE `mch_merchant_balances` (
     `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
     `deleted_at` datetime(3) DEFAULT NULL,
     UNIQUE KEY `uk_merchant_currency` (`merchant_id`, `currency`),
-    KEY `idx_deleted_at` (`deleted_at`)
+    KEY `idx_deleted_at` (`deleted_at`),
+    CONSTRAINT `chk_balance_available` CHECK (`available_balance` >= 0),
+    CONSTRAINT `chk_balance_freeze` CHECK (`freeze_balance` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家资金余额表';
 
 
@@ -54,7 +56,8 @@ CREATE TABLE `mch_merchant_withdrawals` (
     `deleted_at` datetime(3) DEFAULT NULL,
     UNIQUE KEY `uk_withdraw_no` (`withdraw_no`),
     KEY `idx_merchant_status` (`merchant_id`, `status`),
-    KEY `idx_deleted_at` (`deleted_at`)
+    KEY `idx_deleted_at` (`deleted_at`),
+    CONSTRAINT `chk_withdraw_amount` CHECK (`amount` > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家提现申请表';
 
 
@@ -76,7 +79,10 @@ CREATE TABLE `mch_merchant_settlement_logs` (
     UNIQUE KEY `uk_settlement_no` (`settlement_no`),
     INDEX `idx_merchant` (`merchant_id`),
     INDEX `idx_status` (`status`),
-    INDEX `idx_deleted_at` (`deleted_at`)
+    INDEX `idx_deleted_at` (`deleted_at`),
+    CONSTRAINT `chk_settlement_total_amount` CHECK (`total_amount` >= 0),
+    CONSTRAINT `chk_settlement_commission_amount` CHECK (`commission_amount` >= 0),
+    CONSTRAINT `chk_settlement_settlement_amount` CHECK (`settlement_amount` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家结算流水表';
 
 

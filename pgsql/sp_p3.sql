@@ -23,7 +23,10 @@ CREATE TABLE sp_inventories (
     updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at timestamp(3) DEFAULT NULL,
     PRIMARY KEY (id),
-    UNIQUE (sku_id, warehouse_id)
+    UNIQUE (sku_id, warehouse_id),
+    CONSTRAINT chk_inventory_quantity_nonnegative CHECK (quantity >= 0),
+    CONSTRAINT chk_inventory_reserved_nonnegative CHECK (reserved >= 0),
+    CONSTRAINT chk_inventory_reserved_lte_quantity CHECK (reserved <= quantity)
 );
 
 CREATE INDEX idx_sp_inventories_active ON sp_inventories (sku_id, warehouse_id, status)

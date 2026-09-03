@@ -21,7 +21,8 @@ CREATE TABLE usr_levels (
     updated_at timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at timestamp(3) DEFAULT NULL,
     PRIMARY KEY (id),
-    UNIQUE (level)
+    UNIQUE (level),
+    CONSTRAINT chk_level_discount_rate CHECK (discount_rate BETWEEN 0 AND 1000)
 );
 
 CREATE INDEX idx_usr_levels_status ON usr_levels (status);

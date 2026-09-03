@@ -57,7 +57,9 @@ CREATE TABLE `mch_merchants` (
 
     INDEX `idx_name` (`merchant_name`),
     INDEX `idx_status_level` (`status`, `merchant_level`),
-    INDEX `idx_settled` (`settled_at`)
+    INDEX `idx_settled` (`settled_at`),
+    CONSTRAINT `chk_merchant_total_sales` CHECK (`total_sales` >= 0),
+    CONSTRAINT `chk_merchant_commission_rate` CHECK (`commission_rate` BETWEEN 0 AND 1000)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家主表';
 
 

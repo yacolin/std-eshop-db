@@ -28,7 +28,8 @@ CREATE TABLE tx_deliveries (
     updated_at timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at timestamp(3) DEFAULT NULL,
     PRIMARY KEY (id),
-    UNIQUE (delivery_no)
+    UNIQUE (delivery_no),
+    CONSTRAINT chk_delivery_shipping_fee CHECK (shipping_fee >= 0)
 );
 
 CREATE INDEX idx_tx_deliveries_order_id ON tx_deliveries (order_id);

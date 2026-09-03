@@ -96,8 +96,8 @@ def seed_order(conn):
                 pay_amount = total_amount
 
             payment_status = "paid" if parent_status in ("paid", "completed") \
-                else "unpaid" if parent_status == "pending" \
-                else "refunded"
+                else "refunded" if parent_status == "refunded" \
+                else "unpaid"  # pending/cancelled：未发生支付
 
             consignee = f"用户{user_id}"
             phone = f"138{random.randint(10000000, 99999999)}"

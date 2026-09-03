@@ -19,5 +19,9 @@ CREATE TABLE `mch_settlement_details` (
     `deleted_at` datetime(3) DEFAULT NULL,
     KEY `idx_merchant_order` (`merchant_id`, `order_id`),
     KEY `idx_settlement_log` (`settlement_log_id`),
-    KEY `idx_deleted_at` (`deleted_at`)
+    KEY `idx_deleted_at` (`deleted_at`),
+    CONSTRAINT `chk_settlement_detail_order_amount` CHECK (`order_amount` >= 0),
+    CONSTRAINT `chk_settlement_detail_commission_amount` CHECK (`commission_amount` >= 0),
+    CONSTRAINT `chk_settlement_detail_settlement_amount` CHECK (`settlement_amount` >= 0),
+    CONSTRAINT `chk_settlement_detail_refund_amount` CHECK (`refund_amount` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家结算明细表';

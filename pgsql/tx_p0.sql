@@ -63,6 +63,8 @@ CREATE TABLE tx_orders (
     UNIQUE (order_no),
     CONSTRAINT chk_pay_amount CHECK (pay_amount >= 0),
     CONSTRAINT chk_total_amount CHECK (total_amount >= 0),
+    CONSTRAINT chk_order_discount_amount CHECK (discount_amount >= 0),
+    CONSTRAINT chk_order_shipping_fee CHECK (shipping_fee >= 0),
     CONSTRAINT chk_order_time_order CHECK (paid_at IS NULL OR paid_at >= created_at),
     CONSTRAINT chk_order_time_ship CHECK (shipped_at IS NULL OR shipped_at >= paid_at)
 );
@@ -88,7 +90,7 @@ COMMENT ON COLUMN tx_orders.discount_amount IS '优惠金额（分，含优惠�
 COMMENT ON COLUMN tx_orders.shipping_fee IS '运费（分）';
 COMMENT ON COLUMN tx_orders.pay_amount IS '实付金额（分 = total - discount + shipping）';
 COMMENT ON COLUMN tx_orders.status IS '父订单状态：pending-待支付 paid-已支付 partial_shipped-部分发货 completed-已完成 cancelled-已取消 closed-已关闭 refunding-退款中 refunded-已退款';
-COMMENT ON COLUMN tx_orders.payment_status IS '支付状态：unpaid-未支付 paying-支付中 paid-已支付 refunding-退款中 refunded-已退款';
+COMMENT ON COLUMN tx_orders.payment_status IS '支付状态：unpaid-未支付 paying-支付中 paid-已支付 refunding-退款中 refunded-已退款（支付失败订单仍停留 unpaid，failed 见 tx_payments.status）';
 COMMENT ON COLUMN tx_orders.payment_method IS '支付方式：wechat-微信 alipay-支付宝 wallet-余额';
 COMMENT ON COLUMN tx_orders.consignee IS '收货人';
 COMMENT ON COLUMN tx_orders.phone IS '联系电话';
@@ -123,7 +125,10 @@ CREATE TABLE tx_sub_orders (
     deleted_at timestamp(3) DEFAULT NULL,
     PRIMARY KEY (id),
     UNIQUE (sub_order_no),
-    CONSTRAINT chk_sub_pay_amount CHECK (pay_amount >= 0)
+    CONSTRAINT chk_sub_pay_amount CHECK (pay_amount >= 0),
+    CONSTRAINT chk_sub_total_amount CHECK (total_amount >= 0),
+    CONSTRAINT chk_sub_discount_amount CHECK (discount_amount >= 0),
+    CONSTRAINT chk_sub_shipping_fee CHECK (shipping_fee >= 0)
 );
 
 CREATE INDEX idx_tx_sub_orders_parent_order_no ON tx_sub_orders (parent_order_no);

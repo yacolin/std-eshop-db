@@ -48,7 +48,7 @@ CREATE TABLE sp_skus (
     product_id bigint NOT NULL,
     merchant_id bigint NOT NULL DEFAULT 0,
     sku_code varchar(100) NOT NULL,
-    barcode varchar(50) DEFAULT '',
+    barcode varchar(50) DEFAULT NULL,
     spec jsonb NOT NULL,
     spec_signature varchar(32) NOT NULL DEFAULT '',
     price bigint NOT NULL,
@@ -67,8 +67,11 @@ CREATE TABLE sp_skus (
     updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at timestamp(3) DEFAULT NULL,
     PRIMARY KEY (id),
-    UNIQUE (sku_code),
-    UNIQUE (barcode)
+    UNIQUE (merchant_id, sku_code),
+    UNIQUE (barcode),
+    CONSTRAINT chk_sku_price CHECK (price >= 0),
+    CONSTRAINT chk_sku_market_price CHECK (market_price >= 0),
+    CONSTRAINT chk_sku_cost_price CHECK (cost_price >= 0)
 );
 
 -- 覆盖索引：SKU列表展示价格和规格

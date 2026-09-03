@@ -21,7 +21,7 @@ CREATE TABLE `tx_payments` (
   `transaction_id` varchar(128) DEFAULT NULL COMMENT '支付渠道交易号（微信/支付宝订单号，用于对账）',
   `idempotency_key` varchar(64) NOT NULL COMMENT '支付创建幂等键（防重复提交）',
 
-  `status` varchar(20) NOT NULL DEFAULT 'pending' COMMENT '支付状态：pending-待支付 processing-处理中 success-已支付 failed-支付失败 refunding-退款中 refunded-已退款',
+  `status` varchar(20) NOT NULL DEFAULT 'unpaid' COMMENT '支付状态：unpaid-未支付 paying-支付中 paid-已支付 failed-支付失败 refunding-退款中 refunded-已退款',
   `failure_reason` varchar(500) DEFAULT '' COMMENT '失败原因',
 
   `client_ip` varchar(50) DEFAULT '' COMMENT '客户端IP',

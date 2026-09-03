@@ -16,7 +16,11 @@ CREATE TABLE mch_settlement_details (
     created_at timestamp(3) DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp(3) DEFAULT CURRENT_TIMESTAMP,
     deleted_at timestamp(3) DEFAULT NULL,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    CONSTRAINT chk_settlement_detail_order_amount CHECK (order_amount >= 0),
+    CONSTRAINT chk_settlement_detail_commission_amount CHECK (commission_amount >= 0),
+    CONSTRAINT chk_settlement_detail_settlement_amount CHECK (settlement_amount >= 0),
+    CONSTRAINT chk_settlement_detail_refund_amount CHECK (refund_amount >= 0)
 );
 
 CREATE INDEX idx_mch_settlement_details_merchant_order ON mch_settlement_details (merchant_id, order_id);

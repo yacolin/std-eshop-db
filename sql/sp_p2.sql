@@ -56,7 +56,10 @@ UNIQUE KEY `uk_merchant_sku_code` (`merchant_id`, `sku_code`) COMMENT '同一商
   UNIQUE KEY `uk_barcode` (`barcode`) COMMENT '条码唯一约束',
   KEY `idx_merchant` (`merchant_id`),
   KEY `idx_product_id` (`product_id`) COMMENT '根据商品查SKU列表',
-  KEY `idx_product_status` (`product_id`, `status`) COMMENT '查询有效SKU'
+  KEY `idx_product_status` (`product_id`, `status`) COMMENT '查询有效SKU',
+  CONSTRAINT `chk_sku_price` CHECK (`price` >= 0),
+  CONSTRAINT `chk_sku_market_price` CHECK (`market_price` >= 0),
+  CONSTRAINT `chk_sku_cost_price` CHECK (`cost_price` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='SKU规格表（具体可售单元）';
 
 

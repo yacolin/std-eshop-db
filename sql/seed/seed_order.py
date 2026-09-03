@@ -89,8 +89,8 @@ def seed_order(conn):
                 pay_amount = total_amount
 
             payment_status = "paid" if parent_status in ("paid", "completed") \
-                else "unpaid" if parent_status == "pending" \
-                else "refunded"
+                else "refunded" if parent_status == "refunded" \
+                else "unpaid"  # pending/cancelled：未发生支付
 
             consignee = f"用户{user_id}"
             phone = f"138{random.randint(10000000, 99999999)}"
@@ -198,7 +198,7 @@ def seed_order(conn):
                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                     (payment_no, order_no, order_id, order_merchant_id, pay_amount, payment_method,
                      payment_method, "native", idempotency_key,
-                     "success" if parent_status != "refunded" else "refunded",
+                     "paid" if parent_status != "refunded" else "refunded",
                      paid_at.strftime(FMT), order_date.strftime(FMT), paid_at.strftime(FMT)),
                 )
                 payment_id = cur.lastrowid

@@ -50,7 +50,8 @@ CREATE TABLE `tx_deliveries` (
     KEY `idx_merchant` (`merchant_id`),
     KEY `idx_tracking` (`tracking_no`) COMMENT '按运单号查询',
     KEY `idx_status` (`status`),
-    KEY `idx_created_at` (`created_at`)
+    KEY `idx_created_at` (`created_at`),
+    CONSTRAINT `chk_delivery_shipping_fee` CHECK (`shipping_fee` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='物流单主表（一个订单可拆多个物流单）';
 
 
