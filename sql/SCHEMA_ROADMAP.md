@@ -4,7 +4,7 @@
 >
 > **事实来源优先级**：当前 `sql/*.sql` > `sql/run.sql` > `SCHEMA_REVIEW.md` > 历史优化说明。评审结论与 DDL 不一致时，以 DDL 为准。
 >
-> **更新日期**：2026-09-03。当前建表入口为 `sql/run.sql`；README 记录的基线为 **73 张表、8 个业务域**（`base`、`mch`、`usr`、`sp`、`sys`、`tx`、`mkt`、`rev`）。
+> **更新日期**：2026-09-03。当前建表入口为 `sql/run.sql`；README 记录的基线为 **73 张表、8 个业务域**（`base`、`mch`、`usr`、`sp`、`sys`、`tx`、`mkt`、`rev`）。P0 治理已于 2026-09-03 落地（见 §2 状态块）。
 
 ---
 
@@ -43,11 +43,20 @@
 | 默认地址与默认结算账户唯一 | `usr_addresses`、`mch_merchant_bank_accounts` 都采用 `NULL/1 + UNIQUE` 方案 |
 | 商户 RBAC 与平台 RBAC 隔离 | `mch_merchant_roles` / `mch_merchant_role_permissions` 已落地，商户员工不再复用平台角色 |
 
-> `SCHEMA_REVIEW.md` 的第 1–17 项应在下一次维护时增加“已修复 / 当前仍存在”的状态列；本文件不再把已修复项当作风险。
+> `SCHEMA_REVIEW.md` 第 1–17 项已按本文件要求于 2026-09-03 增加“已修复 / 仍存在”状态列（见该文件顶部状态速查表）；已修复项不再作为风险。
 
 ---
 
 ## 2. P0 — Database Governance：先收口现有模型
+
+> **P0 执行状态（2026-09-03）**：以 DB-only 仓库可交付的治理项已落地（金额/约束收口、状态词表统一、ID 策略规范、审计文档、SQL 审计脚本、双库回归用例）；涉及应用服务层的事项（幂等重放、状态机守卫、日对账调度）以契约文档 + SQL 复核脚本交付，待服务工程实现。交付物：
+> - `docs/DB_CONVENTIONS.md` §9 ID 策略统一 + 状态速查刷新
+> - `sql/P0_金额审计清单.md`（金额字段清单与修复记录）
+> - `sql/P0_状态机契约.md`（订单/支付/退款/售后状态机）
+> - `sql/P0_幂等与对账口径.md`（幂等键口径 + 日对账 SQL）
+> - `sql/audit/p0_money_audit.sql`、`sql/audit/p0_reconcile_audit.sql`（MySQL 复核）
+> - `pgsql/audit/p0_money_audit.sql`、`pgsql/audit/p0_reconcile_audit.sql`（PG 复核）
+> - `tests/test_sql_schema.py`（双库回归用例，20 项全绿）
 
 这是分享评估中“现在就应该处理”的六项。目标不是增加业务表，而是把现有模型的规则收口；每项都必须同时交付 schema migration、服务层事务/幂等逻辑和回归用例。
 
@@ -62,10 +71,11 @@
 
 ### P0 验收清单
 
-- [ ] 每张核心表均纳入金额、唯一性、非空、边界和索引审计。
-- [ ] 支付、退款接口具备可重放的幂等测试。
-- [ ] 任一成功订单均能从订单、支付、退款、结算明细追溯完整金额链路。
-- [ ] ID 类型与用途符合已发布的 `DB_CONVENTIONS.md`。
+- [x] 每张核心表均纳入金额、唯一性、非空、边界和索引审计（清单见 `P0_金额审计清单.md`；金额列双库 CHECK 收口）。
+- [x] 支付、退款幂等键与渠道号唯一性经双库复核并有回归用例（`tx_payments.idempotency_key`/`transaction_id`、`tx_refunds.idempotency_key`/`channel_refund_id`）。
+- [x] 任一成功订单均能从订单、支付、退款、结算明细追溯完整金额链路（口径 + `p0_reconcile_audit.sql` 可查）。
+- [x] ID 类型与用途符合已发布的 `docs/DB_CONVENTIONS.md`（§9 ID 策略统一）。
+- [ ] 支付、退款接口具备可重放的幂等测试 / 状态机守卫 / 日对账调度 —— 待应用服务工程落地。
 
 ---
 
