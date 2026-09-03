@@ -1,175 +1,141 @@
-# 电商数据库 Schema 优化与完善路线图
+# 电商数据库 Schema 演进路线图
 
-> 目的：在当前 `sql/` 73 张表、9 大域的设计基础上，梳理**可优化项**与**业务完整性缺口**，
-> 为后续迭代开发提供存档与任务清单。
-> 生成日期：2026-07-13
-> 配套文档：`SCHEMA_REVIEW.md`（评价）、`run.sql`（建表入口）
+> **目标**：以当前可执行 DDL 为基线，先保证交易、资金与库存的正确性，再补齐业务闭环和工程化治理能力。
+>
+> **事实来源优先级**：当前 `sql/*.sql` > `sql/run.sql` > `SCHEMA_REVIEW.md` > 历史优化说明。评审结论与 DDL 不一致时，以 DDL 为准。
+>
+> **更新日期**：2026-09-03。当前建表入口为 `sql/run.sql`；README 记录的基线为 **73 张表、8 个业务域**（`base`、`mch`、`usr`、`sp`、`sys`、`tx`、`mkt`、`rev`）。
 
 ---
 
-## 〇、关于"EAV 模型"的现状（回答核心问题）
+## 0. 使用规则与当前边界
 
-当前唯一采用 **EAV（实体-属性-值）** 模型的是商品域：
+### 0.1 设计约定
 
-| 表 | 作用 |
+- **逻辑外键**：全库不使用 `FOREIGN KEY` / `REFERENCES`，关联完整性由应用事务、输入校验和监控保证。这是为分库分表预留的明确取舍，而不是遗漏。
+- **金额与时间**：金额统一用 `BIGINT` 分存储；时间统一为 `DATETIME(3)`；字符集统一为 `utf8mb4_unicode_ci`。
+- **快照优先**：订单商品、地址、优惠、支付渠道响应等历史数据应保留快照，不回读可能变化的主数据。
+- **EAV 仅用于开放商品属性**：`sp_attributes`、`sp_attribute_values`、`sp_product_attributes`、`sp_sku_specs`、`sp_category_attributes` 构成商品属性/规格模型。营销规则、审计明细与交易快照继续使用 JSON，不把 EAV 扩散到固定字段域。
+
+### 0.2 本路线图的两类事项
+
+| 类型 | 含义 | 示例 |
+| --- | --- | --- |
+| **结构修正** | 当前 DDL 已有明确缺陷或缺少一致性约束，应通过 migration 修复。 | 库存并发控制、资金表禁止软删除 |
+| **能力建设** | 现有库未覆盖，但是否建设取决于产品范围。 | C 端钱包、发票、积分商城 |
+
+---
+
+## 1. 已落实或已失效的评审结论
+
+下列事项已在当前 SQL 中处理，不应继续作为待办重复排期：
+
+| 已落实项 | DDL 依据 |
 | --- | --- |
-| `sp_attributes` / `sp_attribute_values` | 属性字典 + 属性值字典 |
-| `sp_product_attributes` | SPU 级属性值（EAV，含 `attribute_value_id` 引用与 `value` 冗余） |
-| `sp_sku_specs` | SKU 级规格值（EAV，决定可售单元） |
-| `sp_category_attributes` | 类目→属性推荐模板 |
+| 优惠码空串不再占用唯一键 | `mkt_promotions.promo_code_uq = NULLIF(promo_code, '')`，唯一键为 `(merchant_id, promo_code_uq)` |
+| 无单据库存操作可重复记录 | `sp_inventory_logs.reference_id_uq` 将空串转为 `NULL`，唯一键使用该生成列 |
+| 空仓库编码不再冲突 | `sp_warehouses.warehouse_code_uq` 与唯一键已落实 |
+| 通用促销库存的 `NULL` SKU 可防重 | `mkt_promotion_stocks` 已使用 `sku_id_uq` 参与唯一键 |
+| 会员默认折扣正确 | `usr_levels.discount_rate` 默认值已为 `1000`（无折扣） |
+| 评价分数有边界 | `rev_reviews.chk_rating_range` 限制所有评分在 1–5 |
+| 商户内角色名防重 | `mch_merchant_roles.uk_merchant_name` 已存在 |
+| 商品版本号防重 | `sp_product_versions.uk_product_version(product_id, version)` 已存在 |
+| 默认地址与默认结算账户唯一 | `usr_addresses`、`mch_merchant_bank_accounts` 都采用 `NULL/1 + UNIQUE` 方案 |
+| 商户 RBAC 与平台 RBAC 隔离 | `mch_merchant_roles` / `mch_merchant_role_permissions` 已落地，商户员工不再复用平台角色 |
 
-EAV 用于商品是因为"规格/属性是开放集、不同类目差异极大"，这是正确选型。
-
-**其他业务域的扩展模式对比：**
-
-| 域 | 当前扩展方式 | 评价 |
-| --- | --- | --- |
-| `mkt` 营销 | JSON（`benefit_config`、`promotion_snapshot`） | 文档型扩展，适合规则多变，**合理** |
-| `tx` 交易 | JSON 快照（`coupon_snapshot`、`sku_spec`、`channel_response`） | 快照型，防篡改，**合理** |
-| `sys` 系统 | JSON（`operation_logs.detail`） | 审计快照，**合理** |
-| `mch` 商户 | 自由文本（`business_scope`）+ 固定列 | 类目/经营范围用文本，**偏弱** |
-| `usr` 用户 | 固定列（`usr_infos`） | 资料字段固定，**无开放扩展** |
-| `rev` 评价 | 固定维度列（`quality/logistics/service_rating`） | 维度固定，**够用** |
-
-**结论与建议：**
-1. EAV 不必推广到所有域——它不是银弹，会增加查询复杂度。仅在"属性是开放集"时使用（商品规格已覆盖）。
-2. 其余域统一两类扩展范式：**字典表 + JSON 快照**（已是主流），避免再出现 `business_scope` 这类自由文本。
-3. 若未来需要"商户自定义资料字段 / 用户自定义标签"，可新建轻量 EAV（如 `usr_user_tags`、`mch_merchant_attrs`），但当前阶段优先级低，不建议现在做。
+> `SCHEMA_REVIEW.md` 的第 1–17 项应在下一次维护时增加“已修复 / 当前仍存在”的状态列；本文件不再把已修复项当作风险。
 
 ---
 
-## 一、跨域 / 架构级优化（影响全局）
+## 2. P0 — Database Governance：先收口现有模型
 
-### 1.1 分布式 ID 与分库分表策略（高）
-- 现状：`id` 全部 `BIGINT AUTO_INCREMENT`。
-- 风险：多商户、后续分库分表时自增主键会冲突，且 `merchant_id`/`user_id` 作为天然分片键未文档化。
-- 建议：
-  - 明确分片键：`sp_*`/`tx_*`/`mch_*` 按 `merchant_id` 分片；`usr_*`/`tx_orders` 按 `user_id` 分片。
-  - 新建表改用 **雪花 ID（BIGINT）** 或发号器；存量表在分片改造时迁移。
-  - 在 `run.sql` 顶部或独立 `SHARDING.md` 记录分片约定。
+这是分享评估中“现在就应该处理”的六项。目标不是增加业务表，而是把现有模型的规则收口；每项都必须同时交付 schema migration、服务层事务/幂等逻辑和回归用例。
 
-### 1.2 库存并发扣减的乐观锁（高）
-- 现状：`sp_inventories` 有 `CHECK(reserved<=quantity)`，但**无版本号**；`sp_inventory_logs` 靠 `uk_ref_type(reference_id, change_type)` 做幂等。
-- 风险：高并发下单时，两个事务同时读旧 `quantity` 再扣减可能超卖。
-- 建议：给 `sp_inventories` 增加 `version BIGINT DEFAULT 0`，扣减走
-  `UPDATE ... SET quantity=quantity-?, reserved=reserved+? WHERE id=? AND version=?:` 失败即重试/失败。
-  （`mch_merchant_balances`、`mkt_promotion_stocks` 已有 `version`，应统一此模式。）
+| 事项 | 现状与风险 | 涉及表 | 落地动作与验收标准 |
+| --- | --- | --- | --- |
+| **ID 策略统一** | 当前主键以 `BIGINT AUTO_INCREMENT` 为主，只有“哪些实体需要全局业务 ID、哪些表只需内部行 ID”的讨论，没有可执行规则。 | 全域，重点 `usr_users`、`mch_merchants`、`sp_products`、`sp_skus`、`tx_orders`、`tx_sub_orders`、`mkt_promotions`、`mkt_user_coupons`、`rev_reviews` | 在 `DB_CONVENTIONS.md` 定义：对外/跨域业务实体使用发号器（如雪花 ID），纯内部关联、日志、明细表可以保留自增 ID；同步定义业务号、`merchant_id` / `user_id` 路由边界与迁移窗口。未经容量与部署规划，不全库盲目改雪花 ID。 |
+| **金额字段全面审计** | 金额大多已用 `BIGINT` 分存储并有部分 `CHECK`，但尚未证明全部金额、余额、优惠、结算和提现字段统一。 | `tx_*`、`mch_*`、`mkt_*`、`usr_*` | 建立字段清单：金额一律 `BIGINT`、单位分、`NOT NULL`、非负约束（允许负数的会计冲正须单独说明）；核对订单项小计、支付、退款、优惠分摊、余额与结算。 |
+| **全库约束审计** | 无 FK 是明确取舍，但 `UNIQUE`、`NOT NULL`、`CHECK`、逻辑关联索引仍需一致覆盖。 | 全域 | 为业务号、幂等键、每实体唯一关系、数值边界和状态字段建立审计清单；每个逻辑关联字段须有查询索引或明确例外。 |
+| **订单、支付、退款状态机** | 状态列与幂等键齐全，但合法迁移关系尚未作为统一契约维护。 | `tx_orders`、`tx_sub_orders`、`tx_payments`、`tx_refunds`、`tx_after_sales` | 建立状态转换表/状态机文档与服务层守卫；覆盖超时关单、重复回调、部分退款、售后退款、支付成功与关单竞争。任一非法跃迁必须失败且可审计。 |
+| **支付 / 退款幂等复核** | `tx_payments` 与 `tx_refunds` 已有唯一 `idempotency_key`，但需验证键的生成、重放响应和回调去重完整一致。 | `tx_payments`、`tx_refunds`、`tx_payment_logs` | 为创建、渠道回调、关闭、退款申请与退款回调定义幂等键和重复请求返回语义；重放测试不重复扣款、不重复退款、不重复写资金流水。 |
+| **订单—支付—退款一致性** | 支付和退款已有唯一幂等键，但缺明确的跨表核对规则。 | `tx_orders`、`tx_payments`、`tx_refunds`、`tx_payment_logs` | 定义订单实付、成功支付、成功退款、可退款余额的计算口径；回调处理在一个事务中更新状态并追加日志。日对账能发现且定位金额/状态不一致。 |
 
-### 1.3 审计字段一致性（中）
-- 现状：`created_by/updated_by` 仅部分表有（mch/sp/tx 部分），而 `tx_orders`、`tx_order_items`、`tx_payments`、`rev_reviews` 等核心表**完全没有**。
-- 建议：核心业务表统一补 `created_by BIGINT`、`updated_by BIGINT`；C 端产生的单子 `created_by` 填 `user_id` 或 `0`（系统）。
+### P0 验收清单
 
-### 1.4 全库外键策略文档化（中，已在 SCHEMA_REVIEW 记录）
-- 现状：0 个 FK，引用完整性靠应用。
-- 建议：写 `DB_CONVENTIONS.md` 明确"逻辑外键、应用自治"，并列出各关联的应用层校验点，避免后续误以为有约束。
-
-### 1.5 日志 / 大表归档分区（低，已在 SCHEMA_REVIEW 记录）
-- `tx_payment_logs`、`tx_order_logs`、`sys_operation_logs`、`sp_inventory_logs`、`tx_delivery_traces`、`mkt_promotion_usage_logs` 按 `created_at` 月度分区或定时转储冷数据。
+- [ ] 每张核心表均纳入金额、唯一性、非空、边界和索引审计。
+- [ ] 支付、退款接口具备可重放的幂等测试。
+- [ ] 任一成功订单均能从订单、支付、退款、结算明细追溯完整金额链路。
+- [ ] ID 类型与用途符合已发布的 `DB_CONVENTIONS.md`。
 
 ---
 
-## 二、各域业务完整性缺口（按域）
+## 3. P1 — 历史、并发、资金与数据生命周期治理
 
-### 2.1 `usr` 用户域
-| 缺口 | 说明 | 优先级 |
-| --- | --- | --- |
-| **C 端用户钱包** | `tx_payments.payment_method` 含 `wallet-余额`，但**无 `usr_wallets` / 余额流水表**。余额支付目前无法落地。 | **高** |
-| **第三方登录绑定** | `usr_users` 仅有 `password_hash`，无 OAuth/微信/Apple 绑定表（`usr_user_oauth`）。 | 中 |
-| **收藏 / 关注** | 无 `usr_favorites`（商品收藏）、`usr_follows`（店铺关注），电商基础能力。 | 中 |
-| **签到记录** | `usr_points_rules` 有 `signin_points`，但无 `usr_signin_logs` 落地表，签到发分无法追溯/防刷。 | 中 |
-| **积分余额语义** | `usr_infos.total_points`（累计）与 `usr_points.balance_after`（可用）两套口径，需明确"累计 vs 可用"，建议补 `usr_points_balances` 或文档化。 | 中 |
-| **用户标签 / 分群** | 营销只能按"用户等级"圈人，缺 `usr_user_tags` 做精细化人群定向。 | 低 |
+这是分享评估中的下一轮重点。先完善已有交易骨架的深度，再按产品范围补齐必要的业务闭环。
 
-### 2.2 `sp` 商品域
-| 缺口 | 说明 | 优先级 |
-| --- | --- | --- |
-| **采购 / 供应商** | `sp_inventories.in_transit` 暗示采购在途，但无 `sp_suppliers`、`sp_purchase_orders`，库存生命周期不完整。 | 中 |
-| **多类目归属** | `sp_products.category_id` 单类目，不支持商品挂多个类目（如跨界商品）。 | 低 |
-| **库存预警历史** | `sp_inventories.threshold` 有阈值但无 `sp_inventory_alerts` 预警触发记录。 | 低 |
-| **商品上下架审核流** | `status` 含"待审"，但无审核日志表（可复用 `sys_operation_logs` 或新建 `sp_product_audit_logs`）。 | 低 |
-
-### 2.3 `tx` 交易域
-| 缺口 | 说明 | 优先级 |
-| --- | --- | --- |
-| **发票** | 无 `tx_invoices`（电子发票/抬头/税号/开票状态），B2C/B2B 常见合规需求。 | **高** |
-| **组合支付 / 多次支付** | `tx_payments.order_id` 隐含"一单一付"；余额+第三方组合支付、分期付未建模。建议 `order_id` 可对应多笔 `tx_payments`。 | 中 |
-| **购物车跨端合并** | `tx_carts` 有 `user_id`+`session_id`，缺合并策略落地表/字段（如 `merged_from`）。 | 低 |
-| **订单状态机约束** | `status`/`payment_status`/`refund_status` 仅靠应用维护，建议补充状态流转说明文档或轻量校验。 | 低 |
-
-### 2.4 `mkt` 营销域
-| 缺口 | 说明 | 优先级 |
-| --- | --- | --- |
-| **签到 / 任务中心** | 见 2.1，营销侧缺"签到/每日任务"发放入口表。 | 中 |
-| **积分商城 / 兑换** | `usr_points` 只进不出（无兑换目录 `mkt_point_products` 与兑换流水）。 | 中 |
-| **拼团 / 分销** | 仅 `promo_type 3 秒杀`；缺拼团（`mkt_group_buys`）、分销员/邀请返佣（`mch_affiliates` / `mkt_shares`）。 | 中 |
-| **营销活动分组** | 缺 `mkt_campaigns` 将多个 `promotions` 归拢为大促（双11）。 | 低 |
-| **预算 / 优惠总控** | 缺活动级优惠金额预算上限与已用额度统计。 | 低 |
-| **人群定向** | 促销适用对象仅支持"全站/分类/SPU/SKU"，缺"用户分群/标签"定向（依赖 2.1 用户标签）。 | 低 |
-
-### 2.5 `mch` 商户域
-| 缺口 | 说明 | 优先级 |
-| --- | --- | --- |
-| **提现费率** | `mch_merchant_withdrawals` 无手续费字段，实际提现普遍收费。 | 中 |
-| **经营类目范围** | `business_scope` 自由文本，建议改为 `mch_merchant_categories`（类目白名单）。 | 低 |
-| **违规 / 处罚记录** | 仅有 `avg_rating`，缺 `mch_merchant_violations`（违规扣分/处罚流水）。 | 低 |
-| **分销 / 邀请关系** | 商户间、商户→用户的邀请返佣关系缺失（见 2.4 分销）。 | 低 |
-| **店铺装修** | 缺店铺首页装修模板表（非核心，可后做）。 | 低 |
-
-### 2.6 `rev` 评价域
-| 缺口 | 说明 | 优先级 |
-| --- | --- | --- |
-| **追评** | 无"购买后追加评价"（`rev_review_replies` 是他人回复，非本人追评）。 | 中 |
-| **评价举报 / 投诉** | 缺 `rev_review_reports`（风控补充）。 | 低 |
-| **评价标签聚合** | `rev_review_statistics` 有星级分布，缺"好评标签"（如"物流快"）计数。 | 低 |
-
-### 2.7 `sys` 系统域
-| 缺口 | 说明 | 优先级 |
-| --- | --- | --- |
-| **系统参数配置** | 大量魔法数（默认佣金、各类阈值）散落，缺 `sys_config`（KV 配置）。 | 中 |
-| **数据字典 / 枚举** | 各表 `TINYINT` 状态码无集中字典，建议 `sys_dict`（type/code/label）。 | 中 |
-| **定时任务调度** | 多处注释提到"每日定时任务"（购物车清理、积分过期、统计校准），但无 `sys_jobs` 调度记录表。 | 中 |
-| **文件 / 资源** | 资质、媒体、头像均存裸 URL，缺 `sys_files`（统一文件/对象存储管理）。 | 低 |
-
-### 2.8 `base` 基础域
-| 缺口 | 说明 | 优先级 |
-| --- | --- | --- |
-| **发送分发日志** | `base_notifications` 存最终内容，但无按渠道（短信/邮件/Push）的发送状态与第三方回执（`base_notification_dispatches`）。 | 中 |
-| **订阅偏好** | 缺 `base_notification_preferences`（用户退订/渠道开关）。 | 低 |
+| 事项 | 现状与风险 | 落地动作与验收标准 | 前置依赖 |
+| --- | --- | --- | --- |
+| **订单快照体系** | 已有地址、优惠、规格 JSON 快照；还需将商品名、图片、规格摘要、价格、优惠分摊的写入契约固定下来。 | 下单写入完整不可变快照；订单详情和售后不得回读可能变化的商品主数据。 | P0 订单一致性 |
+| **商品版本与历史数据** | `sp_product_versions` 已能记录商品差异，营销、价格、运费、SKU 规格等变化对历史订单的解释仍需统一。 | 明确“当前数据 + 历史快照”边界；版本记录服务审计，订单快照服务交易事实。 | 订单快照体系 |
+| **库存并发模型** | `sp_inventories` 有数量边界但没有乐观锁版本；锁库、释放、扣减仍有并发超卖风险。 | 增加 `version BIGINT NOT NULL DEFAULT 0`；所有变更以 `id + version + 可用库存条件` 的单条 `UPDATE` 完成，成功后写库存流水。并发压测下库存不可为负、`reserved <= quantity`、同一单据只产生一笔同类流水。 | P0 约束与幂等规范 |
+| **营销规则快照** | 当前规则可变，事后无法只通过当前促销表解释优惠。 | 在订单/订单项或独立优惠明细记录命中规则、活动版本、优惠金额、分摊结果与叠加关系。 | 订单快照体系 |
+| **资金与结算链路** | 支付解决“是否支付成功”，资金结算还需证明“钱最终归谁”；资金表含 `deleted_at` 也会破坏审计链。 | 明确订单→支付/退款→商家应收→平台收入→结算→提现的核对链；资金流水只追加、通过状态冲正，禁止业务软删除。 | P0 金额与交易一致性 |
+| **大表生命周期** | 只追加日志会持续增长，尚无统一归档、查询和恢复约定。 | 为 `tx_payment_logs`、`tx_order_logs`、`sys_operation_logs`、`sp_inventory_logs`、`tx_delivery_traces`、`mkt_promotion_usage_logs` 定义按时间的分区/归档、保留期限与恢复流程。 | Migration 体系 |
 
 ---
 
-## 三、一致性 / 规范巩固清单（已在 SCHEMA_REVIEW 详述，此处汇总）
+## 4. P2 — 工程化、规范与容量治理
 
-- [ ] `created_by/updated_by` 与 `operator` 类型统一为 `BIGINT`（修复 `sp_inventories.last_counted_by`、`sp_inventory_logs.operator` 的 `VARCHAR(50)`）。
-- [ ] 比率统一为"千分比 `BIGINT`"（`usr_points.points_multiplier` 的 `DECIMAL(3,2)` 改造）。
-- [ ] 跨域命名统一：`rev_reviews.spu_id` → 与 `tx_*` 一致的 `product_id`。
-- [ ] `mkt_promotions.promo_code` 空串唯一键冲突（生成列方案，已论证待实施）。
-- [ ] `tx_delivery_traces` 复合主键 `(id, trace_time)` 评估是否简化为单主键。
-- [ ] 全库外键策略写入 `DB_CONVENTIONS.md`。
+这一层承接 `SCHEMA_REVIEW.md` 第八节的工程化意见。优先让 schema 的变更可复现、可审查、可回滚，再处理规模增长问题。
 
----
+| 事项 | 交付物 | 验收标准 |
+| --- | --- | --- |
+| **Migration 体系** | 版本化 migration 目录、执行记录表、升级/回滚约定；`run.sql` 仅保留全新环境初始化职责。 | 任意版本可从空库建成，已部署库只能前向升级；每个 schema 变更可定位到 migration。 |
+| **SQL lint** | SQL 格式化/静态检查规则与危险 SQL 审核规则。 | CI 能阻止无索引的逻辑关联、无注释的新状态值、金额类型漂移、危险 `DROP` / 不可逆变更。 |
+| **Schema diff** | CI 中的 schema 变更对比与审查报告。 | 每次 migration 都能显示表、列、索引、约束的精确变化，并标记破坏性变更。 |
+| **约束与索引审计** | 定期检查 `UNIQUE`、`NOT NULL`、`CHECK`、重复索引、索引命中与慢查询。 | 新业务键都有幂等/唯一策略；常用列表与批处理查询有复合索引；无未解释的重复索引。 |
+| **状态码与系统配置治理** | `DB_CONVENTIONS.md`；按需要引入 `sys_config`、`sys_dict` 与任务执行记录。 | 状态码、金额/比率单位、审计字段语义有单一文档来源；阈值和开关不散落在应用常量。 |
+| **任务与文件治理** | 任务调度/执行记录、对象存储文件元数据（按需要）。 | 购物车清理、积分过期、统计校准、告警可追踪、可重试；资质/媒体 URL 可追溯其文件生命周期。 |
+| **Seed 数据治理与测试/生产数据隔离** | 开发/测试/演示数据分层，固定 seed 的版本与清理顺序。 | 生产初始化不导入测试用户和弱密码；seed 能重复执行且不会掩盖 migration 问题。 |
 
-## 四、建议落地路线（按阶段）
+### P2 的规范收敛事项
 
-### P1（近期，补核心闭环，阻塞型）
-1. **C 端用户钱包**（`usr_wallets` + 流水）—— 否则 `wallet` 支付方式不可用。
-2. **发票表**（`tx_invoices`）—— 合规与售后闭环。
-3. **库存乐观锁**（`sp_inventories.version`）—— 防超卖，生产必做。
-4. **分布式 ID / 分片键约定文档** —— 越早定越好，避免后期返工。
-
-### P2（中期，丰富营销与履约）
-5. 签到记录、积分商城、拼团/分销。
-6. 采购/供应商、库存预警。
-7. 系统配置表、数据字典、定时任务表、文件表。
-8. 审计字段统一补全。
-
-### P3（长期，体验与精细化）
-9. 收藏/关注、追评、评价标签、店铺装修、订阅偏好、发送分发日志。
-10. 大表分区/归档、EAV 扩展（如需用户/商户自定义字段）。
+- 将 `sp_inventories.last_counted_by`、`sp_inventory_logs.operator` 等“操作人姓名”字段与 `created_by` / `updated_by` 的“操作人 ID”语义分开命名；需要展示姓名时可保留快照列。
+- 确定比例字段规范。建议金额、佣金、折扣统一使用千分比 `BIGINT`；`usr_levels.points_multiplier` 若保留倍数语义，则在规范中明确其不是“折扣率”，无需强行改名为千分比。
+- 确定 `rev_reviews.spu_id` 是否迁移为 `product_id`。若迁移，采用兼容期（双读或视图）而非直接破坏查询；若不迁移，则在领域词汇表中明确 SPU 与 product 同义。
+- 评估 `tx_delivery_traces` 的复合主键是否服务于分区要求；在决定分区方案前，不做只为“看起来常见”的主键改造。
 
 ---
 
-## 五、一句话总评
-当前 schema 已是"能跑通下单-支付-退款-售后-物流-结算-评价-营销"的完整电商骨架；
-**最关键的三个缺口是：C 端钱包、发票、库存乐观锁**（均属"已有引用但无落地表/无并发保护"），
-建议优先于任何新营销玩法补齐。其余多为体验与精细化运营的可选增强。
+## 5. Backlog — 产品增强（按业务优先级选择）
+
+以下能力不阻塞基础交易，只有在对应业务目标明确后建模，避免过早引入空表和无主流程。
+
+| 域 | 候选能力 |
+| --- | --- |
+| `usr` | 第三方账号绑定、商品收藏、店铺关注、用户标签与分群、签到/积分兑换 |
+| `sp` | 多类目归属、商品审核历史、供应商协同 |
+| `tx` | C 端余额钱包（`usr_wallets` + 只追加流水）、发票、组合/多笔支付；均应在 P1 资金链路稳定后按真实需求建设 |
+| `mkt` | 活动（campaign）聚合、用户标签定向、预算控制、拼团、分销、任务中心 |
+| `mch` | 提现手续费、经营类目白名单、违规处罚、店铺装修 |
+| `rev` | 追评、举报、评价标签聚合 |
+| `base` | 渠道分发回执、订阅偏好 |
+
+---
+
+## 6. 推荐实施顺序与依赖
+
+```text
+P0：ID 策略 / 金额与约束审计 / 状态机 / 支付退款幂等 / 订单资金核对
+  └─ P1：订单与营销快照 / 商品历史 / 库存并发 / 资金结算 / 大表生命周期
+       └─ P2：migration、CI 检查、配置任务、归档、seed 治理
+            └─ Backlog：按业务目标选择钱包、发票、采购、增长与运营功能
+```
+
+建议每个事项以一条独立 migration 和一组业务验收用例交付；不要把 P0 安全修正与 P3 功能扩展混在同一个发布中。
+
+---
+
+## 7. 一句话结论
+
+现有 schema 已覆盖商品、下单、支付、退款、售后、物流、结算、评价、促销和 RBAC 的核心骨架。下一阶段的关键不是继续堆表，而是先让 **ID、约束、状态机、订单资金链路、库存并发和 schema 演进流程**可证明地正确；钱包、发票等能力只在这轮治理完成且有明确产品需求后再建设。
