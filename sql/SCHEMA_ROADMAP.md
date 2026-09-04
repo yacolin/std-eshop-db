@@ -106,7 +106,7 @@
 这一层承接 `SCHEMA_REVIEW.md` 第八节的工程化意见。优先让 schema 的变更可复现、可审查、可回滚，再处理规模增长问题。
 
 > **P2 执行状态（2026-09-03）**：以 DB-only 仓库可交付的工程化治理已落地（仓库无 CI/调度器，CI 类以脚本+规范交付）。交付物：
-> - Migration 体系：`sql/migrations/`、`pgsql/migrations/`（`schema_migrations` 记录表 + `V001`/`V002` 回放 P0/P1 增量）+ 双库运行器 `sql/migrate.sh`、`pgsql/migrate.sh` + `P2_Migration指南.md`；已在预-P0 基线库上回放验证（基线 + V001 + V002 == 当前 run.sql 基线）
+> - Migration 体系：`sql/migrations/`、`pgsql/migrations/`（`schema_migrations` 记录表，**以当前 run.sql 基线为 BASELINE**，首次执行自动登记 baseline）+ 双库运行器 `sql/migrate.sh`、`pgsql/migrate.sh` + `P2_Migration指南.md`；迁移编号从 V001 重新开始，历史回放脚本已随基线重写删除
 > - SQL lint：`tools/sql_lint.py`（R1–R7 + P1 资金规则，双库 0 违规）+ `P2_SQLlint规范.md`
 > - Schema diff：`tools/schema_diff.py`（git ref 对比、DESTRUCTIVE 标记）+ `P2_SchemaDiff.md`
 > - 约束/索引审计：`p2_constraint_index_audit.sql`（双库）+ `P2_约束索引审计.md`

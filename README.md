@@ -9,12 +9,35 @@
 ## 快速开始
 
 ```bash
-# 清理旧表 → 建全部表 → 初始化 RBAC 种子（需 root 密码）
+# 1) 全新建库：清旧表 → 建全部表 → 初始化 RBAC 种子（需 root 密码）
 bash run.sh
 
-# 批量生成测试数据（商品、库存、订单等）
-python -m sql.seed.seed_test_data
+# 2) 批量生成测试数据（商品、库存、订单等；已有数据时务必先 --clean）
+python -m sql.seed.seed_test_data --clean
 ```
+
+> 全新 / 重建环境用 `run.sh` 即可，**不需要执行迁移**（`run.sh` 建出的 schema 即迁移基线 BASELINE）。
+> seed 脚本是追加式生成器，重复执行前必须 `--clean`，否则会撞唯一键报错。
+
+## 数据库初始化 vs Schema 迁移
+
+仓库包含**两套互补的建库入口**，职责不同，别混淆：
+
+| 场景 | 命令 |
+| --- | --- |
+| 全新建库（清表 → 建 73 表 → RBAC 种子） | `bash run.sh` |
+| 全新建库后要演示数据 | `python -m sql.seed.seed_test_data --clean` |
+| 对库登记迁移基线 / 应用基线后的增量迁移 | `bash sql/migrate.sh`（可加 `DB_NAME=<库名>`） |
+| 只预览将登记 / 待执行的迁移（不写库） | `bash sql/migrate.sh --dry-run` |
+
+要点：
+
+- `run.sh` 负责**全新环境初始化**：执行 `sql/*.sql` 基线 DDL（该 schema 即 **BASELINE**，已含 P0–P2 全部治理成果）+ RBAC 种子；它不读取 `sql/migrations/`，行为与历史版本一致。
+- `sql/migrate.sh` 负责迁移记录与**基线之后的增量升级**：首次对某库执行时自动写入 `version='baseline'` 记录（表示该库 == 当前基线），随后按序执行 `sql/migrations/V00N*.sql` 中尚未应用的版本，每个版本只执行一次（PG 镜像见 `pgsql/migrate.sh`）。
+- `run.sh` 新建的库无需再跑 `migrate.sh`（跑也只登记 baseline、无待执行）；`migrate.sh` 的意义是**未来每次 schema 变更**新增一个 `V00N` 后，对已登记的库做前向升级。
+- 目前 `sql/migrations/` 下还没有 `V00N` 文件属正常：代表尚未发生“基线之后”的变更。
+- 若目标库是用**早于当前基线**的旧代码建的，历史回放已废弃——请先 `bash run.sh` 重建或手工对齐到当前 schema 后再进入迁移体系。
+- 详细约定（命名 / 回滚 / 环境职责）见 [`sql/P2_Migration指南.md`](sql/P2_Migration指南.md)。
 
 ## 表域划分
 
@@ -82,10 +105,12 @@ dashboard(1) → 仪表盘查看
 
 ```bash
 # 在仓库根目录执行（seed 使用包内相对导入，须以模块方式启动）
-python -m sql.seed.seed_test_data
+# 已有数据时重复生成必须先 --clean（TRUNCATE 全部演示表），否则会撞唯一键
+python -m sql.seed.seed_test_data --clean
 ```
 
 生成模拟数据：商品、SKU、库存记录、订单、评论等（用于前端开发调试）。
+> 该命令只用于开发/演示环境，**禁止在生产执行**；分层约定见 [`sql/P2_Seed治理.md`](sql/P2_Seed治理.md)。
 
 ## 相关项目
 
