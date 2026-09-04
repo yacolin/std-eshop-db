@@ -45,15 +45,12 @@ CREATE TABLE mch_merchant_balances (
     version bigint NOT NULL DEFAULT 0,
     created_at timestamp(3) DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    deleted_at timestamp(3) DEFAULT NULL,
+    -- 资金表只可追加：禁止软删除（见 DB_CONVENTIONS §4）
     PRIMARY KEY (id),
     UNIQUE (merchant_id, currency),
     CONSTRAINT chk_balance_available CHECK (available_balance >= 0),
     CONSTRAINT chk_balance_freeze CHECK (freeze_balance >= 0)
 );
-
-CREATE INDEX idx_mch_merchant_balances_active ON mch_merchant_balances (merchant_id)
-    WHERE deleted_at IS NULL;
 
 CREATE TRIGGER trg_mch_merchant_balances_updated_at
     BEFORE UPDATE ON mch_merchant_balances
@@ -80,14 +77,13 @@ CREATE TABLE mch_merchant_withdrawals (
     paid_at timestamp(3) DEFAULT NULL,
     created_at timestamp(3) DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    deleted_at timestamp(3) DEFAULT NULL,
+    -- 资金表只可追加：禁止软删除（见 DB_CONVENTIONS §4）
     PRIMARY KEY (id),
     UNIQUE (withdraw_no),
     CONSTRAINT chk_withdraw_amount CHECK (amount > 0)
 );
 
-CREATE INDEX idx_mch_merchant_withdrawals_merchant_status ON mch_merchant_withdrawals (merchant_id, status)
-    WHERE deleted_at IS NULL;
+CREATE INDEX idx_mch_merchant_withdrawals_merchant_status ON mch_merchant_withdrawals (merchant_id, status);
 
 CREATE TRIGGER trg_mch_merchant_withdrawals_updated_at
     BEFORE UPDATE ON mch_merchant_withdrawals
@@ -119,7 +115,7 @@ CREATE TABLE mch_merchant_settlement_logs (
     remark varchar(500),
     created_at timestamp(3) DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    deleted_at timestamp(3) DEFAULT NULL,
+    -- 资金表只可追加：禁止软删除（见 DB_CONVENTIONS §4）
     PRIMARY KEY (id),
     UNIQUE (settlement_no),
     CONSTRAINT chk_settlement_total_amount CHECK (total_amount >= 0),
@@ -129,8 +125,6 @@ CREATE TABLE mch_merchant_settlement_logs (
 
 CREATE INDEX idx_mch_merchant_settlement_logs_merchant ON mch_merchant_settlement_logs (merchant_id);
 CREATE INDEX idx_mch_merchant_settlement_logs_status ON mch_merchant_settlement_logs (status);
-CREATE INDEX idx_mch_merchant_settlement_logs_active ON mch_merchant_settlement_logs (merchant_id, status)
-    WHERE deleted_at IS NULL;
 
 CREATE TRIGGER trg_mch_merchant_settlement_logs_updated_at
     BEFORE UPDATE ON mch_merchant_settlement_logs

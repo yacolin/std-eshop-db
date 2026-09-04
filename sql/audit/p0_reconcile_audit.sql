@@ -12,7 +12,7 @@ FROM tx_orders o
 LEFT JOIN (
     SELECT order_no, SUM(amount) AS paid_sum
     FROM tx_payments
-    WHERE status IN ('paid','refunding','refunded') AND deleted_at IS NULL
+    WHERE status IN ('paid','refunding','refunded')
     GROUP BY order_no
 ) p ON p.order_no = o.order_no
 WHERE o.deleted_at IS NULL
@@ -22,11 +22,11 @@ WHERE o.deleted_at IS NULL
 -- 2) 超退：成功退款合计 > 成功支付合计
 SELECT r.order_no, SUM(r.amount) AS refunded_sum
 FROM tx_refunds r
-WHERE r.status = 'success' AND r.deleted_at IS NULL
+WHERE r.status = 'success'
 GROUP BY r.order_no
 HAVING refunded_sum > (
     SELECT COALESCE(SUM(amount),0) FROM tx_payments
-    WHERE order_no = r.order_no AND status IN ('paid','refunding','refunded') AND deleted_at IS NULL
+    WHERE order_no = r.order_no AND status IN ('paid','refunding','refunded')
 );
 
 -- 3) 状态矛盾：订单 payment_status=refunded 但成功退款合计 < 成功支付合计
@@ -35,10 +35,10 @@ SELECT o.id, o.order_no, o.pay_amount,
        COALESCE(r.refunded_sum,0) AS refunded_sum
 FROM tx_orders o
 LEFT JOIN (SELECT order_no, SUM(amount) paid_sum FROM tx_payments
-           WHERE status IN ('paid','refunding','refunded') AND deleted_at IS NULL GROUP BY order_no) p
+           WHERE status IN ('paid','refunding','refunded') GROUP BY order_no) p
        ON p.order_no = o.order_no
 LEFT JOIN (SELECT order_no, SUM(amount) refunded_sum FROM tx_refunds
-           WHERE status='success' AND deleted_at IS NULL GROUP BY order_no) r
+           WHERE status='success' GROUP BY order_no) r
        ON r.order_no = o.order_no
 WHERE o.deleted_at IS NULL AND o.payment_status = 'refunded'
   AND COALESCE(r.refunded_sum,0) < COALESCE(p.paid_sum,0);
@@ -47,7 +47,7 @@ WHERE o.deleted_at IS NULL AND o.payment_status = 'refunded'
 SELECT DISTINCT o.id, o.order_no, o.payment_status
 FROM tx_refunds r
 JOIN tx_orders o ON o.order_no = r.order_no AND o.deleted_at IS NULL
-WHERE r.status = 'success' AND r.deleted_at IS NULL
+WHERE r.status = 'success'
   AND o.payment_status NOT IN ('refunding','refunded');
 
 -- 5) 订单明细行已退款合计 > 订单项小计

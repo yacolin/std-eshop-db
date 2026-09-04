@@ -15,7 +15,7 @@ CREATE TABLE mch_settlement_details (
     status smallint NOT NULL DEFAULT 0,
     created_at timestamp(3) DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp(3) DEFAULT CURRENT_TIMESTAMP,
-    deleted_at timestamp(3) DEFAULT NULL,
+    -- 资金表只可追加：禁止软删除（见 DB_CONVENTIONS §4）
     PRIMARY KEY (id),
     CONSTRAINT chk_settlement_detail_order_amount CHECK (order_amount >= 0),
     CONSTRAINT chk_settlement_detail_commission_amount CHECK (commission_amount >= 0),
@@ -24,8 +24,7 @@ CREATE TABLE mch_settlement_details (
 );
 
 CREATE INDEX idx_mch_settlement_details_merchant_order ON mch_settlement_details (merchant_id, order_id);
-CREATE INDEX idx_mch_settlement_details_settlement_log ON mch_settlement_details (settlement_log_id)
-    WHERE deleted_at IS NULL;
+CREATE INDEX idx_mch_settlement_details_settlement_log ON mch_settlement_details (settlement_log_id);
 
 CREATE TRIGGER trg_mch_settlement_details_updated_at
     BEFORE UPDATE ON mch_settlement_details

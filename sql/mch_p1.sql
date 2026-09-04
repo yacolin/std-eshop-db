@@ -32,9 +32,8 @@ CREATE TABLE `mch_merchant_balances` (
     `version` BIGINT NOT NULL DEFAULT 0 COMMENT '版本号（并发控制）',
     `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-    `deleted_at` datetime(3) DEFAULT NULL,
+    -- 资金表只可追加：禁止软删除（见 DB_CONVENTIONS §4）
     UNIQUE KEY `uk_merchant_currency` (`merchant_id`, `currency`),
-    KEY `idx_deleted_at` (`deleted_at`),
     CONSTRAINT `chk_balance_available` CHECK (`available_balance` >= 0),
     CONSTRAINT `chk_balance_freeze` CHECK (`freeze_balance` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家资金余额表';
@@ -53,10 +52,9 @@ CREATE TABLE `mch_merchant_withdrawals` (
     `paid_at` datetime(3) DEFAULT NULL COMMENT '打款时间',
     `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-    `deleted_at` datetime(3) DEFAULT NULL,
+    -- 资金表只可追加：禁止软删除（见 DB_CONVENTIONS §4）
     UNIQUE KEY `uk_withdraw_no` (`withdraw_no`),
     KEY `idx_merchant_status` (`merchant_id`, `status`),
-    KEY `idx_deleted_at` (`deleted_at`),
     CONSTRAINT `chk_withdraw_amount` CHECK (`amount` > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商家提现申请表';
 
@@ -75,11 +73,10 @@ CREATE TABLE `mch_merchant_settlement_logs` (
     `remark` VARCHAR(500) COMMENT '备注',
     `created_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` datetime(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-    `deleted_at` datetime(3) DEFAULT NULL,
+    -- 资金表只可追加：禁止软删除（见 DB_CONVENTIONS §4）
     UNIQUE KEY `uk_settlement_no` (`settlement_no`),
     INDEX `idx_merchant` (`merchant_id`),
     INDEX `idx_status` (`status`),
-    INDEX `idx_deleted_at` (`deleted_at`),
     CONSTRAINT `chk_settlement_total_amount` CHECK (`total_amount` >= 0),
     CONSTRAINT `chk_settlement_commission_amount` CHECK (`commission_amount` >= 0),
     CONSTRAINT `chk_settlement_settlement_amount` CHECK (`settlement_amount` >= 0)

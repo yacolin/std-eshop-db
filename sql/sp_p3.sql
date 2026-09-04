@@ -24,6 +24,9 @@ CREATE TABLE `sp_inventories` (
   -- 状态
   `status` tinyint NOT NULL DEFAULT 1 COMMENT '1-充足 2-缺货 3-无货',
 
+  -- 乐观锁版本号（并发扣减/预占校验：UPDATE ... WHERE id=? AND version=?）
+  `version` bigint NOT NULL DEFAULT 0 COMMENT '版本号（并发控制，每次变更 +1）',
+
   -- 盘点审计
   `last_counted_at` datetime(3) DEFAULT NULL COMMENT '最后盘点时间',
   `last_counted_by` varchar(50) DEFAULT '' COMMENT '最后盘点人',

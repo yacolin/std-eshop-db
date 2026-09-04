@@ -32,7 +32,7 @@ CREATE TABLE `tx_payments` (
 
   `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-  `deleted_at` datetime(3) DEFAULT NULL,
+  -- 资金表只可追加：禁止软删除，异常走状态流转/冲正流水（见 DB_CONVENTIONS §4 / P1 资金结算链路）
 
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_payment_no` (`payment_no`) COMMENT '支付单号唯一',
@@ -87,7 +87,7 @@ CREATE TABLE `tx_refunds` (
 
   `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-  `deleted_at` datetime(3) DEFAULT NULL,
+  -- 资金表只可追加：禁止软删除，异常走状态流转/冲正流水（见 DB_CONVENTIONS §4 / P1 资金结算链路）
 
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_refund_no` (`refund_no`) COMMENT '退款单号唯一',

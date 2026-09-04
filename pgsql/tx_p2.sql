@@ -26,7 +26,7 @@ CREATE TABLE tx_payments (
     channel_response jsonb DEFAULT NULL,
     created_at timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at timestamp(3) DEFAULT NULL,
+    -- 资金表只可追加：禁止软删除，异常走状态流转/冲正流水（见 DB_CONVENTIONS §4 / P1 资金结算链路）
     PRIMARY KEY (id),
     UNIQUE (payment_no),
     UNIQUE (idempotency_key),
@@ -113,7 +113,7 @@ CREATE TABLE tx_refunds (
     notify_at timestamp(3) DEFAULT NULL,
     created_at timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at timestamp(3) DEFAULT NULL,
+    -- 资金表只可追加：禁止软删除，异常走状态流转/冲正流水（见 DB_CONVENTIONS §4 / P1 资金结算链路）
     PRIMARY KEY (id),
     UNIQUE (refund_no),
     UNIQUE (channel_refund_id),
