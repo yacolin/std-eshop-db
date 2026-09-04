@@ -105,6 +105,17 @@
 
 这一层承接 `SCHEMA_REVIEW.md` 第八节的工程化意见。优先让 schema 的变更可复现、可审查、可回滚，再处理规模增长问题。
 
+> **P2 执行状态（2026-09-03）**：以 DB-only 仓库可交付的工程化治理已落地（仓库无 CI/调度器，CI 类以脚本+规范交付）。交付物：
+> - Migration 体系：`sql/migrations/`、`pgsql/migrations/`（`schema_migrations` 记录表 + `V001`/`V002` 回放 P0/P1 增量）+ 双库运行器 `sql/migrate.sh`、`pgsql/migrate.sh` + `P2_Migration指南.md`；已在预-P0 基线库上回放验证（基线 + V001 + V002 == 当前 run.sql 基线）
+> - SQL lint：`tools/sql_lint.py`（R1–R7 + P1 资金规则，双库 0 违规）+ `P2_SQLlint规范.md`
+> - Schema diff：`tools/schema_diff.py`（git ref 对比、DESTRUCTIVE 标记）+ `P2_SchemaDiff.md`
+> - 约束/索引审计：`p2_constraint_index_audit.sql`（双库）+ `P2_约束索引审计.md`
+> - 状态码与配置：`P2_状态码与配置治理.md` 状态码词典 + DB_CONVENTIONS 单一来源（sys_config 按需引入不建表）
+> - 任务/文件治理：`P2_任务与文件治理.md` 方案（sys_task_runs / sys_file_meta 约定，按需引入不建表）
+> - Seed 治理：`P2_Seed治理.md`（分层/清理顺序/幂等约定/生产隔离）
+> - 附带 DDL 收口：`sp_attributes.status` 补注释、`usr_points_rules.rule_key` 去掉空串默认值（双库）
+
+
 | 事项 | 交付物 | 验收标准 |
 | --- | --- | --- |
 | **Migration 体系** | 版本化 migration 目录、执行记录表、升级/回滚约定；`run.sql` 仅保留全新环境初始化职责。 | 任意版本可从空库建成，已部署库只能前向升级；每个 schema 变更可定位到 migration。 |
