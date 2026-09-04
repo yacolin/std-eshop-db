@@ -40,6 +40,7 @@ COMMENT ON COLUMN sp_attributes.unit IS '单位（如：英寸、GB）';
 COMMENT ON COLUMN sp_attributes.required IS '1-必填（该属性在该类目下创建商品时必须填写）';
 COMMENT ON COLUMN sp_attributes.searchable IS '1-作为前台筛选条件（列表页筛选项来源）';
 COMMENT ON COLUMN sp_attributes.is_sku_spec IS '1-是SKU规格（如颜色、内存） 0-仅SPU属性（如上市时间）';
+COMMENT ON COLUMN sp_attributes.status IS '1-启用 0-禁用';
 
 
 CREATE TABLE sp_products (

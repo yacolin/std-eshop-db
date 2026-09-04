@@ -85,7 +85,7 @@ CREATE TABLE `usr_points` (
 CREATE TABLE `usr_points_rules` (
   `id` int NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL DEFAULT '' COMMENT '规则名称',
-  `rule_key` varchar(50) NOT NULL DEFAULT '' COMMENT '规则键名：earn_rate-消费返积分比例 expire_days-积分过期天数 signin_points-签到奖励积分 review_points-评价奖励积分',
+  `rule_key` varchar(50) NOT NULL COMMENT '规则键名：earn_rate-消费返积分比例 expire_days-积分过期天数 signin_points-签到奖励积分 review_points-评价奖励积分',
   `value_int` int DEFAULT NULL COMMENT '整数值（如积分数量、天数）',
   `value_decimal` decimal(10,2) DEFAULT NULL COMMENT '小数值（如比例、倍数）',
   `value_string` varchar(255) DEFAULT '' COMMENT '字符串值（如配置json、文本）',

@@ -15,7 +15,7 @@ CREATE TABLE `sp_attributes` (
   `searchable` tinyint NOT NULL DEFAULT 0 COMMENT '1-作为前台筛选条件（列表页筛选项来源）',
   `is_sku_spec` tinyint NOT NULL DEFAULT 0 COMMENT '1-是SKU规格（如颜色、内存） 0-仅SPU属性（如上市时间）',
   `sort_order` int NOT NULL DEFAULT 0,
-  `status` tinyint NOT NULL DEFAULT 1,
+  `status` tinyint NOT NULL DEFAULT 1 COMMENT '1-启用 0-禁用',
   `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updated_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   `deleted_at` datetime(3) DEFAULT NULL,
