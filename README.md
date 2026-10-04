@@ -39,6 +39,21 @@ python -m sql.seed.seed_test_data --clean
 - 若目标库是用**早于当前基线**的旧代码建的，历史回放已废弃——请先 `bash run.sh` 重建或手工对齐到当前 schema 后再进入迁移体系。
 - 详细约定（命名 / 回滚 / 环境职责）见 [`sql/P2_Migration指南.md`](sql/P2_Migration指南.md)。
 
+## 本地开发机重置
+
+| 目标 | 命令 |
+| --- | --- |
+| 只重置演示数据（保留 schema 与月分片） | `python -m sql.seed.seed_test_data --clean` |
+| 连 schema 一起重建（清表 → 建 73 表 → RBAC 种子 → 演示数据） | `bash run.sh`（提示输入 MySQL 密码）→ `python -m sql.seed.seed_test_data --clean` |
+| 重置并回到「只有月分片」的分表终态（本地应用跑 `monthly` 时用这条） | `bash run.sh` → `python -m sql.seed.seed_test_data --clean --sharded-only` |
+
+要点：
+
+- `run.sh` 建出的是**基线主表** `tx_orders` 等，所以重建后必然是「主表 + 月分片」并存（dual）。种子会自动识别为**双写**并同时写两侧，`orderShard.mode=single` 与 `monthly` 都能读到数据。
+- 若应用跑 `monthly`，主表只是过渡镜像（应用不写它，会逐渐过期），加 `--sharded-only` 让种子生成完成后删掉这 4 张主表、回到分表终态。该开关**只在存在月分片时生效**（单表形态下绝不删主表），可重复执行。
+- `run.sh` 会**动态删除**订单域的 `tx_*_legacy_YYYYMM` 归档副本。原因：副本由分表工具的 `RENAME TABLE` 产生，`RENAME` 不重命名 CHECK 约束，副本仍占用原始约束名（`chk_pay_amount` / `chk_total_amount` …）；而 MySQL 的 CHECK 约束名在 schema 内唯一，残留副本会让基线建表直接报 `Error 3822 Duplicate check constraint name`。见 [`sql/00_drop_tables.sql`](sql/00_drop_tables.sql) 顶部说明。
+- 重置后自检：`python3 tools/verify_order_seed.py`（口径见 [`sql/P2_Seed治理.md`](sql/P2_Seed治理.md) §5）。
+
 ## 表域划分
 
 | 域 | 文件 | 表数 | 说明 |
@@ -110,7 +125,14 @@ python -m sql.seed.seed_test_data --clean
 ```
 
 生成模拟数据：商品、SKU、库存记录、订单、评论等（用于前端开发调试）。
+
 > 该命令只用于开发/演示环境，**禁止在生产执行**；分层约定见 [`sql/P2_Seed治理.md`](sql/P2_Seed治理.md)。
+
+订单域数据是**按分表规范生成**的：四张订单表（`tx_orders` / `tx_sub_orders` / `tx_order_items` /
+`tx_order_logs`）已去自增，种子用与 gf-eshop `identity.go` 相同的「分钟(25)|秒(6)|序列(20)」
+布局显式写入全局唯一主键，并按 `created_at` 月份写入 `tx_*_YYYYMM` 月分片（同键同片）；
+单号、状态机时间轴、订单日志、支付/退款均与 [`sql/P0_状态机契约.md`](sql/P0_状态机契约.md) 对齐。
+校验口径见 [`sql/P2_Seed治理.md`](sql/P2_Seed治理.md) §5。
 
 ## 相关项目
 
