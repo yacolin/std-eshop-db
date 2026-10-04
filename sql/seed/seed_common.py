@@ -166,36 +166,47 @@ def physical_table(base, suffix):
     return f"{base}_{suffix}" if suffix else base
 
 
+def shard_template_for(cur, base, exclude):
+    """
+    返回建分片表时的模板表名，优先级与 gf-eshop shardTemplate 一致：
+
+      主表 base → 同域最新的月分片 → 最新的 legacy 归档副本
+      （三者都排除 exclude 自身：`CREATE TABLE x LIKE x` 会报 Not unique table/alias）
+
+    按月分片表名（tx_orders_202608）在字典序上等同月份序，故取升序列表的最后一个即最新月份。
+    """
+    if base != exclude and table_exists(cur, base):
+        return base
+    shards = [
+        name for name in list_tables_like(cur, base)
+        if name != base and name != exclude and f"{base}_legacy_" not in name
+    ]
+    if shards:
+        return shards[-1]
+    for name in reversed(list_tables_like(cur, base)):
+        if f"{base}_legacy_" in name and name != exclude:
+            return name
+    raise RuntimeError(
+        f"找不到 {base} 的建表模板（主表 / 月分片 / legacy 副本都不存在），"
+        f"请先执行 bash run.sh 建出基线表"
+    )
+
+
 def ensure_order_shard_tables(cur, suffix):
     """
-    确保某月的四张分片表存在（幂等）。
+    确保某月的四张分片表存在（幂等，结构复制自 shard_template_for）。
 
-    模板优先级与 gf-eshop shardTemplate 一致：当前表自身 → 主表 → 最新月分片 → 最新 legacy 副本。
+    返回本次**实际创建**的物理表名列表（已存在的不会出现在里面）。
     """
+    created = []
     for base in ORDER_SHARD_BASES:
         target = physical_table(base, suffix)
         if table_exists(cur, target):
             continue
-        template = None
-        if table_exists(cur, base) and base != target:
-            template = base
-        if template is None:
-            for s in reversed([s for s in order_shard_suffixes(cur) if s and s != suffix]):
-                candidate = physical_table(base, s)
-                if table_exists(cur, candidate):
-                    template = candidate
-                    break
-        if template is None:
-            for name in reversed(list_tables_like(cur, base)):
-                if f"{base}_legacy_" in name and table_exists(cur, name):
-                    template = name
-                    break
-        if template is None:
-            raise RuntimeError(
-                f"找不到 {base} 的建表模板（主表 / 月分片 / legacy 副本都不存在），"
-                f"请先执行 bash run.sh 建出基线表"
-            )
+        template = shard_template_for(cur, base, target)
         cur.execute(f"CREATE TABLE IF NOT EXISTS `{target}` LIKE `{template}`")
+        created.append(target)
+    return created
 
 
 def encode_order_id(moment, seq):
