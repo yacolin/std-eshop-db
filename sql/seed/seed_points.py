@@ -15,11 +15,14 @@ def seed_points(conn):
             print("  ⚠ 无用户数据，跳过积分生成")
             return
 
-        cur.execute(
-            "SELECT id, user_id, pay_amount, created_at FROM tx_orders "
-            "WHERE status IN ('paid','completed') AND deleted_at IS NULL"
-        )
-        orders = cur.fetchall()
+        # 订单表分表后按「活跃物理表」跨分片读取；dual（主表+分片）下只读分片，避免重复计分
+        orders = []
+        for name in active_order_tables(cur, "tx_orders"):
+            cur.execute(
+                f"SELECT id, user_id, pay_amount, created_at FROM `{name}` "
+                "WHERE status IN ('paid','completed') AND deleted_at IS NULL"
+            )
+            orders += cur.fetchall()
         user_orders = {u: [] for u in users}
         for oid, ouid, amount, otime in orders:
             if ouid in user_orders:

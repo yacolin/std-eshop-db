@@ -9,16 +9,24 @@ def seed_review(conn):
     now = datetime.now()
 
     with conn.cursor() as cur:
-        cur.execute("""
-            SELECT oi.id, oi.order_id, oi.product_id, oi.sku_id,
-                   o.user_id, o.created_at, oi.merchant_id
-            FROM tx_order_items oi
-            JOIN tx_orders o ON o.id = oi.order_id
-            WHERE o.status IN ('paid','completed') AND o.deleted_at IS NULL
-              AND oi.id NOT IN (SELECT order_item_id FROM rev_reviews WHERE status != 3)
-            ORDER BY o.created_at DESC
-        """)
-        items = cur.fetchall()
+        # 订单四表同键同片：订单项与订单在同一个物理分片内 JOIN，逐片取数后合并。
+        # dual（主表+分片）下只取分片，否则同一明细会被读两遍而撞 rev_reviews 唯一键。
+        items = []
+        for suffix in active_order_suffixes(cur):
+            orders_tbl = physical_table("tx_orders", suffix)
+            items_tbl = physical_table("tx_order_items", suffix)
+            if not (table_exists(cur, orders_tbl) and table_exists(cur, items_tbl)):
+                continue
+            cur.execute(f"""
+                SELECT oi.id, oi.order_id, oi.product_id, oi.sku_id,
+                       o.user_id, o.created_at, oi.merchant_id
+                FROM `{items_tbl}` oi
+                JOIN `{orders_tbl}` o ON o.id = oi.order_id
+                WHERE o.status IN ('paid','completed') AND o.deleted_at IS NULL
+                  AND oi.id NOT IN (SELECT order_item_id FROM rev_reviews WHERE status != 3)
+            """)
+            items += cur.fetchall()
+
         if not items:
             print("  ⚠ 无已支付订单项，跳过评价生成")
             return
