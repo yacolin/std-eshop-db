@@ -30,6 +30,7 @@ MONEY_COLS = {
     'tx_orders': ['total_amount', 'discount_amount', 'shipping_fee', 'pay_amount'],
     'tx_sub_orders': ['total_amount', 'discount_amount', 'shipping_fee', 'pay_amount'],
     'tx_order_items': ['price', 'subtotal', 'refund_amount'],
+    'tx_order_daily_stats': ['gmv', 'paid_amount', 'refund_amount'],
     'tx_cart_items': ['price'],
     'tx_payments': ['amount'],
     'tx_refunds': ['amount'],

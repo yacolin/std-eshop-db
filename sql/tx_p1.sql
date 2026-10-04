@@ -26,7 +26,7 @@ CREATE TABLE `tx_cart_items` (
 
 
 CREATE TABLE `tx_order_items` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '订单项ID',
+  `id` bigint NOT NULL COMMENT '全局唯一主键（同上；供 tx_delivery_items / tx_after_sales 跨域引用）',
   `order_id` bigint NOT NULL COMMENT '关联 tx_orders.id',
   `sub_order_id` bigint NOT NULL COMMENT '子订单ID',
   `merchant_id` bigint NOT NULL DEFAULT 0 COMMENT '所属商家ID',

@@ -44,5 +44,6 @@ source sql/sp_p3.sql
 -- ========== P4: 物流配送（依赖 P1 订单明细 / P3 仓库库存）==========
 source sql/tx_p4.sql
 
--- ========== P5: 商品版本历史表（依赖 P1: products）==========
+-- ========== P5: 商品版本历史表 + 订单分表辅助表（依赖 P1: products / P0: orders）==========
 source sql/sp_p5.sql
+source sql/tx_p5.sql

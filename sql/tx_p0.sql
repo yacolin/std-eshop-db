@@ -19,7 +19,7 @@ CREATE TABLE `tx_carts` (
 
 
 CREATE TABLE `tx_orders` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+  `id` bigint NOT NULL COMMENT '全局唯一主键（51 位：分钟|秒|序列，由应用层生成，非自增）',
   `order_no` varchar(32) NOT NULL COMMENT '父订单号（业务唯一键，如 202612010001）',
   `user_id` bigint NOT NULL COMMENT '用户ID',
 
