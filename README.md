@@ -45,13 +45,22 @@ python -m sql.seed.seed_test_data --clean
 | --- | --- |
 | 只重置演示数据（保留 schema 与月分片） | `python -m sql.seed.seed_test_data --clean` |
 | 连 schema 一起重建（清表 → 建 73 表 → RBAC 种子 → 演示数据） | `bash run.sh`（提示输入 MySQL 密码）→ `python -m sql.seed.seed_test_data --clean` |
-| 重置并回到「只有月分片」的分表终态（本地应用跑 `monthly` 时用这条） | `bash run.sh` → `python -m sql.seed.seed_test_data --clean --sharded-only` |
+| 重置并回到「只有月分片」的分表终态（本地应用跑 `monthly` 时用这条） | 见下方三步 |
+
+从零回到分表终态（`run.sh` 只建基线主表、**不建月分片**，所以要显式建一次）：
+
+```bash
+bash run.sh                                                        # 1) 基线：主表，无分片
+python3 tools/create_order_shards.py --from 2026-07 --to 2026-10   # 2) 建月分片 → 布局变 dual
+python -m sql.seed.seed_test_data --clean --sharded-only           # 3) 双写两侧 + 删主表 → monthly
+```
 
 要点：
 
-- `run.sh` 建出的是**基线主表** `tx_orders` 等，所以重建后必然是「主表 + 月分片」并存（dual）。种子会自动识别为**双写**并同时写两侧，`orderShard.mode=single` 与 `monthly` 都能读到数据。
-- 若应用跑 `monthly`，主表只是过渡镜像（应用不写它，会逐渐过期），加 `--sharded-only` 让种子生成完成后删掉这 4 张主表、回到分表终态。该开关**只在存在月分片时生效**（单表形态下绝不删主表），可重复执行。
+- **分片表是应用管理的动态对象、不入基线**（`sql/tx_p5.sql` 头注释）。`run.sh` 只建基线主表；建分片要么由应用在 `monthly` 模式下写入时自动建当月，要么用 [`tools/create_order_shards.py`](tools/create_order_shards.py)（等价 `gf-eshop shard --action=create`，幂等、支持月份区间，可指向 RDS 直接跑）。
+- 第 3 步前库里是**主表 + 月分片并存（dual）**：种子会自动识别为**双写**并同时写两侧，`orderShard.mode=single` 与 `monthly` 都能读到数据。`--sharded-only` 让种子生成完成后删掉 4 张主表、回到分表终态；该开关**只在存在月分片时生效**（单表形态下绝不删主表），可重复执行 —— 所以第 2 步不能省。
 - `run.sh` 会**动态删除**订单域的 `tx_*_legacy_YYYYMM` 归档副本。原因：副本由分表工具的 `RENAME TABLE` 产生，`RENAME` 不重命名 CHECK 约束，副本仍占用原始约束名（`chk_pay_amount` / `chk_total_amount` …）；而 MySQL 的 CHECK 约束名在 schema 内唯一，残留副本会让基线建表直接报 `Error 3822 Duplicate check constraint name`。见 [`sql/00_drop_tables.sql`](sql/00_drop_tables.sql) 顶部说明。
+- 别一次建太多空月份：订单列表/看板是**跨片 fan-out**，空分片也会被扫到。建「有数据的月份 + 当月」即可。
 - 重置后自检：`python3 tools/verify_order_seed.py`（口径见 [`sql/P2_Seed治理.md`](sql/P2_Seed治理.md) §5）。
 
 ## 表域划分
