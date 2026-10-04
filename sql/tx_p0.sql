@@ -77,7 +77,7 @@ CREATE TABLE `tx_orders` (
 
 
 CREATE TABLE `tx_sub_orders` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '子订单ID',
+  `id` bigint NOT NULL COMMENT '全局唯一主键（51 位：分钟|秒|序列，由应用层生成，非自增）',
   `sub_order_no` varchar(32) NOT NULL COMMENT '子订单号（按商家拆单后的业务唯一键）',
   `parent_order_id` bigint NOT NULL COMMENT '父订单ID',
   `parent_order_no` varchar(32) NOT NULL COMMENT '父订单号（冗余，便于查询）',

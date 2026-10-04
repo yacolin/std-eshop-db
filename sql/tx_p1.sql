@@ -67,7 +67,7 @@ CREATE TABLE `tx_order_items` (
 
 
 CREATE TABLE `tx_order_logs` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '日志ID',
+  `id` bigint NOT NULL COMMENT '全局唯一主键（同上，由应用层生成，非自增）',
   `order_id` bigint NOT NULL COMMENT '关联 tx_orders.id',
   `order_no` varchar(32) NOT NULL COMMENT '订单号（冗余，便于按号查日志）',
   `from_status` varchar(20) DEFAULT '' COMMENT '变更前状态',
