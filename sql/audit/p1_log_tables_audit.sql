@@ -10,7 +10,8 @@ SELECT TABLE_NAME, TABLE_ROWS, UPDATE_TIME
 FROM information_schema.TABLES
 WHERE TABLE_SCHEMA = DATABASE()
   AND TABLE_NAME IN ('tx_payment_logs','tx_order_logs','sys_operation_logs',
-                     'sp_inventory_logs','tx_delivery_traces','mkt_promotion_usage_logs')
+                     'sp_inventory_logs','tx_delivery_traces','mkt_promotion_usage_logs',
+                     'sp_search_logs')
 ORDER BY TABLE_NAME;
 
 -- 2) 各日志表 created_at 年龄分布（按月，供保留期决策）
@@ -29,5 +30,6 @@ WHERE TABLE_SCHEMA = DATABASE()
     OR TABLE_NAME LIKE 'sys_operation_logs\_%'
     OR TABLE_NAME LIKE 'sp_inventory_logs\_%'
     OR TABLE_NAME LIKE 'tx_delivery_traces\_%'
-    OR TABLE_NAME LIKE 'mkt_promotion_usage_logs\_%')
+    OR TABLE_NAME LIKE 'mkt_promotion_usage_logs\_%'
+    OR TABLE_NAME LIKE 'sp_search_logs\_%')
 ORDER BY TABLE_NAME;

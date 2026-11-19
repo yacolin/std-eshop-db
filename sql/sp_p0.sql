@@ -40,3 +40,29 @@ CREATE TABLE `sp_brands` (
   KEY `idx_first_letter` (`first_letter`),
   KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='品牌表';
+
+
+-- ------------------------------------------------------------
+-- 检索日志：C 端搜索词埋点，供「热词 / 零结果词」统计
+--
+-- 为什么放在 sp 域：埋点对象是商品与品牌的检索，属于商品域事件；
+-- 为什么不建唯一键：同一用户可反复搜同一个词，天然不唯一；
+-- 分片键：无。分析型追加表，与 base_/sys_ 同类例外（DB_CONVENTIONS §9.2），
+--   按 created_at 保留期归档，不按 merchant/user 分片；
+-- created_at 由应用在**入队时**打戳，不是落库时取 now()，
+--   否则批量写入的延迟会被算进统计时间窗。
+-- 保留期建议 90 天（统计接口窗口上限同为 90 天），见 sql/P1_大表生命周期.md。
+-- ------------------------------------------------------------
+CREATE TABLE `sp_search_logs` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '日志ID',
+  `keyword` varchar(100) NOT NULL COMMENT '搜索词（用户输入原文，已合并连续空白并截断到 100 字符）',
+  `scene` varchar(20) NOT NULL DEFAULT '' COMMENT '检索场景：products-商品 brands-品牌',
+  `result_count` int NOT NULL DEFAULT 0 COMMENT '本次返回的当前页条数（0=零结果；商品侧游标分页不做 COUNT，故为下界）',
+  `user_id` bigint NOT NULL DEFAULT 0 COMMENT '登录用户ID，0=匿名（关联 usr_users.id）',
+  `ip` varchar(64) DEFAULT '' COMMENT '来源 IP（IPv4/IPv6）',
+  `created_at` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`id`),
+  KEY `idx_created_at` (`created_at`) COMMENT '保留期清理 + 时间窗统计',
+  KEY `idx_keyword` (`keyword`) COMMENT '按词分组统计（utf8mb4_unicode_ci 天然合并大小写）',
+  KEY `idx_scene_created` (`scene`, `created_at`) COMMENT '按场景 + 时间窗统计'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='搜索词日志（只追加，用于热词与零结果分析）';

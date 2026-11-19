@@ -123,6 +123,7 @@ DROP TABLE IF EXISTS `base_notifications`;
 DROP TABLE IF EXISTS `base_notification_templates`;
 DROP TABLE IF EXISTS `sp_categories`;
 DROP TABLE IF EXISTS `sp_brands`;
+DROP TABLE IF EXISTS `sp_search_logs`;
 DROP TABLE IF EXISTS `usr_users`;
 
 SET FOREIGN_KEY_CHECKS = 1;

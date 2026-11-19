@@ -8,9 +8,9 @@
 #   bash sql/migrate.sh --dry-run            # 仅预览，不写库
 #
 # 基线模型：
-#   - 当前仓库 sql/*.sql（run.sh 建出的 73 表 schema）即 BASELINE
+#   - 当前仓库 sql/*.sql（run.sh 建出的 74 表 schema）即 BASELINE
 #   - 首次对某库执行时：若 schema_migrations 为空/不存在 → 自动登记 version='baseline'
-#   - baseline 之后的增量迁移：sql/migrations/V00N__*.sql（当前为空，未来新增）
+#   - baseline 之后的增量迁移：sql/migrations/V00N__*.sql（当前 V001~V003）
 #
 # 约定：新库/当前基线库跑本脚本 = 登记 baseline、无待执行；早于当前基线的旧库不提供回放，
 #       请先用 run.sh 重建或手工对齐到当前基线。
@@ -26,7 +26,7 @@ DRY_RUN=0
 
 mysql_exec() { MYSQL_PWD="${MYSQL_PWD:-}" mysql -u "${MYSQL_USER}" "${DB_NAME}" "$@"; }
 
-BASELINE_DESC="当前 run.sh 基线（73 表 schema，含 P0-P2 治理成果）"
+BASELINE_DESC="当前 run.sh 基线（74 表 schema，含 P0-P2 治理成果）"
 
 # 1) 确保执行记录表存在（dry-run 不建表）
 if [ "$DRY_RUN" -eq 0 ]; then
